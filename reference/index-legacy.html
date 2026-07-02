@@ -1,0 +1,2692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OranjeStride | Stride into Decision Intelligence</title>
+<link rel="icon" type="image/jpeg" href="images/no_background_logo.jpg">
+<style>
+  :root {
+    --orange: #ff6a00;
+    --orange-2: #f47c20;
+    --orange-soft: #fff0e3;
+    --orange-glow: rgba(255, 106, 0, 0.18);
+    --navy: #1e2d3d;
+    --navy-2: #17314a;
+    --charcoal: #2d2d2d;
+    --ink: #1e1e1e;
+    --muted: #657180;
+    --line: #dfe5ea;
+    --paper: #fffdf8;
+    --warm: #f6f1e8;
+    --white: #ffffff;
+    --success: #256e51;
+    --shadow: 0 18px 50px rgba(16, 36, 55, 0.12);
+    --radius: 8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: var(--ink);
+    background: var(--paper);
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+  a { color: inherit; }
+  img { max-width: 100%; display: block; }
+  button, input, select, textarea { font: inherit; }
+
+  .site-shell {
+    position: relative;
+    min-height: 100vh;
+    background:
+      radial-gradient(circle at 85% 5%, rgba(255,106,0,0.11), transparent 34rem),
+      linear-gradient(180deg, var(--paper) 0%, #fbfaf5 100%);
+  }
+
+  .nav {
+    position: fixed;
+    inset: 0 0 auto;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+    padding: 1rem clamp(1.25rem, 4vw, 4rem);
+    background: rgba(255, 253, 248, 0.88);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(16, 36, 55, 0.08);
+  }
+
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    text-decoration: none;
+    min-width: max-content;
+  }
+
+  .brand-mark {
+    width: 44px;
+    height: 44px;
+    border: 1.5px solid rgba(255, 106, 0, 0.32);
+    border-radius: 50%;
+    overflow: hidden;
+    background: var(--white);
+    box-shadow: 0 6px 20px rgba(255, 106, 0, 0.16);
+    flex-shrink: 0;
+  }
+
+  .brand-mark img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center top;
+    transform: scale(1.08);
+  }
+
+  .brand-name {
+    display: grid;
+    line-height: 1;
+  }
+
+  .brand-name strong {
+    font-size: 1.08rem;
+    letter-spacing: 0.01em;
+  }
+
+  .w-oranje { color: var(--orange); }
+  .w-stride  { color: #1a1a2e; }
+
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: clamp(1rem, 2vw, 2rem);
+  }
+
+  .nav-links a {
+    position: relative;
+    text-decoration: none;
+    font-size: 0.78rem;
+    font-weight: 750;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--navy);
+  }
+
+  .nav-links a:not(.nav-cta)::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -0.35rem;
+    width: 0;
+    height: 2px;
+    background: var(--orange);
+    transition: width 0.25s ease;
+  }
+
+  .nav-links a:hover::after { width: 100%; }
+
+  .nav-cta {
+    padding: 0.72rem 1rem;
+    border-radius: 999px;
+    background: var(--navy);
+    color: var(--white) !important;
+    box-shadow: 0 12px 30px rgba(16, 36, 55, 0.18);
+  }
+
+  .hero {
+    position: relative;
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(420px, 1.1fr);
+    grid-template-areas:
+      "copy visual"
+      "metrics visual";
+    align-items: center;
+    gap: clamp(2rem, 4vw, 5rem);
+    padding: 8rem clamp(1.25rem, 4vw, 4rem) 4rem;
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: "";
+    position: absolute;
+    left: clamp(1.25rem, 4vw, 4rem);
+    right: clamp(1.25rem, 4vw, 4rem);
+    bottom: 2.5rem;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(16,36,55,0.2), transparent);
+  }
+
+  .hero-copy {
+    position: relative;
+    z-index: 2;
+    grid-area: copy;
+    max-width: 660px;
+  }
+
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+    margin-bottom: 1.25rem;
+    color: var(--orange);
+    font-size: 0.74rem;
+    font-weight: 800;
+    letter-spacing: 0.17em;
+    text-transform: uppercase;
+  }
+
+  .eyebrow::before {
+    content: "";
+    width: 34px;
+    height: 2px;
+    background: var(--orange);
+  }
+
+  /* Company wordmark — primary display in hero */
+  .hero-wordmark {
+    display: block;
+    font-size: clamp(3.6rem, 7.2vw, 7.8rem);
+    font-weight: 900;
+    line-height: 0.92;
+    letter-spacing: -0.025em;
+    margin-bottom: 0.45rem;
+  }
+
+  .hero-wordmark .w-oranje {
+    color: var(--orange);
+  }
+
+  .hero-wordmark .w-stride {
+    color: var(--charcoal);
+  }
+
+  /* Tagline h1 — sits directly under the wordmark */
+  .hero h1 {
+    max-width: 660px;
+    font-size: clamp(1.55rem, 2.8vw, 2.9rem);
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+    font-weight: 800;
+    color: var(--charcoal);
+    margin-top: 0.6rem;
+  }
+
+  .hero h1 span {
+    color: var(--orange);
+  }
+
+  .hero-sub {
+    margin-top: 1.5rem;
+    max-width: 585px;
+    color: var(--muted);
+    font-size: clamp(1rem, 1.4vw, 1.18rem);
+  }
+
+  .motto {
+    margin-top: 1.5rem;
+    padding-left: 1.2rem;
+    border-left: 3px solid var(--orange);
+    color: var(--navy);
+    font-size: 1.08rem;
+    font-weight: 760;
+  }
+
+  .hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 2rem;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 46px;
+    padding: 0.82rem 1.35rem;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    text-decoration: none;
+    font-size: 0.82rem;
+    font-weight: 850;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    transition: transform 0.22s ease, box-shadow 0.22s ease, background 0.22s ease;
+  }
+
+  .btn:hover { transform: translateY(-2px); }
+  .btn-primary {
+    background: var(--orange);
+    color: var(--white);
+    box-shadow: 0 18px 38px rgba(255,106,0,0.26);
+  }
+  .btn-secondary {
+    background: var(--white);
+    color: var(--navy);
+    border-color: rgba(16,36,55,0.16);
+  }
+
+  .hero-visual {
+    position: relative;
+    z-index: 1;
+    grid-area: visual;
+    min-height: 480px;
+    border-radius: var(--radius);
+    overflow: visible;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .hero-visual::before {
+    content: "";
+    position: absolute;
+    inset: -10% -8%;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,106,0,0.1) 0%, transparent 70%);
+    z-index: 0;
+  }
+
+  .hero-visual img {
+    position: relative;
+    z-index: 1;
+    width: min(480px, 100%);
+    height: auto;
+    object-fit: contain;
+    border-radius: 16px;
+    filter: drop-shadow(0 24px 48px rgba(16, 36, 55, 0.13));
+    animation: floatLogo 7s ease-in-out infinite;
+  }
+
+  @keyframes floatLogo {
+    0%, 100% { transform: translateY(0); }
+    50%       { transform: translateY(-14px); }
+  }
+
+  .hero-metrics {
+    position: relative;
+    z-index: 4;
+    grid-area: metrics;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1px;
+    max-width: 650px;
+    margin: -1.5rem 0 0;
+    background: rgba(16, 36, 55, 0.12);
+    border: 1px solid rgba(16, 36, 55, 0.12);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+
+  .hero-metric {
+    padding: 1.1rem 1.2rem;
+    background: rgba(255, 255, 255, 0.92);
+  }
+
+  .hero-metric strong {
+    display: block;
+    color: var(--orange);
+    font-size: 1.65rem;
+    line-height: 1;
+  }
+
+  .hero-metric span {
+    display: block;
+    margin-top: 0.35rem;
+    color: var(--muted);
+    font-size: 0.72rem;
+    font-weight: 760;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  /* ── Clients CTA action panel (lives in the #clients section) ── */
+  .clients-cta-action {
+    margin-top: 2.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.15rem;
+    text-align: center;
+    padding: clamp(2.25rem, 5vw, 3.25rem) 1.5rem;
+    background: linear-gradient(180deg, var(--white) 0%, #fbf7f1 100%);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+  }
+  .clients-cta-hint {
+    color: var(--muted);
+    font-size: 0.86rem;
+    font-weight: 700;
+    max-width: 52ch;
+  }
+  .clients-cta-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.95rem 1.8rem;
+    border: 0;
+    border-radius: 999px;
+    background: var(--navy);
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 900;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    cursor: pointer;
+    box-shadow: 0 14px 32px rgba(30, 45, 61, 0.26);
+    transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+  }
+  .clients-cta-btn:hover {
+    background: var(--navy-2);
+    transform: translateY(-2px);
+    box-shadow: 0 18px 40px rgba(30, 45, 61, 0.34);
+  }
+  .clients-cta-btn:focus-visible { outline: 2px solid var(--orange); outline-offset: 3px; }
+  .clients-cta-btn .cta-icon { color: var(--orange); flex-shrink: 0; }
+  .clients-cta-btn .cta-arrow { flex-shrink: 0; transition: transform 0.25s ease; }
+  .clients-cta-btn:hover .cta-arrow { transform: translateX(4px); }
+
+  /* ── Client gallery modal ── */
+  .cg-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 220;
+    background: rgba(10, 14, 26, 0.72);
+    backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.35s ease;
+  }
+  .cg-overlay.open { opacity: 1; pointer-events: all; }
+
+  .cg-modal {
+    position: relative;
+    width: min(980px, 100%);
+    max-height: min(88vh, 780px);
+    display: flex;
+    flex-direction: column;
+    background: var(--white);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 40px 80px rgba(10, 14, 26, 0.4);
+    transform: translateY(28px) scale(0.97);
+    transition: transform 0.38s cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+  .cg-overlay.open .cg-modal { transform: translateY(0) scale(1); }
+
+  .cg-head {
+    position: relative;
+    background: #1a1a2e;
+    color: #fff;
+    padding: 1.75rem 2rem 1.5rem;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .cg-head::before {
+    content: "";
+    position: absolute;
+    top: -70px;
+    right: -50px;
+    width: 240px;
+    height: 240px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 106, 0, 0.25), transparent 70%);
+  }
+  .cg-close {
+    position: absolute;
+    top: 1.1rem;
+    right: 1.1rem;
+    width: 36px;
+    height: 36px;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+    font-size: 0.95rem;
+    cursor: pointer;
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    transition: background 0.25s ease;
+  }
+  .cg-close:hover { background: rgba(255, 255, 255, 0.24); }
+  .cg-eyebrow {
+    position: relative;
+    font-size: 0.7rem;
+    font-weight: 900;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--orange);
+    margin-bottom: 0.5rem;
+  }
+  .cg-head h3 {
+    position: relative;
+    font-size: clamp(1.4rem, 3vw, 1.9rem);
+    font-weight: 800;
+    line-height: 1.15;
+  }
+  .cg-head h3 span { color: var(--orange); }
+  .cg-sub {
+    position: relative;
+    margin-top: 0.55rem;
+    max-width: 62ch;
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 0.86rem;
+    line-height: 1.5;
+  }
+
+  .cg-tabs {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    padding: 1rem 2rem;
+    flex-shrink: 0;
+    border-bottom: 1px solid var(--line);
+    background: var(--paper);
+  }
+  .cg-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 0.5rem 0.95rem;
+    background: var(--white);
+    color: var(--navy);
+    cursor: pointer;
+    font-size: 0.74rem;
+    font-weight: 800;
+    letter-spacing: 0.03em;
+    transition: background 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+  }
+  .cg-tab span {
+    display: inline-grid;
+    place-items: center;
+    min-width: 20px;
+    height: 18px;
+    padding: 0 0.35rem;
+    border-radius: 999px;
+    background: var(--orange-soft);
+    color: var(--orange);
+    font-size: 0.64rem;
+    font-weight: 900;
+  }
+  .cg-tab:hover { border-color: var(--orange); }
+  .cg-tab.active { background: var(--navy); color: #fff; border-color: var(--navy); }
+  .cg-tab.active span { background: rgba(255, 255, 255, 0.2); color: #fff; }
+
+  .cg-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    padding: 1.5rem 2rem 1.75rem;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .cg-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+    gap: 0.9rem;
+  }
+  .cg-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.65rem;
+    padding: 1.1rem 0.8rem;
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  }
+  .cg-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow);
+    border-color: rgba(255, 106, 0, 0.4);
+  }
+  .cg-logo {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 54px;
+  }
+  .cg-logo img {
+    max-height: 54px;
+    max-width: 116px;
+    object-fit: contain;
+    transition: transform 0.25s ease;
+  }
+  .cg-card:hover .cg-logo img { transform: scale(1.04); }
+  .cg-name { font-size: 0.82rem; font-weight: 800; color: var(--navy); line-height: 1.25; }
+  .cg-tag {
+    font-size: 0.63rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* category filter */
+  .cg-grid[data-filter="academic"] .cg-card:not([data-cat="academic"]),
+  .cg-grid[data-filter="corporate"] .cg-card:not([data-cat="corporate"]) { display: none; }
+
+  @keyframes cgIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: none; }
+  }
+  .cg-grid.cg-animate .cg-card { animation: cgIn 0.35s ease both; }
+
+  .cg-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    padding: 1rem 2rem;
+    flex-shrink: 0;
+    border-top: 1px solid var(--line);
+    background: var(--paper);
+    font-size: 0.82rem;
+    color: var(--muted);
+  }
+  .cg-foot-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-weight: 900;
+    letter-spacing: 0.03em;
+    color: var(--orange);
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .cg-foot-cta:hover { text-decoration: underline; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cg-overlay, .cg-modal, .cg-card, .cg-logo img, .clients-cta-btn, .clients-cta-btn .cta-arrow { transition: none !important; }
+    .cg-grid.cg-animate .cg-card { animation: none !important; }
+    .cg-modal { transform: none !important; }
+    .clients-cta-btn:hover { transform: none; }
+  }
+
+  @media (max-width: 720px) {
+    .clients-cta-action { padding: 2rem 1.25rem; margin-top: 1.75rem; }
+    .clients-cta-btn { padding: 0.85rem 1.4rem; font-size: 0.74rem; }
+    .cg-head { padding: 1.4rem 1.25rem 1.2rem; }
+    .cg-close { top: 0.8rem; right: 0.8rem; }
+    .cg-tabs { padding: 0.85rem 1.25rem; }
+    .cg-body { padding: 1.25rem 1.25rem 1.5rem; }
+    .cg-grid { grid-template-columns: repeat(2, 1fr); gap: 0.7rem; }
+    .cg-foot { padding: 0.9rem 1.25rem; }
+  }
+
+  section { position: relative; }
+  .wrap {
+    width: min(1180px, calc(100% - 2.5rem));
+    margin: 0 auto;
+    padding: clamp(4.25rem, 7vw, 7rem) 0;
+  }
+
+  .section-head {
+    display: grid;
+    grid-template-columns: minmax(0, 0.85fr) minmax(280px, 0.7fr);
+    gap: 2rem;
+    align-items: end;
+    margin-bottom: 2.5rem;
+  }
+
+  .section-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+    margin-bottom: 0.9rem;
+    color: var(--orange);
+    font-size: 0.74rem;
+    font-weight: 850;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  .section-label::before {
+    content: "";
+    width: 28px;
+    height: 2px;
+    background: currentColor;
+  }
+
+  h2 {
+    color: var(--navy);
+    font-size: clamp(2.25rem, 4.6vw, 4.75rem);
+    line-height: 0.98;
+    letter-spacing: 0;
+  }
+
+  h2 span { color: var(--orange); }
+  .section-copy {
+    color: var(--muted);
+    max-width: 650px;
+    font-size: 1rem;
+  }
+
+  .split {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(340px, 0.9fr);
+    gap: clamp(2rem, 5vw, 5rem);
+    align-items: center;
+  }
+
+  .copy-stack p {
+    color: var(--muted);
+    margin-bottom: 1rem;
+  }
+
+  .copy-stack strong { color: var(--navy); }
+
+  .brand-panel,
+  .panel,
+  .card,
+  .metric-card,
+  .testimonial,
+  .course-card,
+  .track-card,
+  .tour-feature,
+  .data-panel,
+  .contact-card {
+    border-radius: var(--radius);
+  }
+
+  .brand-panel {
+    background: var(--white);
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow);
+    padding: clamp(1.5rem, 3vw, 2.5rem);
+  }
+
+  .brand-panel img {
+    width: min(260px, 100%);
+    margin: 0 auto 1.5rem;
+    border-radius: 12px;
+  }
+
+  .principles {
+    display: grid;
+    gap: 0.9rem;
+    margin-top: 1.25rem;
+  }
+
+  .principle {
+    display: grid;
+    grid-template-columns: 48px 1fr;
+    gap: 1rem;
+    align-items: start;
+    padding: 1rem;
+    background: #fbfaf6;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+  }
+
+  .token {
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    color: var(--orange);
+    background: var(--orange-soft);
+    border: 1px solid rgba(255, 106, 0, 0.2);
+    font-size: 0.78rem;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+
+  .token img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+  }
+
+  .principle h3,
+  .card h3,
+  .course-card h3,
+  .track-card h3,
+  .tour-feature h3,
+  .consulting-item h3 {
+    color: var(--navy);
+    font-size: 1rem;
+    line-height: 1.3;
+  }
+
+  .principle p,
+  .card p,
+  .course-card p,
+  .track-card p,
+  .tour-feature p,
+  .consulting-item p {
+    margin-top: 0.35rem;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+
+  .band {
+    background: var(--navy);
+    color: var(--white);
+  }
+
+  .band h2,
+  .band .section-copy,
+  .band .section-head p { color: var(--white); }
+  .band .section-copy,
+  .band .section-head p { opacity: 0.78; }
+
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: rgba(255,255,255,0.18);
+    border: 1px solid rgba(255,255,255,0.16);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .metric-card {
+    padding: 2.4rem 1.5rem;
+    background: rgba(255,255,255,0.06);
+    min-height: 170px;
+  }
+
+  .metric-card strong {
+    display: block;
+    color: var(--orange);
+    font-size: clamp(2.4rem, 5vw, 4.2rem);
+    line-height: 1;
+  }
+
+  .metric-card span {
+    display: block;
+    margin-top: 0.75rem;
+    color: rgba(255,255,255,0.78);
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+  }
+
+  .expertise-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  .card {
+    position: relative;
+    min-height: 260px;
+    padding: 1.5rem;
+    background: var(--white);
+    border: 1px solid var(--line);
+    box-shadow: 0 14px 32px rgba(16,36,55,0.06);
+    overflow: hidden;
+  }
+
+  .card::after,
+  .course-card::after {
+    content: "";
+    position: absolute;
+    left: 1.5rem;
+    right: 1.5rem;
+    bottom: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--orange), var(--navy));
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s ease;
+  }
+
+  .card:hover::after,
+  .course-card:hover::after { transform: scaleX(1); }
+
+  .card-number {
+    display: inline-flex;
+    margin-bottom: 1.25rem;
+    color: var(--orange);
+    font-size: 0.72rem;
+    font-weight: 900;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    margin-top: 1.1rem;
+  }
+
+  .tag {
+    padding: 0.32rem 0.55rem;
+    border-radius: 999px;
+    background: #f4f6f8;
+    color: var(--navy);
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .soft {
+    background:
+      linear-gradient(180deg, #fbfaf5, var(--warm));
+  }
+
+  .column-title {
+    color: var(--orange);
+    font-size: 0.75rem;
+    font-weight: 900;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .testimonial-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  .testimonial {
+    position: relative;
+    padding: 1.5rem;
+    background: var(--white);
+    border: 1px solid var(--line);
+    box-shadow: 0 14px 32px rgba(16,36,55,0.06);
+  }
+
+  .stars {
+    color: var(--orange);
+    letter-spacing: 0.12em;
+    font-size: 0.85rem;
+  }
+
+  .testimonial p {
+    margin-top: 1rem;
+    color: var(--muted);
+    font-size: 0.94rem;
+  }
+
+  .author {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 1.2rem;
+  }
+
+  .avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--orange) 0%, #c94f00 100%);
+    color: var(--white);
+    font-size: 1.1rem;
+    font-weight: 900;
+    letter-spacing: 0;
+    flex-shrink: 0;
+    box-shadow: 0 4px 14px rgba(255, 106, 0, 0.35);
+    border: 2px solid rgba(255, 255, 255, 0.6);
+    line-height: 1;
+  }
+
+  .author strong {
+    display: block;
+    color: var(--navy);
+  }
+
+  .author span {
+    display: block;
+    color: var(--muted);
+    font-size: 0.8rem;
+  }
+
+  .tabs {
+    display: flex;
+    margin-top: 2rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--white);
+  }
+
+  .tab {
+    flex: 1;
+    border: 0;
+    border-right: 1px solid var(--line);
+    padding: 1rem;
+    background: var(--white);
+    color: var(--navy);
+    cursor: pointer;
+    font-size: 0.78rem;
+    font-weight: 900;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .tab:last-child { border-right: 0; }
+  .tab.active {
+    background: var(--navy);
+    color: var(--white);
+  }
+
+  .stream-panel {
+    display: none;
+    margin-top: 2rem;
+  }
+
+  .stream-panel.active { display: block; }
+
+  .stream-intro {
+    max-width: 850px;
+    margin-bottom: 2rem;
+    padding: 1rem 1.2rem;
+    border-left: 3px solid var(--orange);
+    background: var(--white);
+    color: var(--muted);
+    border-radius: 0 var(--radius) var(--radius) 0;
+  }
+
+  .stream-intro.full-width {
+    max-width: 100%;
+    border-left: none;
+    border-top: 3px solid var(--orange);
+    border-radius: var(--radius);
+    padding: 1.4rem 1.6rem;
+    background: var(--white);
+    box-shadow: 0 4px 16px rgba(16,36,55,0.06);
+  }
+
+  .subhead {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 2.2rem 0 1.2rem;
+  }
+
+  .subhead span {
+    color: var(--orange);
+    font-size: 0.75rem;
+    font-weight: 900;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+
+  .subhead::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--line);
+  }
+
+  .courses-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  .courses-grid.three {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .course-card {
+    position: relative;
+    min-height: 310px;
+    padding: 1.4rem;
+    background: var(--white);
+    border: 1px solid var(--line);
+    box-shadow: 0 14px 32px rgba(16,36,55,0.05);
+    overflow: hidden;
+  }
+
+  .course-kicker {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 46px;
+    height: 34px;
+    margin-bottom: 1rem;
+    border-radius: 999px;
+    color: var(--orange);
+    background: var(--orange-soft);
+    font-size: 0.74rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+  }
+
+  .badge {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    padding: 0.3rem 0.55rem;
+    border-radius: 999px;
+    background: var(--navy);
+    color: var(--white);
+    font-size: 0.64rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--line);
+  }
+
+  .meta span {
+    color: var(--muted);
+    font-size: 0.76rem;
+  }
+
+  .meta strong {
+    display: block;
+    color: var(--navy);
+    font-size: 0.82rem;
+  }
+
+  .track-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .track-card {
+    padding: 1.5rem;
+    background: var(--white);
+    border: 1px solid var(--line);
+    box-shadow: 0 14px 32px rgba(16,36,55,0.05);
+  }
+
+  .track-badge {
+    display: inline-flex;
+    margin-bottom: 0.9rem;
+    padding: 0.35rem 0.65rem;
+    border-radius: 999px;
+    background: var(--orange-soft);
+    color: var(--orange);
+    font-size: 0.68rem;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .track-card ul {
+    display: grid;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    list-style: none;
+  }
+
+  .track-card li {
+    display: grid;
+    grid-template-columns: 18px 1fr;
+    gap: 0.5rem;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+
+  .track-card li::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    margin-top: 0.55rem;
+    border-radius: 50%;
+    background: var(--orange);
+  }
+
+  .certificate {
+    margin-top: 1rem;
+    padding: 0.9rem 1rem;
+    background: var(--orange-soft);
+    border: 1px solid rgba(255,106,0,0.22);
+    border-radius: var(--radius);
+    color: var(--navy);
+    font-size: 0.86rem;
+    font-weight: 760;
+  }
+
+  .tour-layout,
+  .consulting-layout,
+  .contact-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(340px, 0.86fr);
+    gap: clamp(2rem, 4vw, 4rem);
+    align-items: start;
+  }
+
+  .tour-features,
+  .consulting-list {
+    display: grid;
+    gap: 0.9rem;
+  }
+
+  .tour-feature,
+  .consulting-item {
+    display: grid;
+    grid-template-columns: 48px 1fr;
+    gap: 1rem;
+    padding: 1rem;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.14);
+  }
+
+  .tour-feature h3,
+  .tour-feature p,
+  .consulting-item h3,
+  .consulting-item p { color: var(--white); }
+  .tour-feature p,
+  .consulting-item p { opacity: 0.78; }
+
+  .tour-panel,
+  .data-panel {
+    padding: 1.5rem;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.16);
+    border-radius: var(--radius);
+  }
+
+  .audience {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 1rem 0 1.5rem;
+  }
+
+  .audience span,
+  .duration span {
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 999px;
+    padding: 0.38rem 0.7rem;
+    color: rgba(255,255,255,0.82);
+    font-size: 0.78rem;
+  }
+
+  .duration {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin-top: 1rem;
+  }
+
+  .data-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.8rem 0;
+    border-bottom: 1px solid rgba(255,255,255,0.14);
+    color: rgba(255,255,255,0.8);
+  }
+
+  .data-row strong { color: var(--orange); }
+
+  .bar {
+    margin-top: 1rem;
+  }
+
+  .bar-line {
+    height: 8px;
+    margin-top: 0.35rem;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.16);
+    overflow: hidden;
+  }
+
+  .bar-fill {
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, var(--orange), #ffb15d);
+  }
+
+  .contact-card {
+    background: var(--white);
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow);
+    padding: 1.5rem;
+  }
+
+  .contact-detail {
+    display: grid;
+    grid-template-columns: 46px 1fr;
+    gap: 1rem;
+    align-items: center;
+    margin-top: 1rem;
+  }
+
+  .contact-detail a {
+    text-decoration: none;
+  }
+
+  .contact-detail small {
+    display: block;
+    color: var(--muted);
+    font-size: 0.72rem;
+    font-weight: 850;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .contact-detail strong,
+  .contact-detail a {
+    color: var(--navy);
+    font-weight: 760;
+  }
+
+  .form {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  .form label {
+    display: grid;
+    gap: 0.4rem;
+    color: var(--navy);
+    font-size: 0.74rem;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .form input,
+  .form select,
+  .form textarea {
+    width: 100%;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: #fbfaf6;
+    color: var(--ink);
+    padding: 0.85rem 0.95rem;
+    outline: none;
+  }
+
+  .form textarea {
+    min-height: 130px;
+    resize: vertical;
+  }
+
+  .form input:focus,
+  .form select:focus,
+  .form textarea:focus {
+    border-color: var(--orange);
+    box-shadow: 0 0 0 4px rgba(255,106,0,0.1);
+  }
+
+  .form button {
+    border: 0;
+    cursor: pointer;
+  }
+
+  #formMsg {
+    display: none;
+    padding: 0.75rem;
+    border-radius: var(--radius);
+    text-align: center;
+    font-size: 0.86rem;
+    font-weight: 760;
+  }
+
+  /* ── Page Loader ── */
+  #page-loader {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: #1a1a2e;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 0;
+    transition: opacity 0.7s ease, visibility 0.7s ease;
+  }
+
+  #page-loader.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .loader-logo-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    animation: loaderFadeUp 0.6s ease forwards;
+  }
+
+  .loader-logo-wrap img {
+    width: 88px;
+    height: 88px;
+    object-fit: contain;
+    filter: drop-shadow(0 0 28px rgba(255,106,0,0.5));
+    animation: loaderPulse 1.8s ease-in-out infinite;
+  }
+
+  .loader-wordmark {
+    margin-top: 1rem;
+    font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+    font-size: 2rem;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+
+  .loader-wordmark .lw-oranje { color: #ff6a00; }
+  .loader-wordmark .lw-stride { color: #ffffff; }
+
+  .loader-tagline {
+    margin-top: 0.5rem;
+    font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.4);
+  }
+
+  .loader-bar-track {
+    width: 180px;
+    height: 3px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 999px;
+    margin-top: 2rem;
+    overflow: hidden;
+  }
+
+  .loader-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #ff6a00, #ffb15d);
+    border-radius: 999px;
+    animation: loaderBar 1.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    animation-delay: 0.2s;
+  }
+
+  @keyframes loaderFadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes loaderPulse {
+    0%, 100% { transform: scale(1);    filter: drop-shadow(0 0 28px rgba(255,106,0,0.5)); }
+    50%       { transform: scale(1.06); filter: drop-shadow(0 0 42px rgba(255,106,0,0.75)); }
+  }
+
+  @keyframes loaderBar {
+    from { width: 0%; }
+    to   { width: 100%; }
+  }
+
+  /* ── DataStride Popup ── */
+  .ds-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: rgba(10, 14, 26, 0.72);
+    backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.35s ease;
+  }
+
+  .ds-overlay.open {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .ds-card {
+    position: relative;
+    width: min(780px, 100%);
+    background: #ffffff;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 40px 80px rgba(10, 14, 26, 0.4);
+    transform: translateY(28px) scale(0.97);
+    transition: transform 0.38s cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+
+  .ds-overlay.open .ds-card {
+    transform: translateY(0) scale(1);
+  }
+
+  .ds-card-top {
+    background: #1a1a2e;
+    padding: 2rem 2rem 1.6rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .ds-card-top::before {
+    content: "";
+    position: absolute;
+    top: -60px;
+    right: -60px;
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,106,0,0.22), transparent 70%);
+  }
+
+  .ds-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.3rem 0.75rem;
+    border-radius: 999px;
+    background: rgba(255,106,0,0.18);
+    border: 1px solid rgba(255,106,0,0.4);
+    color: var(--orange);
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: 1.1rem;
+  }
+
+  .ds-pill::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--orange);
+    animation: pulse 1.8s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%       { opacity: 0.5; transform: scale(0.7); }
+  }
+
+  .ds-top-grid {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 1.1rem;
+    align-items: center;
+  }
+
+  .ds-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--orange), #c94f00);
+    display: grid;
+    place-items: center;
+    font-size: 1.6rem;
+    box-shadow: 0 8px 24px rgba(255,106,0,0.35);
+    flex-shrink: 0;
+  }
+
+  .ds-top-text h3 {
+    color: #ffffff;
+    font-size: 1.55rem;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+  }
+
+  .ds-top-text h3 span { color: var(--orange); }
+
+  .ds-top-text p {
+    margin-top: 0.3rem;
+    color: rgba(255,255,255,0.6);
+    font-size: 0.85rem;
+  }
+
+  .ds-card-body {
+    padding: 1.8rem 2rem 2rem;
+  }
+
+  .ds-desc {
+    color: #444;
+    font-size: 0.97rem;
+    line-height: 1.65;
+    margin-bottom: 1.5rem;
+    max-width: 680px;
+  }
+
+  .ds-features {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.9rem;
+    margin-bottom: 1.8rem;
+  }
+
+  .ds-feature {
+    padding: 1rem;
+    background: #f8f7f4;
+    border: 1px solid #eee;
+    border-radius: 10px;
+    border-top: 3px solid var(--orange);
+  }
+
+  .ds-feature-icon {
+    font-size: 1.3rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .ds-feature h4 {
+    color: #1a1a2e;
+    font-size: 0.85rem;
+    line-height: 1.3;
+    margin-bottom: 0.3rem;
+  }
+
+  .ds-feature p {
+    color: #777;
+    font-size: 0.78rem;
+    line-height: 1.5;
+  }
+
+  .ds-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .ds-dismiss {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #999;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 0.5rem 0.25rem;
+    transition: color 0.2s;
+  }
+
+  .ds-dismiss:hover { color: #555; }
+
+  .ds-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: rgba(255,255,255,0.7);
+    font-size: 1.1rem;
+    line-height: 1;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    transition: background 0.2s, color 0.2s;
+  }
+
+  .ds-close:hover {
+    background: rgba(255,255,255,0.22);
+    color: #fff;
+  }
+
+  /* Nav trigger button */
+  .nav-ds-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.5rem 0.9rem;
+    border-radius: 999px;
+    background: rgba(255,106,0,0.1);
+    border: 1.5px solid rgba(255,106,0,0.35);
+    color: var(--orange);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+    white-space: nowrap;
+  }
+
+  .nav-ds-btn:hover {
+    background: rgba(255,106,0,0.18);
+    border-color: var(--orange);
+  }
+
+  .nav-ds-btn svg { width: 13px; height: 13px; }
+
+  @media (max-width: 820px) {
+    .ds-features { grid-template-columns: 1fr; }
+    .ds-card-top, .ds-card-body { padding: 1.4rem; }
+    .nav-ds-btn { display: none; }
+  }
+
+  footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+    padding: 2rem clamp(1.25rem, 4vw, 4rem);
+    color: rgba(255,255,255,0.75);
+    background: #0b1f33;
+  }
+
+  footer strong {
+    color: var(--white);
+    font-size: 1rem;
+  }
+
+  footer span {
+    display: block;
+    margin-top: 0.3rem;
+    color: rgba(255,255,255,0.58);
+    font-size: 0.78rem;
+  }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(26px);
+    transition: opacity 0.65s cubic-bezier(0.22, 0.61, 0.36, 1), transform 0.65s cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Staggered children for grids */
+  .expertise-grid .card.visible:nth-child(2) { transition-delay: 0.08s; }
+  .expertise-grid .card.visible:nth-child(3) { transition-delay: 0.16s; }
+  .expertise-grid .card.visible:nth-child(4) { transition-delay: 0.08s; }
+  .expertise-grid .card.visible:nth-child(5) { transition-delay: 0.16s; }
+  .expertise-grid .card.visible:nth-child(6) { transition-delay: 0.24s; }
+  .testimonial-grid .testimonial.visible:nth-child(2) { transition-delay: 0.1s; }
+  .testimonial-grid .testimonial.visible:nth-child(3) { transition-delay: 0.2s; }
+
+  /* ── Hamburger button ── */
+  .hamburger {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    width: 44px;
+    height: 44px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: var(--radius);
+    flex-shrink: 0;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .hamburger span {
+    display: block;
+    height: 2px;
+    background: #1a1a2e;
+    border-radius: 99px;
+    transition: transform 0.28s ease, opacity 0.28s ease, width 0.28s ease;
+    transform-origin: center;
+  }
+
+  .hamburger span:nth-child(1) { width: 22px; }
+  .hamburger span:nth-child(2) { width: 15px; margin-left: auto; }
+  .hamburger span:nth-child(3) { width: 22px; }
+
+  .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); width: 22px; }
+  .hamburger.open span:nth-child(2) { opacity: 0; width: 0; }
+  .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); width: 22px; }
+
+  /* ── Mobile drawer ── */
+  .mobile-drawer {
+    position: fixed;
+    inset: 0;
+    z-index: 48;
+    pointer-events: none;
+    visibility: hidden;
+  }
+
+  .mobile-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(10, 14, 26, 0.55);
+    backdrop-filter: blur(3px);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .mobile-panel {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: min(300px, 84vw);
+    background: #1a1a2e;
+    padding: 4.5rem 1.25rem 2.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    transform: translateX(100%);
+    transition: transform 0.34s cubic-bezier(0.22, 0.61, 0.36, 1);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .mobile-drawer.open { pointer-events: all; visibility: visible; }
+  .mobile-drawer.open .mobile-overlay { opacity: 1; }
+  .mobile-drawer.open .mobile-panel   { transform: translateX(0); }
+
+  .mobile-panel a,
+  .m-link {
+    display: flex;
+    align-items: center;
+    padding: 0.88rem 0.9rem;
+    border-radius: var(--radius);
+    color: rgba(255,255,255,0.75);
+    font-size: 0.86rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-decoration: none;
+    text-transform: uppercase;
+    background: none;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+    transition: background 0.18s, color 0.18s;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .mobile-panel a:active,
+  .m-link:active { background: rgba(255,255,255,0.08); color: #fff; }
+
+  .mobile-sep {
+    height: 1px;
+    background: rgba(255,255,255,0.1);
+    margin: 0.35rem 0;
+  }
+
+  .m-cta {
+    margin-top: 0.6rem !important;
+    background: var(--orange) !important;
+    color: #fff !important;
+    justify-content: center;
+    border-radius: 999px !important;
+  }
+
+  .m-ds {
+    color: var(--orange) !important;
+    border: 1.5px solid rgba(255,106,0,0.38);
+    justify-content: center;
+    border-radius: 999px;
+  }
+
+  /* ─────────────────────────────────────
+     BREAKPOINT: ≤1060px (tablets, small laptops)
+  ───────────────────────────────────── */
+  @media (max-width: 1060px) {
+    .hero {
+      grid-template-columns: 1fr;
+      grid-template-areas:
+        "copy"
+        "visual"
+        "metrics";
+      min-height: auto;
+      padding-bottom: 4rem;
+    }
+    .hero-visual { min-height: auto; }
+    .hero-visual img {
+      width: min(420px, 100%);
+      height: auto;
+      object-fit: contain;
+      object-position: center;
+    }
+    .hero-metrics {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      max-width: none;
+      margin-top: 0;
+    }
+    .courses-grid.three,
+    .expertise-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  /* ─────────────────────────────────────
+     BREAKPOINT: ≤820px (phones, small tablets)
+  ───────────────────────────────────── */
+  @media (max-width: 820px) {
+    /* Nav */
+    .nav {
+      position: sticky;
+      top: 0;
+      padding: 0.9rem clamp(1rem, 4vw, 1.75rem);
+      align-items: center;
+    }
+    .nav-links { display: none; }
+    .hamburger  { display: flex; }
+
+    /* Hero */
+    .hero {
+      min-height: auto;
+      padding-top: 5.5rem;
+      padding-bottom: 2.5rem;
+      gap: 2rem;
+    }
+    .hero::before { display: none; }
+    .hero-metrics {
+      position: static;
+      margin: 0.5rem 0 0;
+      max-width: none;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    /* Stats band — 2×2 on mobile */
+    .metrics-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    /* Section grids → single column */
+    .section-head,
+    .split,
+    .testimonial-grid,
+    .courses-grid,
+    .courses-grid.three,
+    .expertise-grid,
+    .track-grid,
+    .tour-layout,
+    .consulting-layout,
+    .contact-layout,
+    .form-row {
+      grid-template-columns: 1fr;
+    }
+
+    /* Cards — remove fixed min-height */
+    .card, .course-card, .track-card { min-height: auto; }
+
+    /* Tabs → vertical */
+    .tabs { flex-direction: column; }
+    .tab  { border-right: 0; border-bottom: 1px solid var(--line); }
+
+    /* Wrap — slightly tighter */
+    .wrap { width: calc(100% - 2rem); }
+
+    /* Footer */
+    footer {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+
+    /* DataStride popup */
+    .ds-card-top, .ds-card-body { padding: 1.4rem; }
+    .ds-features { grid-template-columns: 1fr; gap: 0.7rem; }
+    .ds-card { max-height: 90vh; overflow-y: auto; }
+  }
+
+  /* ─────────────────────────────────────
+     BREAKPOINT: ≤640px (phones, portrait)
+  ───────────────────────────────────── */
+  @media (max-width: 640px) {
+    /* Wordmark — scale down so it doesn't overflow */
+    .hero-wordmark { font-size: clamp(2.4rem, 10.5vw, 3.6rem); }
+    .hero h1       { font-size: clamp(1.1rem,  4.8vw, 1.55rem); line-height: 1.2; }
+    h2             { font-size: clamp(1.8rem,  7.5vw, 2.25rem); }
+    .hero-sub      { font-size: 0.94rem; }
+    .motto         { font-size: 0.95rem; }
+
+    /* Hero layout */
+    .hero { padding-top: 4.5rem; gap: 1.5rem; }
+    .hero-visual img { width: min(320px, 100%); }
+
+    /* Hero metrics */
+    .hero-metric strong { font-size: 1.3rem; }
+    .hero-metric span   { font-size: 0.66rem; }
+
+    /* Stats band */
+    .metric-card { padding: 1.6rem 1.1rem; min-height: auto; }
+    .metric-card strong { font-size: clamp(1.9rem, 6.5vw, 2.4rem); }
+
+    /* Cards */
+    .card        { padding: 1.2rem; }
+    .course-card { padding: 1.1rem; }
+    .tour-panel, .data-panel { padding: 1.2rem; }
+    .contact-card { padding: 1.2rem; }
+    .brand-panel  { padding: 1.4rem; }
+
+    /* Principle + feature items */
+    .principle        { grid-template-columns: 40px 1fr; gap: 0.7rem; padding: 0.85rem; }
+    .tour-feature,
+    .consulting-item  { grid-template-columns: 40px 1fr; gap: 0.7rem; padding: 0.85rem; }
+
+    /* Prevent iOS auto-zoom on form focus */
+    .form input,
+    .form select,
+    .form textarea { font-size: 1rem; }
+
+    /* Tabs font */
+    .tab { font-size: 0.72rem; padding: 0.9rem; letter-spacing: 0.07em; }
+
+    /* Section label */
+    .section-label { font-size: 0.68rem; }
+
+    /* Tags */
+    .tags { gap: 0.35rem; }
+    .tag  { font-size: 0.62rem; padding: 0.26rem 0.48rem; }
+
+    /* Tour audience */
+    .audience span { font-size: 0.72rem; padding: 0.3rem 0.55rem; }
+
+    /* DataStride popup — tighter */
+    .ds-card-top, .ds-card-body { padding: 1.1rem; }
+    .ds-top-grid { gap: 0.7rem; }
+    .ds-top-text h3 { font-size: 1.2rem; }
+    .ds-icon  { width: 46px; height: 46px; font-size: 1.3rem; }
+    .ds-desc  { font-size: 0.88rem; margin-bottom: 1.1rem; }
+    .ds-feature { padding: 0.8rem; }
+    .ds-actions { flex-direction: column; gap: 0.65rem; }
+    .ds-actions .btn { width: 100%; justify-content: center; }
+    .ds-actions .ds-dismiss { text-align: center; }
+
+    /* Loader */
+    .loader-logo-wrap img { width: 70px; height: 70px; }
+    .loader-wordmark { font-size: 1.55rem; }
+    .loader-bar-track { width: 150px; }
+
+    /* Footer brand */
+    footer strong { font-size: 0.9rem; }
+    footer span   { font-size: 0.74rem; }
+  }
+
+  /* ─────────────────────────────────────
+     BREAKPOINT: ≤420px (very small phones)
+  ───────────────────────────────────── */
+  @media (max-width: 420px) {
+    .hero-wordmark { font-size: clamp(1.9rem, 10vw, 2.4rem); }
+    .hero h1       { font-size: clamp(0.95rem, 4.4vw, 1.1rem); }
+    h2             { font-size: clamp(1.6rem,  8.5vw, 1.8rem); }
+
+    .hero-metric   { padding: 0.8rem 0.7rem; }
+    .hero-metric strong { font-size: 1.2rem; }
+    .hero-metric span   { font-size: 0.6rem; letter-spacing: 0.07em; }
+
+    .wrap { width: calc(100% - 1.5rem); }
+
+    .nav { padding: 0.75rem 1rem; }
+    .brand-name strong { font-size: 0.95rem; }
+    .brand-mark { width: 38px; height: 38px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Page Loader -->
+<div id="page-loader" aria-hidden="true">
+  <div class="loader-logo-wrap">
+    <img src="images/cropped_logo.jpg" alt="">
+    <div class="loader-wordmark"><span class="lw-oranje">Oranje</span><span class="lw-stride">Stride</span></div>
+    <div class="loader-tagline">Stride into Decision Intelligence</div>
+  </div>
+  <div class="loader-bar-track"><div class="loader-bar-fill"></div></div>
+</div>
+
+<div class="site-shell">
+  <nav class="nav" aria-label="Primary navigation">
+    <a href="#" class="brand" aria-label="OranjeStride home">
+      <span class="brand-mark"><img src="images/cropped_logo.jpg" alt="OranjeStride" loading="eager"></span>
+      <span class="brand-name"><strong><span class="w-oranje">Oranje</span><span class="w-stride">Stride</span></strong></span>
+    </a>
+    <div class="nav-links">
+      <a href="#about">About</a>
+      <a href="#expertise">Expertise</a>
+      <a href="#clients">Clients</a>
+      <a href="#courses">Programmes</a>
+      <a href="#india-tour">India Tour</a>
+      <a href="#consulting">Consulting</a>
+      <button class="nav-ds-btn" onclick="openDSPopup()" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4.03 3 9 3s9-1.34 9-3"/></svg>
+        DataStride
+      </button>
+      <a href="#contact" class="nav-cta">Get In Touch</a>
+    </div>
+    <button class="hamburger" id="hamburger-btn" aria-label="Open menu" aria-expanded="false" type="button">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <!-- Mobile drawer -->
+  <div class="mobile-drawer" id="mobile-drawer" aria-hidden="true">
+    <div class="mobile-overlay" id="mobile-overlay"></div>
+    <nav class="mobile-panel" aria-label="Mobile navigation">
+      <a href="#about"      class="m-nav-link">About</a>
+      <a href="#expertise"  class="m-nav-link">Expertise</a>
+      <a href="#clients"    class="m-nav-link">Clients</a>
+      <a href="#courses"    class="m-nav-link">Programmes</a>
+      <a href="#india-tour" class="m-nav-link">India Tour</a>
+      <a href="#consulting" class="m-nav-link">Consulting</a>
+      <div class="mobile-sep"></div>
+      <button class="m-link m-ds" onclick="openDSPopup();closeMobileNav();" type="button">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:0.5rem"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4.03 3 9 3s9-1.34 9-3"/></svg>
+        DataStride
+      </button>
+      <a href="#contact" class="m-link m-cta m-nav-link">Get In Touch</a>
+    </nav>
+  </div>
+
+  <header class="hero">
+    <div class="hero-copy reveal">
+      <div class="eyebrow">Generative AI · Machine Learning · Analytics</div>
+      <span class="hero-wordmark"><span class="w-oranje">Oranje</span><span class="w-stride">Stride</span></span>
+      <h1>Stride into <span>Decision Intelligence</span></h1>
+      <p class="hero-sub">India's premier Gen AI & Data Science training consultancy - turning complex algorithms into competitive advantage for professionals, executives, and institutions.</p>
+      <p class="motto">From data to decisions. From decisions to outcomes.</p>
+      <div class="hero-actions">
+        <a href="#courses" class="btn btn-primary">Explore Programmes</a>
+        <a href="#contact" class="btn btn-secondary">Work With Us</a>
+      </div>
+    </div>
+    <div class="hero-visual reveal">
+      <img src="images/no_background_logo.jpg" alt="OranjeStride — Stride into Decision Intelligence" loading="eager">
+    </div>
+    <div class="hero-metrics" aria-label="OranjeStride highlights">
+      <div class="hero-metric"><strong>1000+</strong><span>Professionals Trained</span></div>
+      <div class="hero-metric"><strong>4.8/5</strong><span>Feedback Score</span></div>
+      <div class="hero-metric"><strong>90%+</strong><span>Post-Training Adoption</span></div>
+      <div class="hero-metric"><strong>85%+</strong><span>Cohort Completion</span></div>
+    </div>
+  </header>
+</div>
+
+<!-- Client gallery modal -->
+<div class="cg-overlay" id="client-gallery" role="dialog" aria-modal="true" aria-labelledby="cg-title" aria-hidden="true">
+  <div class="cg-modal">
+    <div class="cg-head">
+      <button class="cg-close" type="button" onclick="closeClientGallery()" aria-label="Close client gallery">✕</button>
+      <div class="cg-eyebrow">Our Clients &amp; Partners</div>
+      <h3 id="cg-title">Trusted by <span>Elite Institutions</span></h3>
+      <p class="cg-sub">From India's premier management schools to Fortune 500 leadership teams and government ministries — explore the organisations that build capability with OranjeStride.</p>
+    </div>
+    <div class="cg-tabs" role="tablist" aria-label="Filter clients by category">
+      <button class="cg-tab active" type="button" role="tab" aria-selected="true"  data-filter="all"      onclick="filterClients(this)">All <span>16</span></button>
+      <button class="cg-tab"        type="button" role="tab" aria-selected="false" data-filter="academic" onclick="filterClients(this)">Academic &amp; Training <span>9</span></button>
+      <button class="cg-tab"        type="button" role="tab" aria-selected="false" data-filter="corporate" onclick="filterClients(this)">Corporate &amp; Government <span>7</span></button>
+    </div>
+    <div class="cg-body">
+      <div class="cg-grid cg-animate" id="cg-grid" data-filter="all"></div>
+    </div>
+    <div class="cg-foot">
+      <span>Want your organisation on this list?</span>
+      <a href="#contact" class="cg-foot-cta" onclick="closeClientGallery()">Partner with us&nbsp;→</a>
+    </div>
+  </div>
+</div>
+
+<section id="about">
+  <div class="wrap split">
+    <div class="copy-stack reveal">
+      <div class="section-label">About OranjeStride</div>
+      <h2>Nothing Is <span>Unattainable</span></h2>
+      <p>OranjeStride is India's foremost AI &amp; Data Science training consultancy, built on the conviction that every professional deserves access to world-class education in the technologies reshaping the world.</p>
+      <p>With over <strong>11 years of domain expertise</strong> and a proven track record across premier institutions, corporates, and government bodies, we deliver training that doesn't just inform - it <strong>transforms</strong>.</p>
+      <p>From GenAI bootcamps for C-suite executives to foundational ML programmes for fresh graduates, our curriculum is engineered for <strong>measurable outcomes</strong> - not just certificates.</p>
+      <div class="hero-actions"><a href="#courses" class="btn btn-primary">View Our Programmes</a></div>
+    </div>
+    <div class="brand-panel reveal">
+      <img src="images/no_background_logo.jpg" alt="OranjeStride logo" loading="lazy" decoding="async">
+      <div class="principles">
+        <div class="principle"><span class="token">01</span><div><h3>Relevance With Industry</h3><p>Curriculum crafted by practitioners mapped to real job roles in AI, Data Engineering, and Analytics.</p></div></div>
+        <div class="principle"><span class="token">02</span><div><h3>Expert Experienced Faculty</h3><p>Dedicated data scientists and educators with hundreds of hours of live training delivery across elite institutions.</p></div></div>
+        <div class="principle"><span class="token">03</span><div><h3>Analytics For All</h3><p>Case-study methodology ensuring participants from finance, ops, and HR grasp practical applications immediately.</p></div></div>
+        <div class="principle"><span class="token">04</span><div><h3>Certified Analytics Professional</h3><p>Our OAP certification helps professionals stand apart in a crowded talent market.</p></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="stats">
+  <div class="wrap">
+    <div class="metrics-grid">
+      <div class="metric-card reveal"><strong>1000+</strong><span>Professionals &amp; Students Trained</span></div>
+      <div class="metric-card reveal"><strong>4.8/5</strong><span>Average Feedback Score</span></div>
+      <div class="metric-card reveal"><strong>90%+</strong><span>Post-Training Skill Adoption</span></div>
+      <div class="metric-card reveal"><strong>15+</strong><span>Premier Institutional Clients</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="expertise">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div>
+        <div class="section-label">What We Do</div>
+        <h2>Areas of <span>Deep Expertise</span></h2>
+      </div>
+      <p class="section-copy">End-to-end capability across the modern AI stack - from foundational statistics to cutting-edge agentic systems.</p>
+    </div>
+    <div class="expertise-grid">
+      <article class="card reveal"><span class="card-number">01</span><h3>Generative AI &amp; Agentic AI</h3><p>LLMs, prompt engineering, RAG architectures, AI agents, and autonomous workflows. Practical frameworks for leadership and technical teams alike.</p><div class="tags"><span class="tag">LLMs</span><span class="tag">RAG</span><span class="tag">Agents</span><span class="tag">Prompt Eng.</span></div></article>
+      <article class="card reveal"><span class="card-number">02</span><h3>Machine Learning &amp; Statistical Modeling</h3><p>Supervised &amp; unsupervised learning, regression, classification, ensemble methods, and model interpretability for real-world deployment.</p><div class="tags"><span class="tag">Scikit-learn</span><span class="tag">XGBoost</span><span class="tag">Python/R</span><span class="tag">Stats</span></div></article>
+      <article class="card reveal"><span class="card-number">03</span><h3>Data Science &amp; Advanced Analytics</h3><p>End-to-end data pipelines, EDA, feature engineering - applied to fraud detection, risk scoring, and financial forecasting.</p><div class="tags"><span class="tag">Pandas</span><span class="tag">SQL</span><span class="tag">Forecasting</span><span class="tag">A/B Testing</span></div></article>
+      <article class="card reveal"><span class="card-number">04</span><h3>Business Intelligence &amp; Visualization</h3><p>Tableau, Power BI, and Python visualization labs. Executive dashboards that turn raw data into strategic decision support.</p><div class="tags"><span class="tag">Tableau</span><span class="tag">Power BI</span><span class="tag">Plotly</span><span class="tag">Dashboards</span></div></article>
+      <article class="card reveal"><span class="card-number">05</span><h3>Corporate &amp; Executive AI Strategy</h3><p>Custom workshops for C-suite and senior leadership on AI adoption, ROI mapping, and transformation roadmaps with measurable impact.</p><div class="tags"><span class="tag">Strategy</span><span class="tag">AI Roadmap</span><span class="tag">Change Mgmt</span></div></article>
+      <article class="card reveal"><span class="card-number">06</span><h3>Deep Learning &amp; Neural Networks</h3><p>CNNs, RNNs, Transformers, and computer vision. Learning paths from architecture fundamentals to fine-tuning and deployment.</p><div class="tags"><span class="tag">TensorFlow</span><span class="tag">PyTorch</span><span class="tag">Transformers</span><span class="tag">CV</span></div></article>
+    </div>
+  </div>
+</section>
+
+<section class="soft" id="clients">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div>
+        <div class="section-label">Our Reach</div>
+        <h2>Trusted By <span>Elite Institutions</span></h2>
+      </div>
+      <p class="section-copy">From India's premier management schools to Fortune 500 leadership teams and government ministries - OranjeStride's programmes build capability where it matters most.</p>
+    </div>
+    <div class="clients-cta-action reveal">
+      <button class="clients-cta-btn" type="button" id="view-clients-btn" onclick="openClientGallery()"
+              aria-haspopup="dialog" aria-controls="client-gallery">
+        <svg class="cta-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-5h6v5"/></svg>
+        View Our Clients &amp; Partners
+        <svg class="cta-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </button>
+      <span class="clients-cta-hint">16 organisations across academia, enterprise &amp; government — explore the full roster.</span>
+    </div>
+  </div>
+</section>
+
+<section id="testimonials">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div>
+        <div class="section-label">What Learners Say</div>
+        <h2>Results That <span>Speak</span></h2>
+      </div>
+    </div>
+    <div class="testimonial-grid">
+      <article class="testimonial reveal"><div class="stars">★★★★★</div><p>When theoretical concepts go hand in hand with practical implementation, the mind forces itself to explore beyond the vanilla concepts. Exactly the experience I had.</p><div class="author"><div class="avatar">D</div><div><strong>Dilpreet</strong><span>Sopra Steria</span></div></div></article>
+      <article class="testimonial reveal"><div class="stars">★★★★★</div><p>One of the best teachers I have ever had. Your teaching style is so unique - you make difficult things easy to understand. I feel privileged to have been guided by you.</p><div class="author"><div class="avatar">A</div><div><strong>Ashish Aggarwal</strong><span>Shri Vishwakarma Skill University</span></div></div></article>
+      <article class="testimonial reveal"><div class="stars">★★★★★</div><p>A great hands-on introduction to ML. If you want to understand where ML applies in real life, start here. The R &amp; Python coverage is exceptional and immediately actionable.</p><div class="author"><div class="avatar">L</div><div><strong>Lakshay Guglani</strong><span>Maharaja Agrasen College of Engg.</span></div></div></article>
+    </div>
+  </div>
+</section>
+
+<section class="soft" id="courses">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div>
+        <div class="section-label">Programmes</div>
+        <h2>Our <span>Training Streams</span></h2>
+      </div>
+      <p class="section-copy">Three streams, one goal — turning knowledge into real capability. Each is built for a specific audience, delivered by people who've done the work, not just taught it.</p>
+    </div>
+
+    <div class="tabs reveal" role="tablist" aria-label="Training streams">
+      <button class="tab active" type="button" onclick="switchStream('corporate', this)">Corporate &amp; Leadership Training</button>
+      <button class="tab" type="button" onclick="switchStream('university', this)">University / College Programmes</button>
+    </div>
+
+    <div class="stream-panel active" id="stream-corporate">
+      <p class="stream-intro">Your team doesn't need to become data scientists. They just need to know how to use data to make better calls. Our corporate training works across two levels — practical, sector-specific programmes for managers and functional teams, and strategic AI fluency sessions for the leaders making the big decisions. Whether it's the boardroom or the operations floor, we meet people where they are.</p>
+      <div class="subhead"><span>For Managers &amp; Functional Teams — Sector-Specific Training</span></div>
+      <div class="courses-grid three">
+        <article class="course-card"><span class="badge">High Demand</span><h3>Banking &amp; Financial Services</h3><p>Your teams are sitting on a goldmine of data and not fully using it. We change that — helping BFSI professionals move from instinct to insight, using ML for credit risk, fraud detection, customer segmentation, and forecasting. Practical tools, real datasets, immediate takeaways.</p><div class="tags"><span class="tag">Credit Risk</span><span class="tag">Fraud ML</span><span class="tag">Forecasting</span><span class="tag">Gen AI</span></div><div class="meta"><span><strong>Half-day to 5-day</strong>Duration</span><span><strong>On-site / Virtual</strong>Mode</span></div></article>
+        <article class="course-card"><h3>Healthcare &amp; Pharma</h3><p>Healthcare decisions are only as good as the data behind them. We help clinical and administrative teams make sense of patient data, spot inefficiencies early, and understand how AI is reshaping diagnostics and operations — without the technical overwhelm.</p><div class="tags"><span class="tag">Patient Analytics</span><span class="tag">Ops ML</span><span class="tag">AI Strategy</span></div><div class="meta"><span><strong>Half-day to 5-day</strong>Duration</span><span><strong>On-site / Virtual</strong>Mode</span></div></article>
+        <article class="course-card"><h3>Insurance</h3><p>From underwriting to claims, every part of insurance is touched by data. This programme gives your teams the skills to build smarter risk models, predict churn before it happens, and price policies with more confidence — hands-on, with real insurance scenarios throughout.</p><div class="tags"><span class="tag">Claims AI</span><span class="tag">Churn Models</span><span class="tag">Risk Pricing</span></div><div class="meta"><span><strong>Half-day to 5-day</strong>Duration</span><span><strong>On-site / Virtual</strong>Mode</span></div></article>
+        <article class="course-card"><h3>FMCG &amp; Retail</h3><p>Shelf space is expensive. Getting demand forecasting wrong is more so. We help retail and FMCG teams apply AI to the decisions that directly affect margins — forecasting, customer lifetime value, supply chain optimisation, and basket analysis — tied to outcomes you can measure.</p><div class="tags"><span class="tag">Demand Forecast</span><span class="tag">CLV</span><span class="tag">Supply Chain AI</span></div><div class="meta"><span><strong>Half-day to 5-day</strong>Duration</span><span><strong>On-site / Virtual</strong>Mode</span></div></article>
+        <article class="course-card"><h3>Government &amp; Public Sector</h3><p>Data-driven governance isn't just possible — it's overdue. We work with senior bureaucrats and policy teams to build practical AI literacy and dashboard capabilities, so decisions are backed by evidence, not just experience. Delivered as focused executive workshops — no fluff, just what's useful.</p><div class="tags"><span class="tag">Policy Analytics</span><span class="tag">BI Dashboards</span><span class="tag">AI Fluency</span></div><div class="meta"><span><strong>Half-day to 5-day</strong>Duration</span><span><strong>On-site / Virtual</strong>Mode</span></div></article>
+        <article class="course-card"><h3>Media, Tech &amp; Telecom</h3><p>Audiences are fragmented, attention is scarce, and the teams winning are the ones using data to stay ahead. We help media, tech, and telecom teams harness AI for audience intelligence, content recommendation, and workflow automation — practical skills for the teams driving your digital agenda.</p><div class="tags"><span class="tag">Gen AI</span><span class="tag">Audience AI</span><span class="tag">NLP</span><span class="tag">Automation</span></div><div class="meta"><span><strong>Half-day to 5-day</strong>Duration</span><span><strong>On-site / Virtual</strong>Mode</span></div></article>
+      </div>
+
+      <div class="subhead"><span>For C-Suite &amp; Senior Leaders — Strategic AI Programmes</span></div>
+      <p class="stream-intro full-width">You don't need to understand how the model works. You need to understand what it can do for your organisation, what to invest in, and what questions to ask. These programmes are built for exactly that — no code, no jargon, just the clarity and confidence to lead AI transformation in your organisation. Delivered in half-day to 2-day formats, at your office or virtually.</p>
+      <div class="courses-grid">
+        <article class="course-card"><span class="badge">Flagship</span><h3>AI for Leaders — Strategic Fluency</h3><p>The most common mistake leaders make is either over-investing in AI hype or dismissing it too quickly. This programme gives you a clear-eyed view of what Generative AI and ML actually do, where they genuinely create leverage, how to evaluate vendors, and how to build a culture that makes AI stick — all without writing a single line of code.</p><div class="tags"><span class="tag">Gen AI Strategy</span><span class="tag">AI ROI</span><span class="tag">Change Management</span><span class="tag">Vendor Evaluation</span></div><div class="meta"><span><strong>Half-day to 2-day</strong>Duration</span><span><strong>C-Suite / Board</strong>Level</span><span><strong>On-site / Virtual</strong>Mode</span></div></article>
+        <article class="course-card"><h3>AI Adoption Roadmap Workshop</h3><p>Rather than a theoretical overview, this is a working session. You leave with a concrete, prioritised AI adoption plan for your organisation — covering where to start, what to build vs. buy, how to handle governance and ethics, and how to track whether it's working. The output is a board-ready AI strategy document.</p><div class="tags"><span class="tag">Roadmap Design</span><span class="tag">Build vs Buy</span><span class="tag">AI Governance</span><span class="tag">Impact KPIs</span></div><div class="meta"><span><strong>1-day to 2-day</strong>Duration</span><span><strong>Leadership Team</strong>Level</span><span><strong>On-site preferred</strong>Mode</span></div></article>
+        <article class="course-card"><h3>Executive Analytics for Decision-Makers</h3><p>When a data scientist presents findings to leadership, the leader who can ask the right questions has a real advantage. This programme gives directors and VPs the tools to interpret dashboards critically, challenge analytical assumptions, and make smarter calls when the data is pointing in a particular direction.</p><div class="tags"><span class="tag">Data Interpretation</span><span class="tag">BI Dashboards</span><span class="tag">KPI Design</span><span class="tag">Model Literacy</span></div><div class="meta"><span><strong>Half-day to 2-day</strong>Duration</span><span><strong>Directors / VPs</strong>Level</span><span><strong>On-site / Virtual</strong>Mode</span></div></article>
+        <article class="course-card"><h3>Strategic Innovation with AI</h3><p>The organisations growing fastest right now are using AI to see around corners — spotting market shifts before competitors, identifying white spaces, and making strategic bets earlier. This workshop helps senior leaders use AI-driven intelligence to inform the big moves, not just the operational ones.</p><div class="tags"><span class="tag">AI Market Intel</span><span class="tag">Competitive AI</span><span class="tag">Opportunity Mapping</span><span class="tag">Strategy Design</span></div><div class="meta"><span><strong>1-day to 2-day</strong>Duration</span><span><strong>Senior Leadership</strong>Level</span><span><strong>On-site / Virtual</strong>Mode</span></div></article>
+      </div>
+    </div>
+
+    <div class="stream-panel" id="stream-university">
+      <p class="stream-intro">Most students graduate with theory but freeze up when given a real dataset. We fix that. OranjeStride works directly with colleges and universities to deliver programmes taught by practitioners — people who use these tools professionally, not just academically. Every student leaves with skills they can apply immediately, a portfolio project they're proud of, and a certificate that carries genuine institutional weight.</p>
+      <div class="track-grid">
+        <article class="track-card"><span class="track-badge">Undergraduate Track</span><h3>Data Analytics for Undergraduates</h3><p>BBA · B.Com · B.Sc · B.Tech · Any Stream</p><ul><li>Excel from basics to advanced — the tool every analyst still opens first</li><li>MySQL &amp; databases — understanding the foundations of how data is stored and queried</li><li>Tableau &amp; Power BI — building dashboards that actually tell a story</li><li>Python for data — handling, cleaning, and visualising real datasets</li><li>Business Statistics — the thinking behind every insight</li><li>Capstone: a live business case drawn from your own sector</li></ul><div class="certificate">Certificate jointly signed by OranjeStride &amp; a university of repute in India</div></article>
+        <article class="track-card"><span class="track-badge">Postgraduate / MBA Track</span><h3>Business Analytics &amp; ML for Managers</h3><p>MBA · M.Com · M.Sc · PGDM · Any PG Programme</p><ul><li>Python for business analytics — pandas, numpy, and seaborn in practice</li><li>Regression models for finance and strategy — going beyond gut feel</li><li>ML in action — Random Forest, clustering, and forecasting on real datasets</li><li>Credit risk, churn, and revenue modelling — industry problems, real data</li><li>Tableau &amp; Power BI — reporting that makes a case to the board</li><li>Capstone: a sector-mapped ML project you can walk into an interview with</li></ul><div class="certificate">Certificate jointly signed by OranjeStride &amp; a university of repute in India</div></article>
+      </div>
+      <div class="courses-grid">
+        <article class="course-card"><span class="badge">Flagship</span><h3>Business Analytics with Python</h3><p>This is the programme students wish existed when they first opened Python and had no idea what to do with it. We take you through the full analytics journey — wrangling messy data, building intuition through EDA, running regression and classification models, and forecasting. Every concept is tied to a real business scenario so it actually sticks.</p><div class="tags"><span class="tag">pandas / numpy</span><span class="tag">Regression</span><span class="tag">Random Forest</span><span class="tag">K-Means</span><span class="tag">ARIMA</span><span class="tag">ROC-AUC</span></div><div class="meta"><span><strong>Instructor-Led</strong>Format</span><span><strong>PG / MBA</strong>Level</span><span><strong>Blended</strong>Mode</span></div></article>
+        <article class="course-card"><h3>Generative AI &amp; Agentic AI Bootcamp</h3><p>The job market is changing faster than most curricula. This bootcamp gets students ready for AI-first workplaces — not by teaching theory, but by building things. From how LLMs work to building RAG pipelines, prompt engineering, and deploying AI agents, students leave knowing how to actually work with the tools shaping every industry right now.</p><div class="tags"><span class="tag">LLMs</span><span class="tag">RAG</span><span class="tag">Agents</span><span class="tag">Prompt Eng.</span><span class="tag">MCP</span><span class="tag">Deployment</span></div><div class="meta"><span><strong>Live + Hands-On</strong>Format</span><span><strong>UG / PG</strong>Level</span><span><strong>Online / Offline</strong>Mode</span></div></article>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="india-tour">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div>
+        <div class="section-label">International Programme</div>
+        <h2>India AI <span>Learning Tour</span></h2>
+      </div>
+      <p class="section-copy">Experience AI &amp; Data Science education at its source. An immersive learning journey in India - combining world-class curriculum, hands-on labs, and the academic credibility of a co-signed certificate from a university of repute in India.</p>
+    </div>
+    <div class="tour-layout">
+      <div class="tour-features reveal">
+        <article class="tour-feature"><span class="token"><img src="images/india_logo.jpg" alt="India"></span><div><h3>Come to India. Learn at the Source.</h3><p>International professionals travel to India for a structured, immersive AI &amp; Data Science programme - delivered on a partner university campus or executive training facility in India.</p></div></article>
+        <article class="tour-feature"><span class="token"><img src="images/AI.png" alt="AI"></span><div><h3>Practitioner-Led Curriculum</h3><p>Every session is led by OranjeStride faculty - practitioners with live corporate experience across Accenture, EXL Services, and global financial institutions. No pre-recorded content. No generic slides.</p></div></article>
+        <article class="tour-feature"><span class="token"><img src="images/real_projects.png" alt="Labs"></span><div><h3>Hands-On Labs &amp; Real Projects</h3><p>Participants work on real datasets from their own sectors - banking, insurance, government, FMCG. They leave with working code, dashboards, and a project they can deploy immediately.</p></div></article>
+        <article class="tour-feature"><span class="token"><img src="images/cultural_immersion.png" alt="Networking"></span><div><h3>Cultural Immersion + Networking</h3><p>India is the world's AI talent engine. Beyond the classroom, participants connect with India's data science community - through campus visits, industry interfaces, and peer cohorts from across the globe.</p></div></article>
+        <article class="tour-feature"><span class="token"><img src="images/university_certificate.png" alt="Certificate"></span><div><h3>University-Backed Certificate</h3><p>Every participant receives a certificate jointly signed by OranjeStride Consultancy and a university of repute in India - carrying academic credibility recognised by employers internationally.</p></div></article>
+      </div>
+      <aside class="tour-panel reveal">
+        <div class="column-title">Who This Is For</div>
+        <div class="audience"><span>Nepal</span><span>Southeast Asia</span><span>East Africa</span><span>Middle East</span><span>Banking &amp; Finance</span><span>Government Officials</span><span>Corporate Teams</span><span>University Faculty</span><span>Analytics Professionals</span><span>Entrepreneurs</span></div>
+        <div class="column-title">Certificate</div>
+        <p class="section-copy">Jointly awarded by <strong>OranjeStride Consultancy</strong> and a <strong>university of repute in India</strong> - co-signed, institution-stamped, and internationally credible.</p>
+        <div class="column-title" style="margin-top:1.5rem">Programme Duration</div>
+        <div class="duration"><span>2-3 Day Intensive</span><span>1 Week Deep-Dive</span><span>Custom Group Cohorts</span></div>
+        <div class="hero-actions"><a href="#contact" class="btn btn-primary">Enquire About the Tour</a></div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="consulting">
+  <div class="wrap consulting-layout">
+    <div class="reveal">
+      <div class="section-label">Consulting Practice</div>
+      <h2>Data &amp; Analytics <span>Consulting</span></h2>
+      <p class="section-copy" style="margin-top:1rem">Beyond training, OranjeStride brings deep domain expertise to complex analytical problems - working with quant firms, sovereign funds, and government research bodies on high-stakes data challenges.</p>
+      <div class="consulting-list" style="margin-top:1.5rem">
+        <article class="consulting-item"><span class="token"><img src="images/research.png" alt="Quant Research"></span><div><h3>Quant Research &amp; Risk Analytics</h3><p>Statistical modeling, factor analysis, and risk scoring for quant funds and hedge fund strategies. Backtesting frameworks to portfolio analytics.</p></div></article>
+        <article class="consulting-item"><span class="token"><img src="images/financial.png" alt="Financial"></span><div><h3>Financial Forecasting &amp; Fraud Detection</h3><p>ML-based fraud detection systems, credit risk models, and financial forecasting pipelines built for enterprise deployment.</p></div></article>
+        <article class="consulting-item"><span class="token"><img src="images/government.png" alt="Government"></span><div><h3>Government &amp; Policy Research Analytics</h3><p>Advisory and hands-on delivery for government research mandates - analytics roadmaps, data governance frameworks, and policy impact modeling.</p></div></article>
+      </div>
+    </div>
+    <aside class="data-panel reveal">
+      <div class="column-title">Engagement Metrics</div>
+      <div class="data-row"><span>Post-training technique adoption</span><strong>90%+</strong></div>
+      <div class="data-row"><span>Within-30-day application rate</span><strong>90%+</strong></div>
+      <div class="data-row"><span>Post-session community engagement</span><strong>90%+</strong></div>
+      <div class="data-row"><span>Average cohort completion rate</span><strong>85%+</strong></div>
+      <div class="data-row"><span>Sustained feedback score</span><strong>4.8 / 5</strong></div>
+      <div class="bar"><div class="data-row"><span>Learner Satisfaction</span><strong>96%</strong></div><div class="bar-line"><div class="bar-fill" style="width:96%"></div></div></div>
+      <div class="bar"><div class="data-row"><span>Completion Rate</span><strong>85%</strong></div><div class="bar-line"><div class="bar-fill" style="width:85%"></div></div></div>
+      <div class="bar"><div class="data-row"><span>Skill Adoption</span><strong>90%</strong></div><div class="bar-line"><div class="bar-fill" style="width:90%"></div></div></div>
+    </aside>
+  </div>
+</section>
+
+<section id="contact">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div>
+        <div class="section-label">Get In Touch</div>
+        <h2>Let's Build Outcomes <span>Together</span></h2>
+      </div>
+      <p class="section-copy">Whether you're an institution designing a curriculum, a company upskilling teams, or a fund needing analytics depth - we'd love to hear from you.</p>
+    </div>
+    <div class="contact-layout">
+      <div class="contact-card reveal">
+        <div class="contact-detail">
+          <span class="token">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+          </span>
+          <div><small>Email</small><a href="mailto:contactus@oranjestride.com">contactus@oranjestride.com</a></div>
+        </div>
+        <div class="contact-detail">
+          <span class="token">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.82a16 16 0 0 0 6.29 6.29l1.41-1.41a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          </span>
+          <div><small>Phone</small><a href="tel:+919311790400">+91 93117 90400</a></div>
+        </div>
+        <div class="contact-detail">
+          <span class="token">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+          </span>
+          <div><small>Location</small><strong>Safdarjung Enclave, New Delhi, India</strong></div>
+        </div>
+      </div>
+      <form class="form contact-card reveal" action="https://formspree.io/f/mjgaovpl" method="POST" onsubmit="return false;">
+        <div class="form-row">
+          <label>Full Name<input type="text" class="form-input" placeholder="Your name"></label>
+          <label>Organisation<input type="text" class="form-input" placeholder="Company / Institution"></label>
+        </div>
+        <label>Email Address<input type="email" class="form-input" placeholder="you@organisation.com"></label>
+        <label>Enquiry Type
+          <select class="form-input">
+            <option value="">Select an option</option>
+            <option>Corporate AI / ML Training - Banking &amp; Finance</option>
+            <option>Corporate AI / ML Training - Healthcare &amp; Pharma</option>
+            <option>Corporate AI / ML Training - Insurance</option>
+            <option>Corporate AI / ML Training - FMCG &amp; Retail</option>
+            <option>Corporate AI / ML Training - Government &amp; Public Sector</option>
+            <option>Corporate AI / ML Training - Media, Tech &amp; Telecom</option>
+            <option>University Partnership - Undergraduate Programme</option>
+            <option>University Partnership - Postgraduate / MBA Programme</option>
+            <option>C-Suite &amp; Leadership Workshop</option>
+            <option>Blue Ocean Strategy + AI Workshop</option>
+            <option>India AI Learning Tour</option>
+            <option>Data &amp; Analytics Consulting</option>
+            <option>Quant / Fund Analytics</option>
+            <option>Government Research Advisory</option>
+            <option>Other</option>
+          </select>
+        </label>
+        <label>Message<textarea class="form-input" placeholder="Tell us about your goals or requirements..."></textarea></label>
+        <button class="btn btn-primary" id="submitBtn" type="button">Send Enquiry</button>
+        <p id="formMsg"></p>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- ── DataStride Platform Popup ── -->
+<div id="ds-popup" class="ds-overlay" role="dialog" aria-modal="true" aria-labelledby="ds-title">
+  <div class="ds-card">
+    <div class="ds-card-top">
+      <button class="ds-close" onclick="closeDSPopup()" aria-label="Close">✕</button>
+      <div class="ds-pill">New from OranjeStride</div>
+      <div class="ds-top-grid">
+        <div class="ds-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4.03 3 9 3s9-1.34 9-3"/></svg>
+        </div>
+        <div class="ds-top-text">
+          <h3 id="ds-title"><span>Data</span>Stride</h3>
+          <p>Interactive SQL Learning Platform by OranjeStride</p>
+        </div>
+      </div>
+    </div>
+    <div class="ds-card-body">
+      <p class="ds-desc">Master SQL from the ground up through a fully browser-based, hands-on learning environment. DataStride is OranjeStride's dedicated platform for building real query-writing fluency — no installation, no setup. Write live SQL, solve business-scenario challenges, and progress from SELECT basics to advanced window functions and joins, all in one place.</p>
+      <div class="ds-features">
+        <div class="ds-feature">
+          <div class="ds-feature-icon">⚡</div>
+          <h4>Live SQL Editor</h4>
+          <p>Write and run real SQL queries directly in your browser with instant feedback.</p>
+        </div>
+        <div class="ds-feature">
+          <div class="ds-feature-icon">📚</div>
+          <h4>Structured Curriculum</h4>
+          <p>From SELECT & WHERE to JOINs, subqueries, aggregations, and window functions.</p>
+        </div>
+        <div class="ds-feature">
+          <div class="ds-feature-icon">🎯</div>
+          <h4>Business Challenges</h4>
+          <p>Real-world datasets drawn from finance, retail, and HR to build job-ready skills.</p>
+        </div>
+      </div>
+      <div class="ds-actions">
+        <a href="https://data-stride.vercel.app/" target="_blank" rel="noopener" class="btn btn-primary" style="min-height:42px;font-size:0.8rem;">
+          Explore DataStride &nbsp;→
+        </a>
+<button class="ds-dismiss" onclick="closeDSPopup()" type="button">Maybe Later</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div style="display:flex;align-items:center;gap:0.9rem;">
+    <img src="images/no_background_logo.jpg" alt="OranjeStride" loading="lazy" decoding="async" style="width:40px;height:40px;object-fit:contain;border-radius:50%;background:#fff;padding:3px;">
+    <div><strong>OranjeStride Consultancy Pvt. Ltd.</strong><span style="color:var(--orange);">Stride into Decision Intelligence</span></div>
+  </div>
+  <div><span>©2026 OranjeStride Consultancy Pvt. Ltd.<br>Safdarjung Enclave, New Delhi</span></div>
+</footer>
+
+<script>
+  // Page loader
+  window.addEventListener('load', function () {
+    setTimeout(function () {
+      document.getElementById('page-loader').classList.add('hidden');
+    }, 1800);
+  });
+  // Fallback — hide after 3.5s even if load event is slow
+  setTimeout(function () {
+    document.getElementById('page-loader').classList.add('hidden');
+  }, 3500);
+
+  function switchStream(id, btn) {
+    document.querySelectorAll(".stream-panel").forEach(panel => panel.classList.remove("active"));
+    document.querySelectorAll(".tab").forEach(tab => tab.classList.remove("active"));
+    document.getElementById("stream-" + id).classList.add("active");
+    btn.classList.add("active");
+  }
+
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add("visible");
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.08, rootMargin: "0px 0px -40px 0px" });
+  document.querySelectorAll(".reveal").forEach(el => observer.observe(el));
+
+  // ── Mobile nav ──
+  const hamburgerBtn = document.getElementById('hamburger-btn');
+  const mobileDrawer = document.getElementById('mobile-drawer');
+  const mobileOverlay = document.getElementById('mobile-overlay');
+
+  function openMobileNav() {
+    hamburgerBtn.classList.add('open');
+    hamburgerBtn.setAttribute('aria-expanded', 'true');
+    mobileDrawer.classList.add('open');
+    mobileDrawer.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeMobileNav() {
+    hamburgerBtn.classList.remove('open');
+    hamburgerBtn.setAttribute('aria-expanded', 'false');
+    mobileDrawer.classList.remove('open');
+    mobileDrawer.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+  }
+
+  hamburgerBtn.addEventListener('click', function () {
+    mobileDrawer.classList.contains('open') ? closeMobileNav() : openMobileNav();
+  });
+
+  mobileOverlay.addEventListener('click', closeMobileNav);
+
+  // Close drawer when any nav link inside it is clicked
+  document.querySelectorAll('.m-nav-link').forEach(function (link) {
+    link.addEventListener('click', closeMobileNav);
+  });
+
+  // Close on Escape
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closeMobileNav();
+  });
+
+  function openDSPopup() {
+    document.getElementById("ds-popup").classList.add("open");
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeDSPopup() {
+    const p = document.getElementById("ds-popup");
+    if (!p.classList.contains("open")) return;
+    p.classList.remove("open");
+    document.body.style.overflow = "";
+    localStorage.setItem("ds_popup_seen", "1");
+  }
+
+  // Close on overlay click
+  document.getElementById("ds-popup").addEventListener("click", function(e) {
+    if (e.target === this) closeDSPopup();
+  });
+
+  // Close on Escape key
+  document.addEventListener("keydown", function(e) {
+    if (e.key === "Escape") closeDSPopup();
+  });
+
+  // Auto-show after 5s on first visit
+  if (!localStorage.getItem("ds_popup_seen")) {
+    setTimeout(openDSPopup, 5000);
+  }
+
+  // ── Client gallery ──
+  const CG_CLIENTS = [
+    { n: 'IIM Visakhapatnam',      t: 'Management School',   c: 'academic',  img: 'images/IIM_visakhapatnam.png' },
+    { n: 'IIM Sambalpur',          t: 'Management School',   c: 'academic',  img: 'images/IIM_sambalpur.svg' },
+    { n: 'Christ University',      t: 'University',          c: 'academic',  img: 'images/christ_university.png' },
+    { n: 'ISBF',                   t: 'Business School',     c: 'academic',  img: 'images/ISBF.jpeg' },
+    { n: 'Great Learning',         t: 'Ed-Tech Platform',    c: 'academic',  img: 'images/great_learning.png' },
+    { n: 'NIIT',                   t: 'Training Institute',  c: 'academic',  img: 'images/NIIT.png' },
+    { n: 'Imarticus',              t: 'Training Institute',  c: 'academic',  img: 'images/imarticus.png' },
+    { n: 'IMS Proschool',          t: 'Training Institute',  c: 'academic',  img: 'images/ims_proschool.jpg' },
+    { n: 'EduEdgePro',             t: 'Ed-Tech Platform',    c: 'academic',  img: 'images/eduedgepro.png' },
+    { n: 'EY (Ernst &amp; Young)', t: 'Big 4 Consulting',    c: 'corporate', img: 'images/Ey_logo.png' },
+    { n: 'Hexaware Technologies',  t: 'IT Enterprise',       c: 'corporate', img: 'images/hexaware.png' },
+    { n: 'Havells India',          t: 'Manufacturing',       c: 'corporate', img: 'images/havells.svg' },
+    { n: 'Colt Technology',        t: 'Telecom',             c: 'corporate', img: 'images/colt.png' },
+    { n: 'Room to Read',           t: 'NGO / Social Sector', c: 'corporate', img: 'images/room_to_read.png' },
+    { n: 'Bennett &amp; Coleman',  t: 'Media Group',         c: 'corporate', img: 'images/bennet&coleman.png' },
+    { n: 'AJNIFM (Govt. of India)', t: 'Government Ministry', c: 'corporate', img: 'images/Ajnifm.jpeg' }
+  ];
+
+  const cgOverlay = document.getElementById('client-gallery');
+  const cgGrid = document.getElementById('cg-grid');
+  let cgLastFocus = null;
+
+  (function renderClientGallery() {
+    if (!cgGrid) return;
+    cgGrid.innerHTML = CG_CLIENTS.map(function (c) {
+      return '<div class="cg-card" data-cat="' + c.c + '">' +
+               '<div class="cg-logo"><img src="' + c.img + '" alt="' + c.n + ' logo" loading="lazy" decoding="async"></div>' +
+               '<div class="cg-name">' + c.n + '</div>' +
+               '<div class="cg-tag">' + c.t + '</div>' +
+             '</div>';
+    }).join('');
+  })();
+
+  function cgReplayAnimation() {
+    if (!cgGrid) return;
+    cgGrid.classList.remove('cg-animate');
+    void cgGrid.offsetWidth; // force reflow so the animation re-runs
+    cgGrid.classList.add('cg-animate');
+  }
+
+  function openClientGallery() {
+    cgLastFocus = document.activeElement;
+    cgOverlay.classList.add('open');
+    cgOverlay.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+    cgReplayAnimation();
+    const firstTab = cgOverlay.querySelector('.cg-tab.active') || cgOverlay.querySelector('.cg-close');
+    if (firstTab) setTimeout(function () { firstTab.focus(); }, 60);
+  }
+
+  function closeClientGallery() {
+    cgOverlay.classList.remove('open');
+    cgOverlay.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+    if (cgLastFocus && typeof cgLastFocus.focus === 'function') cgLastFocus.focus({ preventScroll: true });
+  }
+
+  function filterClients(btn) {
+    cgOverlay.querySelectorAll('.cg-tab').forEach(function (t) {
+      t.classList.remove('active');
+      t.setAttribute('aria-selected', 'false');
+    });
+    btn.classList.add('active');
+    btn.setAttribute('aria-selected', 'true');
+    cgGrid.setAttribute('data-filter', btn.dataset.filter);
+    cgReplayAnimation();
+  }
+
+  // Close on backdrop click
+  cgOverlay.addEventListener('click', function (e) {
+    if (e.target === cgOverlay) closeClientGallery();
+  });
+
+  // ESC to close + focus trap while open
+  document.addEventListener('keydown', function (e) {
+    if (!cgOverlay.classList.contains('open')) return;
+    if (e.key === 'Escape') { closeClientGallery(); return; }
+    if (e.key === 'Tab') {
+      const focusable = Array.prototype.slice
+        .call(cgOverlay.querySelectorAll('a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'))
+        .filter(function (el) { return el.offsetParent !== null; });
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
+  });
+
+  document.getElementById("submitBtn").addEventListener("click", async function() {
+    const btn = this;
+    const msg = document.getElementById("formMsg");
+    const inputs = document.querySelectorAll(".form-input");
+    const name = inputs[0].value.trim();
+    const org = inputs[1].value.trim();
+    const email = inputs[2].value.trim();
+    const type = inputs[3].value;
+    const message = inputs[4].value.trim();
+    if (!name || !email || !message) {
+      msg.style.display = "block";
+      msg.style.background = "rgba(255,106,0,0.12)";
+      msg.style.color = "#9a3e00";
+      msg.textContent = "Please fill in Name, Email and Message.";
+      return;
+    }
+    btn.textContent = "Sending...";
+    btn.disabled = true;
+    try {
+      const res = await fetch("https://formspree.io/f/mjgaovpl", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Accept": "application/json" },
+        body: JSON.stringify({ name, organisation: org, email, enquiry_type: type, message })
+      });
+      if (!res.ok) throw new Error("Failed");
+      btn.textContent = "Message Sent";
+      msg.style.display = "block";
+      msg.style.background = "rgba(37,110,81,0.12)";
+      msg.style.color = "#256e51";
+      msg.textContent = "Thank you. We will get back to you within 24 hours.";
+      inputs.forEach(input => { input.value = ""; });
+      setTimeout(() => {
+        btn.textContent = "Send Enquiry";
+        btn.disabled = false;
+      }, 5000);
+    } catch (error) {
+      btn.textContent = "Send Enquiry";
+      btn.disabled = false;
+      msg.style.display = "block";
+      msg.style.background = "rgba(190,38,38,0.1)";
+      msg.style.color = "#be2626";
+      msg.textContent = "Something went wrong. Please email us at contactus@oranjestride.com";
+    }
+  });
+</script>
+</body>
+</html>

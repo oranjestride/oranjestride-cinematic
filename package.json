@@ -1,0 +1,21 @@
+{
+  "name": "oranjestride-cinematic",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "OranjeStride — cinematic scroll-driven 3D website (Vite + Three.js + GSAP + Lenis)",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "posters": "node scripts/generate-posters.mjs"
+  },
+  "dependencies": {
+    "@studio-freight/lenis": "^1.0.42",
+    "gsap": "^3.12.5",
+    "three": "^0.160.1"
+  },
+  "devDependencies": {
+    "vite": "^5.4.10"
+  }
+}
