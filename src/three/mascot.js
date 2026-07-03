@@ -1,148 +1,233 @@
 // ============================================================================
-// mascot.js — Tier 1 primitive-geometry runner built from logo02.png's parts
-// (faceted torso/chip, brain head, bent limbs, momentum arrow, orbit nodes) (§6).
-// Rigged without bones: nested Object3D groups, animated procedurally.
+// mascot.js — OranjeStride character mascot (§6 Phase B).
 //
-// Tier 2 (SVGLoader + ExtrudeGeometry from a traced logo) would replace the
-// primitives 1:1 inside this same rig — see README §(e). GLB swap: load with
-// GLTFLoader and return { group, update } with the same shape.
+// "One 3D asset, many flat renders" — the same pattern breachbunny uses.
+// Most sections show a pre-rendered pose still (public/img/mascot/poses/*.webp)
+// with a floating bob, drop-shadow, and cursor parallax. The Hero optionally
+// upgrades to the live rigged mesh (public/models/mascot.glb) when that Phase A
+// asset exists; until then the Hero shows the idle cutout like everywhere else.
+//
+// Phase A (produce mascot.glb + pose renders in Meshy/Tripo + Mixamo) happens
+// OUTSIDE the build — see README §(e). This module never hard-depends on it.
 // ============================================================================
 import * as THREE from 'three';
-import { makeGlowSprite } from './particles.js';
+import { $, $$, posePath, mascotGLBPath } from '../utils/helpers.js';
 
-const ORANGE = new THREE.Color('#ff6a00');
-const ORANGE2 = new THREE.Color('#f47c20');
-const NAVY = new THREE.Color('#17314a');
-
-const flat = (c, emissive = 0) => new THREE.MeshStandardMaterial({
-  color: c, flatShading: true, roughness: 0.35, metalness: 0.3,
-  emissive: new THREE.Color(c), emissiveIntensity: emissive,
-});
-
-export function createMascot() {
-  const group = new THREE.Group();
-
-  // torso (chip body) — low-detail for facets
-  const torso = new THREE.Mesh(new THREE.BoxGeometry(0.9, 1.1, 0.5), flat(NAVY, 0.15));
-  group.add(torso);
-  const chip = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.08), flat(ORANGE, 0.55));
-  chip.position.z = 0.28;
-  torso.add(chip);
-
-  // head / brain
-  const head = new THREE.Group();
-  head.add(new THREE.Mesh(new THREE.IcosahedronGeometry(0.42, 1), flat(ORANGE, 0.4)));
-  head.position.set(0.15, 0.95, 0);
-  torso.add(head);
-
-  // momentum arrow rising from shoulder
-  const arrow = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.6, 4), flat(ORANGE2, 0.5));
-  arrow.position.set(0.8, 0.9, 0);
-  arrow.rotation.z = -Math.PI / 4;
-  torso.add(arrow);
-
-  // orbit nodes (small octahedra) drifting around the torso
-  const nodes = [];
-  for (let i = 0; i < 4; i++) {
-    const n = new THREE.Mesh(new THREE.OctahedronGeometry(0.09, 0), flat(ORANGE, 0.6));
-    torso.add(n);
-    nodes.push(n);
-  }
-
-  // limbs: upper→lower nested groups so run swings read
-  const limb = (x, y, color) => {
-    const upper = new THREE.Group();
-    const uMesh = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.6, 0.22), flat(color, 0.1));
-    uMesh.position.y = -0.3; upper.add(uMesh);
-    const lower = new THREE.Group();
-    const lMesh = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.55, 0.2), flat(ORANGE, 0.2));
-    lMesh.position.y = -0.28; lower.add(lMesh);
-    lower.position.y = -0.6; upper.add(lower);
-    upper.position.set(x, y, 0);
-    return { upper, lower };
-  };
-  const armL = limb(-0.5, 0.45, ORANGE2);
-  const armR = limb(0.5, 0.45, NAVY);
-  const legL = limb(-0.22, -0.55, ORANGE2);
-  const legR = limb(0.22, -0.55, NAVY);
-  torso.add(armL.upper, armR.upper, legL.upper, legR.upper);
-
-  // arrow-tip particle trail (reuses hero sprite) (§6.2)
-  const TRAIL = 60;
-  const tGeo = new THREE.BufferGeometry();
-  tGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(TRAIL * 3), 3));
-  const trail = new THREE.Points(tGeo, new THREE.PointsMaterial({
-    size: 0.14, map: makeGlowSprite(ORANGE), color: ORANGE,
-    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.7,
-  }));
-  group.add(trail);
-
-  group.scale.setScalar(0.9);
-  group.visible = false;
-
-  let runPhase = 0;
-
-  // state: { pointerLerp:{x,y}, scrollVel, running, target:{p,s}|null }
-  function update(dt, t, state) {
-    const { pointerLerp, scrollVel, running, target } = state;
-
-    if (target) {
-      group.position.lerp(target.p, 0.06);
-      const s = THREE.MathUtils.lerp(group.scale.x, target.s, 0.06);
-      group.scale.setScalar(s);
-      group.rotation.y = THREE.MathUtils.lerp(group.rotation.y, 0.35 + pointerLerp.x * 0.4, 0.05);
-    } else {
-      const s = THREE.MathUtils.lerp(group.scale.x, 0.01, 0.08);
-      group.scale.setScalar(s);
-    }
-    group.visible = group.scale.x > 0.02;
-
-    torso.position.y = Math.sin(t * 1.6) * 0.06;                          // idle bob
-    head.rotation.y = THREE.MathUtils.lerp(head.rotation.y, pointerLerp.x * 0.6, 0.08); // look at cursor
-    head.rotation.x = THREE.MathUtils.lerp(head.rotation.x, -pointerLerp.y * 0.4, 0.08);
-    torso.rotation.x = THREE.MathUtils.lerp(torso.rotation.x, THREE.MathUtils.clamp(scrollVel * 6, -0.4, 0.4), 0.08); // scroll lean
-
-    const speed = running ? 8 : 2.2;
-    runPhase += dt * speed;
-    const sw = Math.sin(runPhase) * (running ? 0.9 : 0.15);
-    armL.upper.rotation.x = sw; armR.upper.rotation.x = -sw;
-    legL.upper.rotation.x = -sw; legR.upper.rotation.x = sw;
-    armL.lower.rotation.x = Math.max(0, -sw) * 0.6;
-    armR.lower.rotation.x = Math.max(0, sw) * 0.6;
-
-    // orbit nodes
-    nodes.forEach((n, i) => {
-      const a = t * 0.8 + (i / nodes.length) * Math.PI * 2;
-      n.position.set(Math.cos(a) * 0.8, 0.1 + Math.sin(a * 1.3) * 0.5, Math.sin(a) * 0.4);
-    });
-
-    // trail follows arrow tip
-    const tp = tGeo.attributes.position.array;
-    for (let i = TRAIL - 1; i > 0; i--) {
-      tp[i * 3] = tp[(i - 1) * 3]; tp[i * 3 + 1] = tp[(i - 1) * 3 + 1]; tp[i * 3 + 2] = tp[(i - 1) * 3 + 2];
-    }
-    tp[0] = 0.8 + Math.sin(t * 3) * 0.05; tp[1] = 1.2; tp[2] = 0;
-    tGeo.attributes.position.needsUpdate = true;
-  }
-
-  return { group, update };
+// pose file → fallback chain (a missing pose degrades to the idle cutout).
+function poseSources(pose) {
+  return [posePath(pose, 'webp'), posePath('idle', 'webp'), posePath('idle', 'png')];
 }
 
-// Tiny 2D breathing emblem beside the nav wordmark (§6 · nav).
-export function initNavMascot(reduced) {
-  const cv = document.getElementById('nav-mascot');
-  if (!cv || reduced) return;
-  const ctx = cv.getContext('2d');
-  const W = cv.width, H = cv.height, cx = W / 2, cy = H / 2;
-  (function draw(t) {
-    const s = 1 + Math.sin(t / 500) * 0.06;
-    ctx.clearRect(0, 0, W, H);
-    ctx.save(); ctx.translate(cx, cy); ctx.scale(s, s); ctx.rotate(Math.sin(t / 1400) * 0.15);
-    ctx.beginPath();
-    ctx.moveTo(0, -22); ctx.lineTo(15, 0); ctx.lineTo(0, 22); ctx.lineTo(-15, 0); ctx.closePath();
-    ctx.fillStyle = '#ff6a00'; ctx.shadowBlur = 12; ctx.shadowColor = '#ff6a00'; ctx.fill();
-    ctx.beginPath(); ctx.arc(0, 0, 5, 0, 7); ctx.fillStyle = '#17314a'; ctx.shadowBlur = 0; ctx.fill();
-    ctx.restore();
-    requestAnimationFrame(draw);
-  })(0);
+// Assign each mascot <img> its pose with a graceful fallback chain.
+function wireImages() {
+  $$('.mascot-img').forEach((img) => {
+    const pose = img.closest('.mascot')?.dataset.pose || 'idle';
+    const srcs = poseSources(pose);
+    let i = 0;
+    img.onerror = () => {
+      i += 1;
+      if (i < srcs.length) img.src = srcs[i];
+      else img.onerror = null;
+    };
+    img.src = srcs[0];
+  });
+}
+
+// Cursor parallax (subtle rotate/translate) on every on-screen mascot (§6 B.2).
+function initParallax(reduced) {
+  if (reduced || matchMedia('(hover: none)').matches) return;
+  let tx = 0, ty = 0, cx = 0, cy = 0;
+  addEventListener('mousemove', (e) => {
+    tx = (e.clientX / innerWidth) * 2 - 1;
+    ty = (e.clientY / innerHeight) * 2 - 1;
+  }, { passive: true });
+  (function loop() {
+    cx += (tx - cx) * 0.06;
+    cy += (ty - cy) * 0.06;
+    const rx = (-cy * 5).toFixed(2);
+    const ry = (cx * 7).toFixed(2);
+    const px = (cx * 10).toFixed(1);
+    document.documentElement.style.setProperty('--mascot-rx', `${rx}deg`);
+    document.documentElement.style.setProperty('--mascot-ry', `${ry}deg`);
+    document.documentElement.style.setProperty('--mascot-px', `${px}px`);
+    requestAnimationFrame(loop);
+  })();
+}
+
+// Reveal section mascots as they scroll into view (cross-fade in).
+function initReveal() {
+  const io = new IntersectionObserver((ens) => {
+    ens.forEach((en) => {
+      if (en.isIntersecting) { en.target.classList.add('mascot-in'); io.unobserve(en.target); }
+    });
+  }, { threshold: 0.15 });
+  $$('.mascot:not(.mascot--nav):not(.mascot--pre)').forEach((m) => io.observe(m));
+  // nav + preloader mascots are visible immediately
+  $$('.mascot--nav, .mascot--pre').forEach((m) => m.classList.add('mascot-in'));
+}
+
+/**
+ * Boot the DOM pose-swap mascots. Call after the section markup is in the DOM.
+ */
+export function initMascots({ reduced }) {
+  wireImages();
+  initReveal();
+  initParallax(reduced);
+}
+
+// ---------------------------------------------------------------------------
+// Live-3D mascot (§6 Phase B.1 / update §2). The rigged, decimated
+// public/models/mascot.glb is loaded ONCE and cached at module scope; each
+// section that wants a live instance clones the skinned mesh via SkeletonUtils
+// (no re-fetch/re-parse) and gets its own AnimationMixer. Clip names are matched
+// by regex so a Mixamo export named Idle/Wave/Run just works. A GLB with no clips
+// (e.g. a static mesh) still mounts and gets a procedural idle bob + cursor turn.
+//
+// Fallback-safe: if the GLB is absent (404), oversized/malformed, or WebGL is
+// off, mountMascotGLB resolves to null and the caller keeps the flat pose still.
+// ---------------------------------------------------------------------------
+
+const CLIP_RE = {
+  idle: /idle|breath/i,
+  wave: /wave|greet/i,
+  run: /run|stride|walk/i,
+  cheer: /clap|cheer/i,
+};
+
+let sharedGLBPromise = null; // single fetch/parse for the whole page
+
+function loadSharedGLB() {
+  if (sharedGLBPromise) return sharedGLBPromise;
+  sharedGLBPromise = (async () => {
+    const url = mascotGLBPath();
+    try {
+      const head = await fetch(url, { method: 'HEAD' });
+      const type = head.headers.get('content-type') || '';
+      // A missing GLB often 200s as the SPA index.html fallback (Vite dev / some
+      // static hosts). Treat an HTML response as "no GLB" so we never try to
+      // parse markup as a model — keep the flat pose fallback instead.
+      if (!head.ok || type.includes('text/html')) return null;
+    } catch (_) {
+      return null;
+    }
+    const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js');
+    const gltf = await new GLTFLoader().loadAsync(url);
+    return { scene: gltf.scene, animations: gltf.animations || [] };
+  })().catch((err) => {
+    console.warn('[mascot] shared GLB load failed, using flat fallbacks:', err);
+    return null;
+  });
+  return sharedGLBPromise;
+}
+
+/**
+ * Mount one live mascot instance into the shared Three.js scene.
+ * @param sceneAPI  window.OS3D (must be .enabled with a .three hook)
+ * @param opts.anchor      {x,y,z} world position
+ * @param opts.scale       uniform scale
+ * @param opts.sectionId   section id whose active state drives visibility + mixer
+ * @param opts.loop        default looping clip name ('idle')
+ * @param opts.onEnterClip one-shot clip on first activation ('wave')
+ * @param opts.react       look toward the cursor (hero/about)
+ * @param opts.runBlend    blend the run clip in by scroll velocity (hero/programmes)
+ * @returns instance handle, or null if no usable GLB (caller keeps flat pose)
+ */
+const _v = new THREE.Vector3();
+// Project a screen point onto the world plane at z=zPlane for the given camera.
+function screenToWorld(camera, x, y, zPlane) {
+  _v.set((x / innerWidth) * 2 - 1, -(y / innerHeight) * 2 + 1, 0.5).unproject(camera);
+  _v.sub(camera.position).normalize();
+  const dist = (zPlane - camera.position.z) / _v.z;
+  return camera.position.clone().add(_v.multiplyScalar(dist));
+}
+
+export async function mountMascotGLB(sceneAPI, opts = {}) {
+  if (!sceneAPI?.enabled || !sceneAPI.three) return null;
+  const shared = await loadSharedGLB();
+  if (!shared) return null;
+
+  const { clone } = await import('three/examples/jsm/utils/SkeletonUtils.js');
+  const { scene, camera, registerMascot } = sceneAPI.three;
+  const { mountId = null, anchor = { x: 0, y: 0, z: 2 }, scale = 2.4, sectionId,
+    loop = 'idle', onEnterClip = null, react = false, runBlend = false, faceFlip = false } = opts;
+  const zPlane = opts.zPlane ?? anchor.z ?? 2;
+
+  const model = clone(shared.scene);
+  model.visible = false;
+  model.traverse((o) => { if (o.isMesh || o.isSkinnedMesh) o.frustumCulled = false; });
+  scene.add(model);
+
+  // Measure bind-pose bounds (world matrices must be current) to auto-fit + ground
+  // the model to a DOM box regardless of its origin/native units.
+  model.updateWorldMatrix(true, true);
+  const box = new THREE.Box3().setFromObject(model);
+  let modelH = box.max.y - box.min.y;
+  if (!isFinite(modelH) || modelH < 0.05) modelH = 1.8; // degenerate → sane default
+  const footY = box.min.y;                       // lowest point (feet)
+  const centerX = (box.max.x + box.min.x) / 2;    // horizontal centre
+  const baseYaw = faceFlip ? Math.PI : 0;
+
+  const clips = shared.animations;
+  const mixer = clips.length ? new THREE.AnimationMixer(model) : null;
+  const findClip = (name) => clips.find((c) => (CLIP_RE[name] || new RegExp(name, 'i')).test(c.name));
+  const action = (name) => { const c = findClip(name); return c && mixer ? mixer.clipAction(c) : null; };
+
+  const loopAction = action(loop);
+  if (loopAction) loopAction.play();
+  const runAction = runBlend ? action('run') : null;
+
+  let t = 0, runW = 0;
+
+  // Fixed-anchor fallback when no DOM mount is given.
+  if (!mountId) { model.position.set(anchor.x, anchor.y, zPlane); model.scale.setScalar(scale); }
+
+  const inst = {
+    sectionId,
+    group: model,
+    active: false,
+    entered: false,
+    setActive(on) {
+      this.active = on;
+      model.visible = on;
+      if (on && !this.entered) {
+        this.entered = true;
+        const a = onEnterClip && action(onEnterClip);
+        if (a) { a.reset(); a.setLoop(THREE.LoopOnce); a.clampWhenFinished = true; a.play(); }
+      }
+    },
+    // Called by scene.js tick ONLY while this section is active (mixer paused otherwise).
+    update({ dt, pointer, scrollVel }) {
+      t += dt;
+      if (mixer) mixer.update(dt);
+
+      // Track the DOM mount: place feet at the box bottom, auto-fit height to it.
+      const el = mountId && document.getElementById(mountId);
+      if (el) {
+        const r = el.getBoundingClientRect();
+        const bottom = screenToWorld(camera, r.left + r.width / 2, r.bottom, zPlane);
+        const top = screenToWorld(camera, r.left + r.width / 2, r.top, zPlane);
+        const s = ((top.y - bottom.y) * 0.86) / modelH;
+        model.scale.setScalar(s);
+        // ground feet at box bottom, centre horizontally (independent of origin)
+        model.position.set(bottom.x - centerX * s, bottom.y - footY * s, zPlane);
+      } else if (!mixer) {
+        model.position.y = anchor.y + Math.sin(t * 1.5) * 0.12; // static GLB → procedural bob
+      }
+
+      if (react) {
+        model.rotation.y += ((baseYaw + pointer.x * 0.5) - model.rotation.y) * 0.06;
+        model.rotation.x += ((-pointer.y * 0.12) - model.rotation.x) * 0.06;
+      } else {
+        model.rotation.y = baseYaw;
+      }
+      if (runAction) {
+        const target = Math.min(1, Math.abs(scrollVel) * 40);
+        runW += (target - runW) * 0.08;
+        runAction.setEffectiveWeight(runW).play();
+      }
+    },
+  };
+
+  registerMascot(inst);
+  return inst;
 }

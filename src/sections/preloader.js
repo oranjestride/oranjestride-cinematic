@@ -1,11 +1,12 @@
 // Preloader — orange particles converge into the diamond emblem, ignite, wipe (§3.1).
-import { wordmark } from '../utils/helpers.js';
+import { wordmark, mascotMarkup } from '../utils/helpers.js';
 
 export function renderPreloader() {
   return `
   <div id="preloader">
     <div class="pre-inner">
       <canvas id="pre-canvas" width="520" height="520"></canvas>
+      ${mascotMarkup('idle', 'pre')}
       <div class="pre-word">${wordmark()}</div>
       <div class="pre-bar"><i id="pre-fill"></i></div>
     </div>

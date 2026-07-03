@@ -10,7 +10,7 @@ import Lenis from '@studio-freight/lenis';
 
 import { $, $$ } from './utils/helpers.js';
 import { initScene } from './three/scene.js';
-import { initNavMascot } from './three/mascot.js';
+import { initMascots, mountMascotGLB } from './three/mascot.js';
 import { initCursor } from './utils/cursor.js';
 import { initReveals } from './utils/reveal.js';
 import { initVideos } from './utils/video.js';
@@ -81,10 +81,25 @@ $$('a[href^="#"]').forEach((a) => a.addEventListener('click', (e) => {
 }));
 
 // ---------------------------------------------------------------------------
-// 3 · Three.js layer + nav mascot (§8.5, §8.6)
+// 3 · Three.js layer + character mascot (§8.5, §8.6)
 // ---------------------------------------------------------------------------
 window.OS3D = initScene({ reduced: REDUCED });
-initNavMascot(REDUCED);
+initMascots({ reduced: REDUCED });          // DOM pose-swap mascots (nav/hero/about/…)
+
+// Live GLB mascots (§2) — dormant & fallback-safe until public/models/mascot.glb
+// lands. One shared fetch; Hero + About + Programmes clone it. Each resolves to
+// null (flat pose stays) when the GLB is absent. body.has-*-glb hides the flat
+// pose only once its live instance actually mounts.
+// Two live instances this round (§5): Hero + About, each anchored to its DOM
+// mount so it lands in the right pane at any viewport. body.has-*-glb hides the
+// flat pose only once its live instance actually mounts (no empty pane if the
+// GLB is missing). Programmes/Closing stay on flat poses for now.
+if (!REDUCED) {
+  mountMascotGLB(window.OS3D, { sectionId: 'hero', mountId: 'hero-mascot-mount', zPlane: 2, loop: 'idle', onEnterClip: 'wave', react: true, runBlend: true, faceFlip: true })
+    .then((m) => m && document.body.classList.add('has-hero-glb'));
+  mountMascotGLB(window.OS3D, { sectionId: 'about', mountId: 'about-mascot-mount', zPlane: 2, loop: 'idle', onEnterClip: 'wave', react: true, faceFlip: true })
+    .then((m) => m && document.body.classList.add('has-about-glb'));
+}
 
 // ---------------------------------------------------------------------------
 // 4 · Video layer (§8.3) + reveals + interactions (§8.7)

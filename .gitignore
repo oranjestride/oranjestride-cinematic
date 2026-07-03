@@ -2,3 +2,9 @@ node_modules
 dist
 .DS_Store
 *.log
+
+# Heavy 3D source material (FBX/OBJ) — the exported public/models/mascot.glb is what ships
+mascot animations/
+# Build-spec prompt docs (not part of the app)
+*-prompt.md
+mascot-immersive-update-prompt.md

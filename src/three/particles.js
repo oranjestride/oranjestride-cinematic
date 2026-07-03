@@ -29,12 +29,13 @@ export function createEmbers({ count, sprite, mobile }) {
   geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
 
   const mat = new THREE.PointsMaterial({
-    size: mobile ? 0.16 : 0.2,
+    size: mobile ? 0.14 : 0.17,
     map: sprite,
     transparent: true,
     depthWrite: false,
     blending: THREE.AdditiveBlending,
-    opacity: 0.85,
+    // Faint: the canvas now sits above content, so embers read as atmosphere, not clutter.
+    opacity: 0.4,
   });
   const points = new THREE.Points(geo, mat);
 

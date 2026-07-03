@@ -10,6 +10,24 @@ export const videoPath = (name) => `${BASE}video/${name}.mp4`;
 export const posterPath = (name) => `${BASE}img/posters/${name}.jpg`;
 export const logoPath = () => `${BASE}img/logo02.png`;
 
+// Mascot pose stills (§6 Phase B). Real renders drop into public/img/mascot/poses/.
+export const posePath = (pose, ext = 'webp') => `${BASE}img/mascot/poses/${pose}.${ext}`;
+export const mascotGLBPath = () => `${BASE}models/mascot.glb`;
+
+/**
+ * Floating character-mascot placement (§6). The <img> src is assigned by
+ * initMascots() with a fallback chain (pose.webp → idle.webp → idle.png), so a
+ * not-yet-rendered pose degrades gracefully to the idle cutout.
+ */
+export function mascotMarkup(pose, variant, opts = {}) {
+  const cls = `mascot mascot--${variant}${opts.faint ? ' mascot--faint' : ''}`;
+  const a11y = opts.label ? `role="img" aria-label="${opts.label}"` : 'aria-hidden="true"';
+  return `<div class="${cls}" data-pose="${pose}" ${a11y}>
+    <span class="mascot-shadow"></span>
+    <img class="mascot-img" alt="" decoding="async" />
+  </div>`;
+}
+
 export const $ = (s, r = document) => r.querySelector(s);
 export const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 export const clamp = (v, a, b) => Math.max(a, Math.min(b, v));

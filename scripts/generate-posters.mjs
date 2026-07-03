@@ -15,7 +15,9 @@ const POSTER_DIR = 'public/img/posters';
 
 if (!existsSync(POSTER_DIR)) mkdirSync(POSTER_DIR, { recursive: true });
 
-const videos = readdirSync(VIDEO_DIR).filter((f) => f.toLowerCase().endsWith('.mp4'));
+// about-portrait was retired (§1) — its section now shows the mascot, not video.
+const SKIP = new Set(['about-portrait.mp4']);
+const videos = readdirSync(VIDEO_DIR).filter((f) => f.toLowerCase().endsWith('.mp4') && !SKIP.has(f));
 if (!videos.length) { console.error('No .mp4 files found in', VIDEO_DIR); process.exit(1); }
 
 for (const file of videos) {

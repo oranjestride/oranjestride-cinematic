@@ -46,7 +46,7 @@ export const stats = [
 ];
 
 export const about = {
-  video: 'about-portrait',
+  // Video retired — the About visual is now the live/flat character mascot (§1).
   label: 'About OranjeStride',
   headA: 'Nothing Is ',
   headAccent: 'Unattainable',

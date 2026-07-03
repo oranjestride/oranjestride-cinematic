@@ -1,6 +1,6 @@
 // 1 · Hero — scroll-scrubbed opening, emblem assembles, particle field over video (§5.1).
 import { hero, brand } from '../data/content.js';
-import { videoBlock, wordmark } from '../utils/helpers.js';
+import { videoBlock, wordmark, mascotMarkup } from '../utils/helpers.js';
 
 export function renderHero() {
   return `
@@ -17,6 +17,8 @@ export function renderHero() {
         <a class="btn btn-ghost" href="${hero.ctaSecondary.target}">${hero.ctaSecondary.label}</a>
       </div>
     </div>
+    ${mascotMarkup('wave', 'hero', { label: 'OranjeStride mascot' })}
+    <div class="mascot-mount" id="hero-mascot-mount" aria-hidden="true"></div>
     <div class="hero-scroll-hint" aria-hidden="true">Scroll</div>
   </section>`;
 }

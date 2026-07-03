@@ -1,6 +1,6 @@
 // 8 · Contact / Closing — scrubbed portal, trust chips, contact tokens, Formspree form (§5.8).
 import { contact } from '../data/content.js';
-import { videoBlock, tokenIcon, $ } from '../utils/helpers.js';
+import { videoBlock, tokenIcon, mascotMarkup, $ } from '../utils/helpers.js';
 
 const trustIco = ['check', 'cap', 'users', 'star'];
 
@@ -46,6 +46,7 @@ export function renderContact() {
         </form>
       </div>
     </div>
+    ${mascotMarkup('cheer', 'contact')}
   </section>`;
 }
 

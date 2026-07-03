@@ -1,6 +1,6 @@
 // 7 · Clients — full-bleed monument, "Our Reach" copy + roster modal w/ hover captions (§5.7, §7).
 import { clients } from '../data/content.js';
-import { videoBlock, $, $$ } from '../utils/helpers.js';
+import { videoBlock, mascotMarkup, $, $$ } from '../utils/helpers.js';
 
 const counts = () => {
   const a = clients.roster.filter((r) => r.c === 'academic').length;
@@ -20,6 +20,7 @@ export function renderClients() {
       <button class="btn btn-primary clients-cta-btn reveal" id="open-clients">${clients.cta} →</button>
       <p class="clients-hint reveal">${clients.hint}</p>
     </div>
+    ${mascotMarkup('idle', 'clients', { faint: true })}
   </section>`;
 }
 

@@ -1,24 +1,16 @@
 // ============================================================================
 // scene.js — persistent Three.js layer on #gl-canvas, composited OVER section
 // videos and UNDER the UI (§3.3). Owns: ember field, globe (Tour), radial grid
-// (Consulting), and the recurring mascot. Driven by main.js via the returned API.
+// (Consulting). The character mascot lives in the DOM (src/three/mascot.js);
+// its optional live Hero mesh mounts here via the exposed `three` hook.
 // ============================================================================
 import * as THREE from 'three';
 import { makeGlowSprite, createEmbers } from './particles.js';
 import { createGlobe, createRadialGrid } from './globe.js';
-import { createMascot } from './mascot.js';
-
-// Per-section mascot anchors (world space) — null → hidden for that section (§6).
-const ANCHORS = {
-  hero:       { p: new THREE.Vector3(4.4, -0.6, 2), s: 1.15, run: true },
-  programmes: { p: new THREE.Vector3(-4.6, -1.2, 2), s: 0.95, run: true },
-  tour:       { p: new THREE.Vector3(0, -2.6, 3.4), s: 0.7, run: false },
-  contact:    { p: new THREE.Vector3(0, -0.3, 3), s: 1.1, run: true },
-};
 
 // No-op API so main.js can always call safely (reduced-motion / no-WebGL).
 function stubAPI() {
-  return { enabled: false, setActive() {}, setScrollVelocity() {}, setPointer() {} };
+  return { enabled: false, three: null, setActive() {}, setScrollVelocity() {}, setPointer() {} };
 }
 
 export function initScene({ reduced }) {
@@ -41,9 +33,11 @@ export function initScene({ reduced }) {
   const camera = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.1, 100);
   camera.position.set(0, 0, 12);
 
-  scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+  scene.add(new THREE.AmbientLight(0xffffff, 0.75));
   const key = new THREE.DirectionalLight(0xff8a3a, 1.4); key.position.set(4, 6, 8); scene.add(key);
   const rim = new THREE.DirectionalLight(0x2a4a6a, 0.9); rim.position.set(-6, -2, 4); scene.add(rim);
+  // Front fill from the camera so the mascot's face/jacket read against dark footage.
+  const fill = new THREE.DirectionalLight(0xfff2e6, 1.0); fill.position.set(0, 2, 12); scene.add(fill);
 
   const sprite = makeGlowSprite(new THREE.Color('#ff6a00'));
 
@@ -54,35 +48,44 @@ export function initScene({ reduced }) {
 
   const globe = createGlobe(); scene.add(globe.group);
   const radial = createRadialGrid(); scene.add(radial.group);
-  const mascot = createMascot(); scene.add(mascot.group);
 
   // ---- state driven by main.js ----
   let activeId = 'hero';
   let scrollVel = 0;
   const pointer = new THREE.Vector2(0, 0);
   const pointerLerp = new THREE.Vector2(0, 0);
-  let mascotTarget = ANCHORS.hero;
-  let running = true;
+
+  // per-frame callbacks + live mascot instances (mounted async via mountMascotGLB)
+  const tickCbs = [];
+  const mascots = [];
+  const clock = new THREE.Clock();
 
   const API = {
     enabled: true,
+    three: {
+      scene,
+      camera,
+      addTick: (fn) => tickCbs.push(fn),
+      registerMascot: (m) => { mascots.push(m); m.setActive(m.sectionId === activeId); },
+    },
     setActive(id) {
       activeId = id;
-      globe.group.visible = id === 'tour';
-      radial.group.visible = id === 'consulting';
-      mascotTarget = ANCHORS[id] || null;
-      running = !!(mascotTarget && mascotTarget.run);
+      // Globe/radial stay hidden: with the canvas raised above content they'd
+      // render in front of the section text, and the section videos already
+      // carry the globe/tunnel motifs. Kept in-scene for a future 2-canvas pass.
+      globe.group.visible = false;
+      radial.group.visible = false;
+      // Same visibility pattern, generalized per live mascot instance (§2).
+      for (const m of mascots) m.setActive(m.sectionId === id);
     },
     setScrollVelocity(v) { scrollVel = v; },
     setPointer(x, y) { pointer.set(x, y); },
   };
 
   const lerpScale = (obj, target, a) => obj.scale.setScalar(THREE.MathUtils.lerp(obj.scale.x, target, a));
-  const clock = new THREE.Clock();
 
   function tick() {
     const dt = Math.min(clock.getDelta(), 0.05);
-    const t = clock.elapsedTime;
     pointerLerp.lerp(pointer, 0.05);
 
     embers.update(scrollVel, pointerLerp);
@@ -92,7 +95,10 @@ export function initScene({ reduced }) {
 
     if (radial.group.visible) radial.update();
 
-    mascot.update(dt, t, { pointerLerp, scrollVel, running, target: mascotTarget });
+    // Only the active section's mascot ticks its mixer — offscreen ones idle (§5).
+    for (const m of mascots) if (m.active) m.update({ dt, pointer: pointerLerp, scrollVel });
+
+    for (const fn of tickCbs) fn({ pointer: pointerLerp, scrollVel });
 
     renderer.render(scene, camera);
     requestAnimationFrame(tick);

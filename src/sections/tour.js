@@ -1,6 +1,6 @@
 // 6 · India AI Learning Tour — globe layer + pulsing feature callouts (§5.6).
 import { tour } from '../data/content.js';
-import { videoBlock } from '../utils/helpers.js';
+import { videoBlock, mascotMarkup } from '../utils/helpers.js';
 
 export function renderTour() {
   return `
@@ -22,5 +22,6 @@ export function renderTour() {
         </div>
       </div>
     </div>
+    ${mascotMarkup('point', 'tour')}
   </section>`;
 }

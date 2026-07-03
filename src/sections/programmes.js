@@ -1,6 +1,6 @@
 // 4 · Programmes — scrubbed staircase, two-tab switcher, step highlight on scroll (§5.4).
 import { programmes } from '../data/content.js';
-import { videoBlock, $, $$ } from '../utils/helpers.js';
+import { videoBlock, mascotMarkup, $, $$ } from '../utils/helpers.js';
 
 const step = (s) => `
   <div class="step">
@@ -31,6 +31,7 @@ export function renderProgrammes() {
         </div>
       </div>
     </div>
+    ${mascotMarkup('run', 'programmes')}
   </section>`;
 }
 

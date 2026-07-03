@@ -1,10 +1,12 @@
-// 2 · About — split layout, principles stagger, "walking toward the light" (§5.2).
+// 2 · About — split layout, principles stagger. The media pane is now the
+// character mascot "at the source" (video retired, §1). The mascot stands on a
+// soft reflective plinth — a nod to the old footage's wet-floor closing shot.
 import { about } from '../data/content.js';
-import { posterPath, videoPath } from '../utils/helpers.js';
+import { posePath } from '../utils/helpers.js';
 
 export function renderAbout() {
   return `
-  <section class="section" id="about" data-video="${about.video}">
+  <section class="section" id="about">
     <div class="facet-bg" aria-hidden="true"></div>
     <div class="sec-content">
       <div class="about-grid">
@@ -19,9 +21,14 @@ export function renderAbout() {
               </div>`).join('')}
           </div>
         </div>
-        <div class="about-media reveal">
-          <video data-src="${videoPath(about.video)}" poster="${posterPath(about.video)}" muted loop playsinline preload="none"></video>
-          <img class="sec-poster" src="${posterPath(about.video)}" alt="" aria-hidden="true" />
+
+        <!-- Media pane: live mascot mounts here on the shared canvas; the flat
+             pose image below is the static fallback (reduced-motion / no GLB). -->
+        <div class="about-media about-stage reveal" id="about-mascot-mount">
+          <span class="about-stage-glow" aria-hidden="true"></span>
+          <img class="mascot-img about-mascot-img" src="${posePath('idle', 'webp')}"
+               alt="The OranjeStride mascot" decoding="async" />
+          <span class="about-stage-floor" aria-hidden="true"></span>
         </div>
       </div>
     </div>

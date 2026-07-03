@@ -94,26 +94,41 @@ const count = mobile ? Math.round(1400 * 0.3) : 1400;   // ← ember count
 ```
 
 Lower the base `1400` for weaker GPUs; the mobile branch already drops ~70% (§3.7).
-`devicePixelRatio` is capped at 2 in the same file. The mascot's arrow-trail count is
-`TRAIL` in `src/three/mascot.js`. All WebGL is skipped entirely under
+`devicePixelRatio` is capped at 2 in the same file. All WebGL is skipped entirely under
 `prefers-reduced-motion` (posters show instead).
 
 ---
 
-## (e) Swap the mascot (Tier 1 → Tier 2 → GLB)
+## (e) Regenerate / replace the character mascot
 
-The shipped mascot is **Tier 1**: a primitive-geometry runner (Icosahedron/Box/Cone/Octahedron)
-assembled from the logo's parts in `src/three/mascot.js`, rigged as nested `Object3D` groups
-and animated procedurally (idle bob, run cycle, cursor-look, scroll-lean).
+The mascot (§6) is the illustrated OranjeStride character — source art at
+`public/img/mascot/mascot-character.png`. It follows the "one 3D asset, many flat renders"
+pattern: most sections show a pre-rendered **pose still**; the hero can optionally upgrade to a
+live rigged mesh. Code lives in `src/three/mascot.js`; placement/CSS in `src/style.css`
+(`.mascot*`). Poses are injected per section via `mascotMarkup(pose, variant)` (`src/utils/helpers.js`).
 
-- **Tier 2 (vectorized facets):** trace `public/img/logo02.png` to multi-part SVG during asset
-  prep (e.g. `potrace`/`opencv`), load with `SVGLoader`, extrude with `ExtrudeGeometry`, and
-  replace the primitives 1:1 inside `createMascot()`. The rig and `update()` don't change.
-- **Rigged GLB:** load with `GLTFLoader`, and return `{ group, update }` with the same shape
-  from `createMascot()`. Anchors/behavior in `scene.js` (`ANCHORS`) stay as-is.
+**Pose stills** — `public/img/mascot/poses/{idle,wave,point,run,cheer}.webp`
+Only `idle.webp` currently ships (a transparent cutout of the source art; `idle.png` is the
+non-webp fallback). Each mascot `<img>` uses a fallback chain **`<pose>.webp → idle.webp → idle.png`**,
+so any pose that isn't rendered yet degrades to idle automatically. To add the real poses:
 
-The mascot recurs in nav (2D emblem), hero, Programmes, India Tour, and Closing — driven by
-`ANCHORS` in `src/three/scene.js`, switched on active section.
+1. **(Phase A — outside this repo)** Feed `mascot-character.png` into an image-to-3D tool
+   (Meshy.ai / Tripo3D / Luma), auto-rig (Meshy or Mixamo), apply Idle / Wave / Point / Run /
+   Cheer clips.
+2. Render each pose as a transparent PNG/WebP from a straight-on 3/4 angle and drop them into
+   `public/img/mascot/poses/` with the exact names above. They're picked up on next load — no
+   code change. (The shipped `idle.webp` was produced in-repo by white-background flood-fill of
+   the source art with Pillow; re-run that if you replace the character art.)
+
+**Live hero mesh** — `public/models/mascot.glb`
+Export the rigged model (with Idle/Wave/Run clips embedded) as GLB to `public/models/mascot.glb`.
+On next load, `initHeroMascotGLB()` HEAD-checks that path; if present it dynamically imports
+`GLTFLoader`, mounts the mesh into the Three.js scene at the hero anchor, plays Idle→Wave, and
+makes it cursor/scroll-reactive — then adds `body.has-hero-glb` so the flat hero pose hides.
+If the GLB is absent or fails to load, the hero keeps the flat idle/wave cutout (no breakage).
+
+Where each pose appears: nav `idle` · hero `wave`(→GLB) · about `point` · programmes `run` ·
+India Tour `point` · clients faint `idle` · closing `cheer` · preloader `idle`.
 
 ---
 
