@@ -124,7 +124,6 @@ body.custom-cursor, body.custom-cursor * { cursor: none; }
 .mascot--programmes { left: 1%; bottom: 0; --mw: clamp(150px, 16vw, 260px); }
 .mascot--tour { left: 1%; bottom: 0; --mw: clamp(140px, 15vw, 240px); }
 .mascot--clients { right: 3%; bottom: 0; --mw: clamp(120px, 13vw, 200px); }
-.mascot--contact { right: 2%; bottom: 0; --mw: clamp(150px, 16vw, 260px); }
 
 /* Live GLB takes over the hero → hide the flat hero pose */
 body.has-hero-glb .mascot--hero { display: none; }
@@ -132,7 +131,29 @@ body.has-hero-glb .mascot--hero { display: none; }
 /* Invisible mount box: defines where/how big a live GLB mascot renders (§2).
    The 3D mascot is auto-fit to this rect via screen→world projection. */
 .mascot-mount { position: absolute; pointer-events: none; z-index: 0; }
-#hero-mascot-mount { right: 2%; bottom: 0; width: min(42vw, 460px); height: 80%; }
+#hero-mascot-mount { right: 2%; bottom: 4%; width: min(34vw, 400px); height: 66%; }
+#programmes-mascot-mount { left: 1%; bottom: 2%; width: min(13vw, 200px); height: 42%; }
+
+/* Contact: mascot stage lives in the LEFT column under the tokens — never
+   behind the form. Flat cutout fades out once the live GLB mounts. */
+.contact-mascot-stage {
+  position: relative; margin-top: 2.2rem; min-height: 280px;
+  display: flex; align-items: flex-end; justify-content: center;
+}
+.contact-mascot-img {
+  position: relative; z-index: 2; width: 68%; max-width: 260px;
+  filter: drop-shadow(0 24px 40px rgba(0, 0, 0, 0.55));
+  animation: mascotBob 5.5s ease-in-out infinite;
+  transition: opacity 0.5s;
+}
+.contact-mascot-floor {
+  position: absolute; bottom: 2%; left: 50%; transform: translateX(-50%);
+  width: 55%; height: 22px; z-index: 1;
+  background: radial-gradient(ellipse at center, rgba(255, 106, 0, 0.4), transparent 70%);
+  filter: blur(11px);
+}
+body.has-contact-glb .contact-mascot-img,
+body.has-contact-glb .contact-mascot-floor { opacity: 0; }
 
 /* Nav mascot: tiny, inline beside the wordmark */
 .mascot--nav { position: static; width: 38px; }
@@ -202,7 +223,14 @@ main { position: relative; z-index: 3; }
 .section.video-section { background: var(--bg-void); }
 #about { background: var(--bg-void); }
 .sec-video { position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%; object-fit: cover; filter: brightness(0.7) contrast(1.08) saturate(1.05); }
-.sec-video-scrim { position: absolute; inset: 0; z-index: 1; pointer-events: none; background: linear-gradient(180deg, rgba(6, 10, 18, 0.55) 0%, rgba(6, 10, 18, 0.15) 35%, rgba(6, 10, 18, 0.75) 100%); }
+/* Dual scrim: left-biased horizontal wash (nearly all copy is left-aligned) +
+   vertical letterbox — keeps text readable over bright/busy footage. */
+.sec-video-scrim {
+  position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(6, 10, 18, 0.78) 0%, rgba(6, 10, 18, 0.38) 52%, rgba(6, 10, 18, 0.22) 100%),
+    linear-gradient(180deg, rgba(6, 10, 18, 0.6) 0%, rgba(6, 10, 18, 0.22) 40%, rgba(6, 10, 18, 0.8) 100%);
+}
 .sec-content { position: relative; z-index: 4; width: 100%; max-width: 1200px; margin: 0 auto; }
 .sec-poster { position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%; object-fit: cover; filter: brightness(0.65) contrast(1.05); opacity: 0; transition: opacity 0.6s; }
 
@@ -214,6 +242,17 @@ h2.headline { font-family: var(--font-display); font-weight: 700; font-size: cla
 .accent { color: var(--accent-orange); }
 .subhead { font-size: clamp(1rem, 1.6vw, 1.2rem); color: var(--text-muted); max-width: 60ch; }
 .lead { max-width: 65ch; color: var(--text-muted); }
+
+/* Over video: shadow the type + lift muted copy so it never sinks into footage */
+.video-section h1.display, .video-section h2.headline,
+.video-section .eyebrow, .video-section .section-label {
+  text-shadow: 0 2px 24px rgba(3, 6, 12, 0.9), 0 1px 4px rgba(3, 6, 12, 0.85);
+}
+.video-section .subhead, .video-section .lead, .video-section .motto {
+  color: #c3c9d5;
+  text-shadow: 0 1px 14px rgba(3, 6, 12, 0.9);
+}
+.video-section .section-label { color: #b6bcc9; }
 
 /* ---------- Buttons ---------- */
 .btn { display: inline-flex; align-items: center; gap: 0.6rem; padding: 0.9rem 1.6rem; border-radius: 100px; font-family: var(--font-display); font-weight: 600; font-size: 0.85rem; letter-spacing: 0.02em; transition: transform 0.3s var(--ease-cine), box-shadow 0.3s, background 0.3s; will-change: transform; }
@@ -455,7 +494,7 @@ footer { position: relative; z-index: 3; padding: 3rem var(--gutter); background
   /* Declutter mascots on small screens — keep hero + closing only */
   .mascot--about, .mascot--programmes, .mascot--tour, .mascot--clients { display: none; }
   .mascot--hero { --mw: clamp(120px, 34vw, 190px); right: 0; opacity: 0.9; }
-  .mascot--contact { --mw: clamp(110px, 30vw, 170px); right: 0; }
+  .contact-mascot-stage { min-height: 220px; }
 }
 @media (max-width: 560px) {
   .cta-row { flex-direction: column; align-items: stretch; }

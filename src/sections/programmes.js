@@ -32,6 +32,9 @@ export function renderProgrammes() {
       </div>
     </div>
     ${mascotMarkup('run', 'programmes')}
+    <!-- Live GLB mounts here and plays the Run clip (staircase climb, §3);
+         the flat run pose above is the fallback when no GLB is present. -->
+    <div class="mascot-mount" id="programmes-mascot-mount" aria-hidden="true"></div>
   </section>`;
 }
 

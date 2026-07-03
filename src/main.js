@@ -86,19 +86,22 @@ $$('a[href^="#"]').forEach((a) => a.addEventListener('click', (e) => {
 window.OS3D = initScene({ reduced: REDUCED });
 initMascots({ reduced: REDUCED });          // DOM pose-swap mascots (nav/hero/about/…)
 
-// Live GLB mascots (§2) — dormant & fallback-safe until public/models/mascot.glb
-// lands. One shared fetch; Hero + About + Programmes clone it. Each resolves to
-// null (flat pose stays) when the GLB is absent. body.has-*-glb hides the flat
-// pose only once its live instance actually mounts.
-// Two live instances this round (§5): Hero + About, each anchored to its DOM
-// mount so it lands in the right pane at any viewport. body.has-*-glb hides the
-// flat pose only once its live instance actually mounts (no empty pane if the
-// GLB is missing). Programmes/Closing stay on flat poses for now.
-if (!REDUCED) {
+// Live GLB mascots (§2) — one shared mascot.glb fetch, SkeletonUtils clone per
+// section, each anchored to a DOM mount box. All four embedded clips are used:
+// Idle (default loop) · Wave (hero/about enter) · Run (programmes loop, hero
+// scroll-blend) · Clap (contact enter — the closing "cheer" beat). Each mount
+// resolves to null when the GLB is absent/broken → flat pose stays (no empty
+// pane). Only the active section's mixer ticks; mobile keeps flat poses (perf).
+const MOBILE = matchMedia('(max-width: 900px)').matches;
+if (!REDUCED && !MOBILE) {
   mountMascotGLB(window.OS3D, { sectionId: 'hero', mountId: 'hero-mascot-mount', zPlane: 2, loop: 'idle', onEnterClip: 'wave', react: true, runBlend: true })
     .then((m) => m && document.body.classList.add('has-hero-glb'));
   mountMascotGLB(window.OS3D, { sectionId: 'about', mountId: 'about-mascot-mount', zPlane: 2, loop: 'idle', onEnterClip: 'wave', react: true })
     .then((m) => m && document.body.classList.add('has-about-glb'));
+  mountMascotGLB(window.OS3D, { sectionId: 'programmes', mountId: 'programmes-mascot-mount', zPlane: 2, loop: 'run' })
+    .then((m) => m && document.body.classList.add('has-programmes-glb'));
+  mountMascotGLB(window.OS3D, { sectionId: 'contact', mountId: 'contact-mascot-mount', zPlane: 2, loop: 'idle', onEnterClip: 'cheer', react: true })
+    .then((m) => m && document.body.classList.add('has-contact-glb'));
 }
 
 // ---------------------------------------------------------------------------

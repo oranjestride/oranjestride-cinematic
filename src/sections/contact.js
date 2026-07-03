@@ -1,6 +1,6 @@
 // 8 · Contact / Closing — scrubbed portal, trust chips, contact tokens, Formspree form (§5.8).
 import { contact } from '../data/content.js';
-import { videoBlock, tokenIcon, mascotMarkup, $ } from '../utils/helpers.js';
+import { videoBlock, tokenIcon, posePath, $ } from '../utils/helpers.js';
 
 const trustIco = ['check', 'cap', 'users', 'star'];
 
@@ -26,6 +26,13 @@ export function renderContact() {
                 <div><strong>${t.strong}</strong><span>${t.span}</span></div>
               </div>`).join('')}
           </div>
+          <!-- Mascot stage: fills the empty space under the tokens (never behind
+               the form). Live GLB mounts here (Clap on section-enter); the flat
+               cutout below is the reduced-motion / no-GLB fallback. -->
+          <div class="contact-mascot-stage reveal" id="contact-mascot-mount" aria-hidden="true">
+            <img class="contact-mascot-img" src="${posePath('idle', 'webp')}" alt="" decoding="async" />
+            <span class="contact-mascot-floor"></span>
+          </div>
         </div>
 
         <form class="form reveal" action="${contact.formAction}" method="POST">
@@ -46,7 +53,6 @@ export function renderContact() {
         </form>
       </div>
     </div>
-    ${mascotMarkup('cheer', 'contact')}
   </section>`;
 }
 
