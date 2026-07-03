@@ -190,24 +190,21 @@ function screenToWorld(camera, x, y, zPlane) {
   return camera.position.clone().add(_v.multiplyScalar(dist));
 }
 
-// World-space AABB that ACCOUNTS FOR SKINNING. Box3.setFromObject returns a
-// degenerate box for skinned meshes (it uses the un-posed geometry bounds), so
-// we transform each mesh's posed bounding box corners by its world matrix.
+// World-space AABB of the POSED skeleton. Box3.setFromObject is degenerate for
+// skinned meshes, and SkinnedMesh.computeBoundingBox needs bone matrices that are
+// only valid during render — so we measure the bones directly (reliable Object3D
+// world positions after updateWorldMatrix), which bound the character well enough
+// for framing. A small margin accounts for flesh beyond the bone tips.
 const _c = new THREE.Vector3();
 function worldSkinnedBox(root) {
   root.updateWorldMatrix(true, true);
   const box = new THREE.Box3(); box.makeEmpty();
-  root.traverse((o) => {
-    if (!o.isSkinnedMesh) return;
-    if (o.computeBoundingBox) o.computeBoundingBox();
-    const lb = o.boundingBox || o.geometry.boundingBox;
-    if (!lb) return;
-    for (let i = 0; i < 8; i++) {
-      _c.set(i & 1 ? lb.max.x : lb.min.x, i & 2 ? lb.max.y : lb.min.y, i & 4 ? lb.max.z : lb.min.z)
-        .applyMatrix4(o.matrixWorld);
-      box.expandByPoint(_c);
-    }
-  });
+  let bones = 0;
+  root.traverse((o) => { if (o.isBone) { o.getWorldPosition(_c); box.expandByPoint(_c); bones++; } });
+  if (!bones) { // no skeleton (static mesh) → fall back to object bounds
+    return new THREE.Box3().setFromObject(root);
+  }
+  box.expandByScalar((box.max.y - box.min.y) * 0.08); // margin for hands/feet/head
   return box;
 }
 
@@ -253,7 +250,7 @@ export async function mountMascotGLB(sceneAPI, opts = {}) {
   // chain) COLLAPSE to a point when skinned — that can't render, so bail out and
   // let the caller keep the flat pose fallback (no empty pane).
   const maxDim = Math.max(sz.x, sz.y, sz.z);
-  if (!isFinite(maxDim) || maxDim < 1e-3 || sz.y < maxDim * 0.4) {
+  if (!isFinite(maxDim) || maxDim < 1e-5 || sz.y < maxDim * 0.4) {
     console.warn('[mascot] GLB rig collapses when posed — using flat pose fallback.');
     if (mixer) mixer.stopAllAction();
     scene.remove(rig);

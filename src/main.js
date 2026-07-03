@@ -95,9 +95,9 @@ initMascots({ reduced: REDUCED });          // DOM pose-swap mascots (nav/hero/a
 // flat pose only once its live instance actually mounts (no empty pane if the
 // GLB is missing). Programmes/Closing stay on flat poses for now.
 if (!REDUCED) {
-  mountMascotGLB(window.OS3D, { sectionId: 'hero', mountId: 'hero-mascot-mount', zPlane: 2, loop: 'idle', onEnterClip: 'wave', react: true, runBlend: true, faceFlip: true })
+  mountMascotGLB(window.OS3D, { sectionId: 'hero', mountId: 'hero-mascot-mount', zPlane: 2, loop: 'idle', onEnterClip: 'wave', react: true, runBlend: true })
     .then((m) => m && document.body.classList.add('has-hero-glb'));
-  mountMascotGLB(window.OS3D, { sectionId: 'about', mountId: 'about-mascot-mount', zPlane: 2, loop: 'idle', onEnterClip: 'wave', react: true, faceFlip: true })
+  mountMascotGLB(window.OS3D, { sectionId: 'about', mountId: 'about-mascot-mount', zPlane: 2, loop: 'idle', onEnterClip: 'wave', react: true })
     .then((m) => m && document.body.classList.add('has-about-glb'));
 }
 
