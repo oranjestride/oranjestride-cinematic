@@ -120,14 +120,24 @@ so any pose that isn't rendered yet degrades to idle automatically. To add the r
    code change. (The shipped `idle.webp` was produced in-repo by white-background flood-fill of
    the source art with Pillow; re-run that if you replace the character art.)
 
-**Live hero mesh** — `public/models/mascot.glb`
-Export the rigged model (with Idle/Wave/Run clips embedded) as GLB to `public/models/mascot.glb`.
-On next load, `initHeroMascotGLB()` HEAD-checks that path; if present it dynamically imports
-`GLTFLoader`, mounts the mesh into the Three.js scene at the hero anchor, plays Idle→Wave, and
-makes it cursor/scroll-reactive — then adds `body.has-hero-glb` so the flat hero pose hides.
-If the GLB is absent or fails to load, the hero keeps the flat idle/wave cutout (no breakage).
+**Live 3D mesh** — `public/models/mascot.glb` (+ optional `public/models/mascot-anims.{glb,fbx}`)
+`mountMascotGLB()` (in `src/three/mascot.js`) loads the model once, clones it per section
+(Hero + About) with `SkeletonUtils`, plays `Idle` by default, fires `Wave` on section-enter,
+and blends `Run` by scroll velocity — all in plain Three.js (no React/R3F needed).
 
-Where each pose appears: nav `idle` · hero `wave`(→GLB) · about `point` · programmes `run` ·
+- **Clips:** it uses the model's embedded animations if present; otherwise it loads a **separate
+  Mixamo file** at `public/models/mascot-anims.glb` (or `.fbx`). Track names are auto-remapped to
+  the model's bones, bridging the common Mixamo mismatch (`mixamorig:Hips` vs `mixamorigHips`).
+  Clips are matched by name: `/idle|breath/`, `/wave|greet/`, `/run|stride|walk/`, `/clap|cheer/`.
+- **Validity gate:** after posing, it measures the *skinned* bounds. If the rig **collapses to a
+  point** (broken skin weights — common from image-to-3D → Mixamo → over-decimation), it bails to
+  the flat pose so a section never goes empty. **Validate any GLB in
+  [gltf-viewer.donmccurdy.com](https://gltf-viewer.donmccurdy.com/) first — play a clip and confirm
+  the character moves without collapsing.** Keep the mesh ~15–40k tris (don't over-decimate; that
+  is what scrambles skin weights).
+- **Fallback-safe:** missing/broken model or `prefers-reduced-motion` → flat pose stills, no breakage.
+
+Where each pose appears: nav `idle` · hero `wave`(→GLB) · about (→GLB) · programmes `run` ·
 India Tour `point` · clients faint `idle` · closing `cheer` · preloader `idle`.
 
 ---

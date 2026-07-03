@@ -11,7 +11,7 @@
 // OUTSIDE the build — see README §(e). This module never hard-depends on it.
 // ============================================================================
 import * as THREE from 'three';
-import { $, $$, posePath, mascotGLBPath } from '../utils/helpers.js';
+import { $, $$, posePath, mascotGLBPath, mascotAnimsPath } from '../utils/helpers.js';
 
 // pose file → fallback chain (a missing pose degrades to the idle cutout).
 function poseSources(pose) {
@@ -94,25 +94,74 @@ const CLIP_RE = {
   cheer: /clap|cheer/i,
 };
 
+// Does a URL resolve to a real binary asset (not the SPA index.html fallback,
+// which many static hosts / Vite dev return as HTML 200 for missing files)?
+async function assetExists(url) {
+  try {
+    const head = await fetch(url, { method: 'HEAD' });
+    const type = head.headers.get('content-type') || '';
+    return head.ok && !type.includes('text/html');
+  } catch (_) {
+    return false;
+  }
+}
+
+// Retarget clip track names to the model's actual bone names. Bridges the common
+// Mixamo mismatch where FBX uses "mixamorig:Hips" but the glTF model has
+// "mixamorigHips" (or "Hips"), which would otherwise silently fail to bind.
+function remapClipsToSkeleton(clips, model) {
+  const norm = (n) => n.replace(/^mixamorig[:_]?/i, '').replace(/[:_\s]/g, '').toLowerCase();
+  const byNorm = new Map();
+  model.traverse((o) => { if (o.isBone) byNorm.set(norm(o.name), o.name); });
+  if (!byNorm.size) return clips;
+  return clips.map((clip) => {
+    const c = clip.clone();
+    c.tracks = c.tracks.map((tr) => {
+      const dot = tr.name.lastIndexOf('.');
+      const node = tr.name.slice(0, dot);
+      const prop = tr.name.slice(dot);
+      const target = byNorm.get(norm(node));
+      if (!target || target === node) return tr;
+      const t = tr.clone(); t.name = target + prop; return t;
+    });
+    return c;
+  });
+}
+
+// Load animation clips from a SEPARATE file (Mixamo). Tries .glb then .fbx.
+async function loadSeparateAnims() {
+  const glb = mascotAnimsPath('glb');
+  if (await assetExists(glb)) {
+    const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js');
+    const g = await new GLTFLoader().loadAsync(glb);
+    if (g.animations?.length) return g.animations;
+  }
+  const fbx = mascotAnimsPath('fbx');
+  if (await assetExists(fbx)) {
+    const { FBXLoader } = await import('three/examples/jsm/loaders/FBXLoader.js');
+    const f = await new FBXLoader().loadAsync(fbx);
+    if (f.animations?.length) return f.animations;
+  }
+  return [];
+}
+
 let sharedGLBPromise = null; // single fetch/parse for the whole page
 
 function loadSharedGLB() {
   if (sharedGLBPromise) return sharedGLBPromise;
   sharedGLBPromise = (async () => {
     const url = mascotGLBPath();
-    try {
-      const head = await fetch(url, { method: 'HEAD' });
-      const type = head.headers.get('content-type') || '';
-      // A missing GLB often 200s as the SPA index.html fallback (Vite dev / some
-      // static hosts). Treat an HTML response as "no GLB" so we never try to
-      // parse markup as a model — keep the flat pose fallback instead.
-      if (!head.ok || type.includes('text/html')) return null;
-    } catch (_) {
-      return null;
-    }
+    if (!(await assetExists(url))) return null; // no model → flat fallback everywhere
+
     const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js');
     const gltf = await new GLTFLoader().loadAsync(url);
-    return { scene: gltf.scene, animations: gltf.animations || [] };
+
+    // Prefer the model's embedded clips; if it's a static model, pull clips from
+    // a separate Mixamo file. Retarget either way so track names bind to bones.
+    let animations = gltf.animations?.length ? gltf.animations : await loadSeparateAnims();
+    if (animations.length) animations = remapClipsToSkeleton(animations, gltf.scene);
+
+    return { scene: gltf.scene, animations };
   })().catch((err) => {
     console.warn('[mascot] shared GLB load failed, using flat fallbacks:', err);
     return null;

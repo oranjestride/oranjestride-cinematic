@@ -13,6 +13,9 @@ export const logoPath = () => `${BASE}img/logo02.png`;
 // Mascot pose stills (§6 Phase B). Real renders drop into public/img/mascot/poses/.
 export const posePath = (pose, ext = 'webp') => `${BASE}img/mascot/poses/${pose}.${ext}`;
 export const mascotGLBPath = () => `${BASE}models/mascot.glb`;
+// Optional SEPARATE animation clips (Mixamo). Used when the model GLB is static
+// (no embedded clips). Tried in order: .glb first, then .fbx.
+export const mascotAnimsPath = (ext) => `${BASE}models/mascot-anims.${ext}`;
 
 /**
  * Floating character-mascot placement (§6). The <img> src is assigned by
