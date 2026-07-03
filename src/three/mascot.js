@@ -141,6 +141,27 @@ function screenToWorld(camera, x, y, zPlane) {
   return camera.position.clone().add(_v.multiplyScalar(dist));
 }
 
+// World-space AABB that ACCOUNTS FOR SKINNING. Box3.setFromObject returns a
+// degenerate box for skinned meshes (it uses the un-posed geometry bounds), so
+// we transform each mesh's posed bounding box corners by its world matrix.
+const _c = new THREE.Vector3();
+function worldSkinnedBox(root) {
+  root.updateWorldMatrix(true, true);
+  const box = new THREE.Box3(); box.makeEmpty();
+  root.traverse((o) => {
+    if (!o.isSkinnedMesh) return;
+    if (o.computeBoundingBox) o.computeBoundingBox();
+    const lb = o.boundingBox || o.geometry.boundingBox;
+    if (!lb) return;
+    for (let i = 0; i < 8; i++) {
+      _c.set(i & 1 ? lb.max.x : lb.min.x, i & 2 ? lb.max.y : lb.min.y, i & 4 ? lb.max.z : lb.min.z)
+        .applyMatrix4(o.matrixWorld);
+      box.expandByPoint(_c);
+    }
+  });
+  return box;
+}
+
 export async function mountMascotGLB(sceneAPI, opts = {}) {
   if (!sceneAPI?.enabled || !sceneAPI.three) return null;
   const shared = await loadSharedGLB();
@@ -148,24 +169,20 @@ export async function mountMascotGLB(sceneAPI, opts = {}) {
 
   const { clone } = await import('three/examples/jsm/utils/SkeletonUtils.js');
   const { scene, camera, registerMascot } = sceneAPI.three;
-  const { mountId = null, anchor = { x: 0, y: 0, z: 2 }, scale = 2.4, sectionId,
+  const { mountId = null, anchor = { x: 0, y: 0, z: 2 }, sectionId,
     loop = 'idle', onEnterClip = null, react = false, runBlend = false, faceFlip = false } = opts;
   const zPlane = opts.zPlane ?? anchor.z ?? 2;
 
   const model = clone(shared.scene);
-  model.visible = false;
   model.traverse((o) => { if (o.isMesh || o.isSkinnedMesh) o.frustumCulled = false; });
-  scene.add(model);
 
-  // Measure bind-pose bounds (world matrices must be current) to auto-fit + ground
-  // the model to a DOM box regardless of its origin/native units.
-  model.updateWorldMatrix(true, true);
-  const box = new THREE.Box3().setFromObject(model);
-  let modelH = box.max.y - box.min.y;
-  if (!isFinite(modelH) || modelH < 0.05) modelH = 1.8; // degenerate → sane default
-  const footY = box.min.y;                       // lowest point (feet)
-  const centerX = (box.max.x + box.min.x) / 2;    // horizontal centre
-  const baseYaw = faceFlip ? Math.PI : 0;
+  // rig (position/scale/facing) → inner (stand-up orientation) → model.
+  // Keeping facing (rig.rotation.y) separate from stand-up (inner.rotation.x)
+  // avoids gimbal tumble when the character turns toward the cursor.
+  const inner = new THREE.Group(); inner.add(model);
+  const rig = new THREE.Group(); rig.add(inner);
+  rig.visible = false;
+  scene.add(rig);
 
   const clips = shared.animations;
   const mixer = clips.length ? new THREE.AnimationMixer(model) : null;
@@ -175,20 +192,43 @@ export async function mountMascotGLB(sceneAPI, opts = {}) {
   const loopAction = action(loop);
   if (loopAction) loopAction.play();
   const runAction = runBlend ? action('run') : null;
+  if (mixer) mixer.update(0.15); // settle into the posed skeleton before measuring
+
+  // Stand the character up if authored Z-up (lies flat → depth ≫ height).
+  let wb = worldSkinnedBox(rig);
+  let sz = wb.getSize(new THREE.Vector3());
+  if (sz.z > sz.y * 1.3) { inner.rotation.x = -Math.PI / 2; wb = worldSkinnedBox(rig); sz = wb.getSize(new THREE.Vector3()); }
+
+  // Validity gate: a usable posed humanoid has real extent and is upright-ish.
+  // Some rigs (bad skin weights / bind data from an image-to-3D → Mixamo → Blender
+  // chain) COLLAPSE to a point when skinned — that can't render, so bail out and
+  // let the caller keep the flat pose fallback (no empty pane).
+  const maxDim = Math.max(sz.x, sz.y, sz.z);
+  if (!isFinite(maxDim) || maxDim < 1e-3 || sz.y < maxDim * 0.4) {
+    console.warn('[mascot] GLB rig collapses when posed — using flat pose fallback.');
+    if (mixer) mixer.stopAllAction();
+    scene.remove(rig);
+    return null;
+  }
+
+  // Upright bounds at unit rig scale → drives auto-fit + grounding.
+  let modelH = sz.y;
+  if (!isFinite(modelH) || modelH < 1e-4) modelH = 1;
+  const footY = wb.min.y;
+  const centerX = (wb.max.x + wb.min.x) / 2;
+  const baseYaw = faceFlip ? Math.PI : 0;
+  rig.rotation.y = baseYaw;
 
   let t = 0, runW = 0;
 
-  // Fixed-anchor fallback when no DOM mount is given.
-  if (!mountId) { model.position.set(anchor.x, anchor.y, zPlane); model.scale.setScalar(scale); }
-
   const inst = {
     sectionId,
-    group: model,
+    group: rig,
     active: false,
     entered: false,
     setActive(on) {
       this.active = on;
-      model.visible = on;
+      rig.visible = on;
       if (on && !this.entered) {
         this.entered = true;
         const a = onEnterClip && action(onEnterClip);
@@ -200,26 +240,24 @@ export async function mountMascotGLB(sceneAPI, opts = {}) {
       t += dt;
       if (mixer) mixer.update(dt);
 
-      // Track the DOM mount: place feet at the box bottom, auto-fit height to it.
+      // Track the DOM mount: auto-fit height + ground feet at the box bottom.
       const el = mountId && document.getElementById(mountId);
       if (el) {
         const r = el.getBoundingClientRect();
         const bottom = screenToWorld(camera, r.left + r.width / 2, r.bottom, zPlane);
         const top = screenToWorld(camera, r.left + r.width / 2, r.top, zPlane);
         const s = ((top.y - bottom.y) * 0.86) / modelH;
-        model.scale.setScalar(s);
-        // ground feet at box bottom, centre horizontally (independent of origin)
-        model.position.set(bottom.x - centerX * s, bottom.y - footY * s, zPlane);
-      } else if (!mixer) {
-        model.position.y = anchor.y + Math.sin(t * 1.5) * 0.12; // static GLB → procedural bob
+        rig.scale.setScalar(s);
+        rig.position.set(bottom.x - centerX * s, bottom.y - footY * s, zPlane);
+      } else {
+        rig.position.set(anchor.x, anchor.y, zPlane);
+        rig.scale.setScalar(anchor.s || 2.4);
       }
 
-      if (react) {
-        model.rotation.y += ((baseYaw + pointer.x * 0.5) - model.rotation.y) * 0.06;
-        model.rotation.x += ((-pointer.y * 0.12) - model.rotation.x) * 0.06;
-      } else {
-        model.rotation.y = baseYaw;
-      }
+      // Face the camera; subtly turn toward the cursor.
+      const targetYaw = baseYaw + (react ? pointer.x * 0.5 : 0);
+      rig.rotation.y += (targetYaw - rig.rotation.y) * 0.06;
+
       if (runAction) {
         const target = Math.min(1, Math.abs(scrollVel) * 40);
         runW += (target - runW) * 0.08;
