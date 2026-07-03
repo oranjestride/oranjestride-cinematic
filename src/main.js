@@ -95,15 +95,21 @@ initMascots({ reduced: REDUCED });          // DOM pose-swap mascots (nav/hero/a
 // resolves to null when the GLB is absent/broken → flat pose stays (no empty
 // pane). Only the active section's mixer ticks; mobile keeps flat poses (perf).
 const MOBILE = matchMedia('(max-width: 900px)').matches;
-if (!REDUCED && !MOBILE) {
-  mountMascotGLB(window.OS3D, { sectionId: 'hero', mountId: 'hero-mascot-mount', zPlane: 2, loop: 'idle', onEnterClip: 'wave', react: true, runBlend: true })
-    .then((m) => m && document.body.classList.add('has-hero-glb'));
+if (!REDUCED) {
+  // Overlay mounts (float over section content) — desktop only, they'd crowd
+  // small screens where the flat poses read better.
+  if (!MOBILE) {
+    mountMascotGLB(window.OS3D, { sectionId: 'hero', mountId: 'hero-mascot-mount', zPlane: 2, loop: 'idle', onEnterClip: 'wave', react: true, runBlend: true, dragRotate: true })
+      .then((m) => m && document.body.classList.add('has-hero-glb'));
+    mountMascotGLB(window.OS3D, { sectionId: 'programmes', mountId: 'programmes-mascot-mount', zPlane: 2, loop: 'run' })
+      .then((m) => m && document.body.classList.add('has-programmes-glb'));
+  }
+  // In-flow stages (own layout space) — live on mobile too; the GLB is webp-
+  // compressed (~2.4 MB) and only the active section's mixer ever ticks.
   mountMascotGLB(window.OS3D, { sectionId: 'about', mountId: 'about-mascot-mount', zPlane: 2, loop: 'idle', onEnterClip: 'wave', react: true })
     .then((m) => m && document.body.classList.add('has-about-glb'));
-  mountMascotGLB(window.OS3D, { sectionId: 'programmes', mountId: 'programmes-mascot-mount', zPlane: 2, loop: 'run' })
-    .then((m) => m && document.body.classList.add('has-programmes-glb'));
-  // Mascot Lab spotlight card: idle + wave on enter; chips fire Wave/Run/Clap.
-  mountMascotGLB(window.OS3D, { sectionId: 'mascot-lab', mountId: 'mascotlab-mount', zPlane: 2, loop: 'idle', onEnterClip: 'wave', react: true })
+  // Mascot Lab spotlight card: drag to rotate; chips fire Wave/Run/Clap.
+  mountMascotGLB(window.OS3D, { sectionId: 'mascot-lab', mountId: 'mascotlab-mount', zPlane: 2, loop: 'idle', onEnterClip: 'wave', react: true, dragRotate: true })
     .then((m) => initMascotLab(m));
   mountMascotGLB(window.OS3D, { sectionId: 'contact', mountId: 'contact-mascot-mount', zPlane: 2, loop: 'idle', onEnterClip: 'cheer', react: true })
     .then((m) => m && document.body.classList.add('has-contact-glb'));

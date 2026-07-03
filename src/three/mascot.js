@@ -216,7 +216,8 @@ export async function mountMascotGLB(sceneAPI, opts = {}) {
   const { clone } = await import('three/examples/jsm/utils/SkeletonUtils.js');
   const { scene, camera, registerMascot } = sceneAPI.three;
   const { mountId = null, anchor = { x: 0, y: 0, z: 2 }, sectionId,
-    loop = 'idle', onEnterClip = null, react = false, runBlend = false, faceFlip = false } = opts;
+    loop = 'idle', onEnterClip = null, react = false, runBlend = false, faceFlip = false,
+    dragRotate = false } = opts;
   const zPlane = opts.zPlane ?? anchor.z ?? 2;
 
   const model = clone(shared.scene);
@@ -267,6 +268,44 @@ export async function mountMascotGLB(sceneAPI, opts = {}) {
 
   let t = 0, runW = 0;
 
+  // ---- Drag-to-rotate (pointer + touch) on the mount element (§drag) ----
+  // touch-action: pan-y keeps vertical page scroll working on mobile while a
+  // horizontal drag spins the character. Inertia decays after release.
+  let dragYaw = 0, dragVel = 0, dragging = false;
+  if (dragRotate && mountId) {
+    const el = document.getElementById(mountId);
+    if (el) {
+      el.style.pointerEvents = 'auto';
+      el.style.touchAction = 'pan-y';
+      // Above .sec-content (z4) so pointer events reach an overlay mount; the
+      // in-flow lab stage is unaffected (nothing stacks over it either way).
+      el.style.zIndex = '5';
+      el.classList.add('mascot-drag');
+      let lastX = 0, lastMoveT = 0;
+      el.addEventListener('pointerdown', (e) => {
+        if (e.button !== 0 && e.pointerType === 'mouse') return;
+        dragging = true; lastX = e.clientX; dragVel = 0; lastMoveT = e.timeStamp;
+        el.setPointerCapture?.(e.pointerId);
+        el.classList.add('dragging');
+        document.body.classList.add('mascot-dragged'); // fades the drag hint
+      });
+      el.addEventListener('pointermove', (e) => {
+        if (!dragging) return;
+        const dx = e.clientX - lastX; lastX = e.clientX; lastMoveT = e.timeStamp;
+        dragVel = dx * 0.008;
+        dragYaw += dragVel;
+      });
+      // No inertia if the pointer was held still before release (stale velocity).
+      const end = (e) => {
+        dragging = false; el.classList.remove('dragging');
+        if (e.timeStamp - lastMoveT > 120) dragVel = 0;
+      };
+      el.addEventListener('pointerup', end);
+      el.addEventListener('pointercancel', end);
+      el.addEventListener('lostpointercapture', end);
+    }
+  }
+
   const inst = {
     sectionId,
     group: rig,
@@ -311,9 +350,10 @@ export async function mountMascotGLB(sceneAPI, opts = {}) {
         rig.scale.setScalar(anchor.s || 2.4);
       }
 
-      // Face the camera; subtly turn toward the cursor.
-      const targetYaw = baseYaw + (react ? pointer.x * 0.5 : 0);
-      rig.rotation.y += (targetYaw - rig.rotation.y) * 0.06;
+      // Face the camera; drag spins (with inertia), cursor adds a subtle turn.
+      if (!dragging && Math.abs(dragVel) > 0.0001) { dragYaw += dragVel; dragVel *= 0.94; }
+      const targetYaw = baseYaw + dragYaw + (react && !dragging ? pointer.x * 0.4 : 0);
+      rig.rotation.y += (targetYaw - rig.rotation.y) * (dragging ? 0.5 : 0.08);
 
       if (runAction) {
         const target = Math.min(1, Math.abs(scrollVel) * 40);

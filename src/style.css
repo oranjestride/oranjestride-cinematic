@@ -396,6 +396,25 @@ body.has-mascotlab-glb .lab-chips { visibility: visible; }
 }
 body.has-mascotlab-glb .lab-fallback-img { opacity: 0; }
 
+/* Drag-to-rotate affordance (only shown once the live mesh is interactive;
+   fades away after the first drag). Grab cursor on non-custom-cursor devices.
+   Corner-anchored: the character grounds at bottom-CENTER of the stage and the
+   WebGL layer paints over the DOM, so a centered pill would sit under his feet. */
+.mascot-drag { cursor: grab; user-select: none; -webkit-user-select: none; }
+.mascot-drag.dragging { cursor: grabbing; }
+.drag-hint {
+  position: absolute; bottom: 0.9rem; left: 0.9rem;
+  display: none; align-items: center; gap: 0.45rem; z-index: 3;
+  padding: 0.45rem 0.9rem; border-radius: 100px;
+  font-size: 0.72rem; font-weight: 600; letter-spacing: 0.04em;
+  color: var(--text-primary); background: rgba(6, 10, 18, 0.7);
+  border: 1px solid rgba(255, 106, 0, 0.3); backdrop-filter: blur(6px);
+  pointer-events: none; transition: opacity 0.6s;
+}
+.drag-hint svg { width: 15px; height: 15px; color: var(--accent-orange); }
+body.has-mascotlab-glb .drag-hint { display: inline-flex; }
+body.mascot-dragged .drag-hint { opacity: 0; }
+
 /* ---------- Testimonials ---------- */
 .testi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.3rem; margin-top: 2.4rem; }
 .testi { padding: 1.7rem; border-radius: 18px; background: var(--glass); border: 1px solid rgba(255, 106, 0, 0.12); backdrop-filter: blur(10px); display: flex; flex-direction: column; gap: 1rem; }
