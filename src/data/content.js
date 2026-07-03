@@ -23,8 +23,8 @@ export const nav = {
   // section id → short dot label (includes interstitials)
   dots: {
     hero: 'Hero', stats: 'Impact', about: 'About', expertise: 'Expertise',
-    testimonials: 'Voices', programmes: 'Programmes', consulting: 'Consulting',
-    tour: 'India Tour', clients: 'Clients', contact: 'Contact',
+    testimonials: 'Voices', 'mascot-lab': 'Mascot', programmes: 'Programmes',
+    consulting: 'Consulting', tour: 'India Tour', clients: 'Clients', contact: 'Contact',
   },
 };
 
@@ -82,6 +82,20 @@ export const testimonials = {
     { initial: 'D', quote: 'When theoretical concepts go hand in hand with practical implementation, the mind forces itself to explore beyond the vanilla concepts.', name: 'Dilpreet', org: 'Sopra Steria' },
     { initial: 'A', quote: 'One of the best teachers I have ever had... you make difficult things easy to understand.', name: 'Ashish Aggarwal', org: 'Shri Vishwakarma Skill University' },
     { initial: 'L', quote: 'A great hands-on introduction to ML... The R & Python coverage is exceptional and immediately actionable.', name: 'Lakshay Guglani', org: 'Maharaja Agrasen College of Engg.' },
+  ],
+};
+
+// Interstitial · Mascot Lab — spotlight card with the live 3D character (§6).
+export const mascotLab = {
+  label: 'Interactive 3D',
+  headA: 'Meet the ',
+  headAccent: 'Stride Runner',
+  sub: 'The OranjeStride mark, brought to life — a fully rigged 3D character rendered live in your browser, carrying the momentum we build into every programme.',
+  hint: 'Take him for a spin:',
+  clips: [
+    { clip: 'wave', label: 'Wave' },
+    { clip: 'run', label: 'Run' },
+    { clip: 'cheer', label: 'Clap' },
   ],
 };
 

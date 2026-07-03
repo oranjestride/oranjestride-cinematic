@@ -340,6 +340,62 @@ body.has-programmes-glb .mascot--programmes { display: none; }
 .tags { display: flex; flex-wrap: wrap; gap: 0.4rem; }
 .tag { font-size: 0.68rem; padding: 0.3rem 0.65rem; border-radius: 100px; background: rgba(255, 106, 0, 0.1); border: 1px solid rgba(255, 106, 0, 0.2); color: var(--accent-orange-2); letter-spacing: 0.02em; }
 
+/* ---------- Mascot Lab (spotlight card, ported from shadcn/aceternity demo) ---------- */
+.lab-card {
+  position: relative; overflow: hidden;
+  min-height: 500px; border-radius: 22px;
+  background: rgba(3, 6, 12, 0.96);
+  border: 1px solid rgba(255, 106, 0, 0.18);
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.5);
+}
+/* one-time spotlight sweep once the card reveals (aceternity keyframes) */
+.spot-sweep {
+  pointer-events: none; position: absolute; z-index: 1;
+  top: -40%; left: 0; height: 169%; width: 138%;
+  opacity: 0;
+}
+.reveal.in .spot-sweep { animation: spotSweep 2s var(--ease-cine) 0.4s forwards; }
+@keyframes spotSweep {
+  0% { opacity: 0; transform: translate(-72%, -62%) scale(0.5); }
+  100% { opacity: 1; transform: translate(-50%, -40%) scale(1); }
+}
+.lab-split { display: flex; min-height: 500px; }
+.lab-copy {
+  flex: 1; padding: clamp(1.6rem, 4vw, 3.2rem); position: relative; z-index: 2;
+  display: flex; flex-direction: column; justify-content: center;
+}
+/* gradient-clipped headline (bg-clip-text equivalent), accent stays orange */
+.lab-grad {
+  background: linear-gradient(180deg, var(--text-primary), #8d93a3);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.lab-grad .accent { -webkit-text-fill-color: var(--accent-orange); }
+.lab-chips { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; margin-top: 1.8rem; }
+.lab-hint { font-size: 0.8rem; color: var(--text-muted); margin-right: 0.2rem; }
+.lab-chip {
+  min-height: 44px; padding: 0.55rem 1.25rem; border-radius: 100px;
+  font-family: var(--font-display); font-weight: 600; font-size: 0.82rem;
+  color: var(--text-primary);
+  border: 1.5px solid rgba(255, 106, 0, 0.4); background: rgba(255, 106, 0, 0.06);
+  transition: background 0.2s, border-color 0.2s, transform 0.15s var(--ease-cine);
+}
+.lab-chip:hover { background: rgba(255, 106, 0, 0.16); border-color: var(--accent-orange); }
+.lab-chip:active, .lab-chip.played { transform: scale(0.96); background: rgba(255, 106, 0, 0.24); }
+.lab-chip:focus-visible { outline: 2px solid var(--accent-orange); outline-offset: 3px; }
+/* chips only make sense with the live 3D instance */
+.lab-chips { visibility: hidden; }
+body.has-mascotlab-glb .lab-chips { visibility: visible; }
+
+.lab-stage { flex: 1; position: relative; display: flex; align-items: flex-end; justify-content: center; }
+.lab-fallback-img {
+  width: 72%; max-width: 360px; margin-bottom: 4%;
+  filter: drop-shadow(0 26px 44px rgba(0, 0, 0, 0.6));
+  animation: mascotBob 5.5s ease-in-out infinite;
+  transition: opacity 0.5s;
+}
+body.has-mascotlab-glb .lab-fallback-img { opacity: 0; }
+
 /* ---------- Testimonials ---------- */
 .testi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.3rem; margin-top: 2.4rem; }
 .testi { padding: 1.7rem; border-radius: 18px; background: var(--glass); border: 1px solid rgba(255, 106, 0, 0.12); backdrop-filter: blur(10px); display: flex; flex-direction: column; gap: 1rem; }
@@ -491,6 +547,10 @@ footer { position: relative; z-index: 3; padding: 3rem var(--gutter); background
   .about-media { aspect-ratio: 16 / 10; order: -1; }
   .cg-grid { grid-template-columns: repeat(2, 1fr); }
   .form-row { grid-template-columns: 1fr; }
+  /* Mascot lab: stack copy above the stage */
+  .lab-split { flex-direction: column; min-height: 0; }
+  .lab-card { min-height: 0; }
+  .lab-stage { min-height: 300px; padding-top: 1rem; }
   /* Declutter mascots on small screens — keep hero + closing only */
   .mascot--about, .mascot--programmes, .mascot--tour, .mascot--clients { display: none; }
   .mascot--hero { --mw: clamp(120px, 34vw, 190px); right: 0; opacity: 0.9; }
@@ -512,4 +572,6 @@ footer { position: relative; z-index: 3; padding: 3rem var(--gutter); background
   .mascot { opacity: 1 !important; transform: none !important; }
   .mascot-img { animation: none !important; }
   .mascot--faint { opacity: 0.4 !important; }
+  /* Spotlight card: no sweep, static soft glow instead */
+  .spot-sweep { animation: none !important; opacity: 0.5; transform: translate(-50%, -40%) scale(1); }
 }

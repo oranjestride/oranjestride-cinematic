@@ -277,9 +277,20 @@ export async function mountMascotGLB(sceneAPI, opts = {}) {
       rig.visible = on;
       if (on && !this.entered) {
         this.entered = true;
-        const a = onEnterClip && action(onEnterClip);
-        if (a) { a.reset(); a.setLoop(THREE.LoopOnce); a.clampWhenFinished = true; a.play(); }
+        this.play(onEnterClip);
       }
+    },
+    // Play a named clip once on top of the idle loop (chips, section-enter).
+    // LoopOnce without clamp auto-stops at the end → the idle loop resumes.
+    play(name) {
+      const a = name && action(name);
+      if (!a) return;
+      a.reset();
+      a.setLoop(THREE.LoopOnce);
+      a.clampWhenFinished = false;
+      a.setEffectiveWeight(1);
+      a.fadeIn(0.2);
+      a.play();
     },
     // Called by scene.js tick ONLY while this section is active (mixer paused otherwise).
     update({ dt, pointer, scrollVel }) {

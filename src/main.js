@@ -23,6 +23,7 @@ import { renderStats } from './sections/stats.js';
 import { renderAbout } from './sections/about.js';
 import { renderExpertise } from './sections/expertise.js';
 import { renderTestimonials } from './sections/testimonials.js';
+import { renderMascotLab, initMascotLab } from './sections/mascotlab.js';
 import { renderProgrammes, initProgrammes } from './sections/programmes.js';
 import { renderConsulting } from './sections/consulting.js';
 import { renderTour } from './sections/tour.js';
@@ -46,6 +47,7 @@ app.innerHTML = `
     ${renderAbout()}
     ${renderExpertise()}
     ${renderTestimonials()}
+    ${renderMascotLab()}
     ${renderProgrammes()}
     ${renderConsulting()}
     ${renderTour()}
@@ -100,6 +102,9 @@ if (!REDUCED && !MOBILE) {
     .then((m) => m && document.body.classList.add('has-about-glb'));
   mountMascotGLB(window.OS3D, { sectionId: 'programmes', mountId: 'programmes-mascot-mount', zPlane: 2, loop: 'run' })
     .then((m) => m && document.body.classList.add('has-programmes-glb'));
+  // Mascot Lab spotlight card: idle + wave on enter; chips fire Wave/Run/Clap.
+  mountMascotGLB(window.OS3D, { sectionId: 'mascot-lab', mountId: 'mascotlab-mount', zPlane: 2, loop: 'idle', onEnterClip: 'wave', react: true })
+    .then((m) => initMascotLab(m));
   mountMascotGLB(window.OS3D, { sectionId: 'contact', mountId: 'contact-mascot-mount', zPlane: 2, loop: 'idle', onEnterClip: 'cheer', react: true })
     .then((m) => m && document.body.classList.add('has-contact-glb'));
 }
