@@ -103,7 +103,9 @@ if (!REDUCED) {
   if (!MOBILE) {
     mountMascotGLB(window.OS3D, { sectionId: 'hero', mountId: 'hero-mascot-mount', zPlane: 2, loop: 'idle', onEnterClip: 'wave', react: true, runBlend: true, dragRotate: true })
       .then((m) => m && document.body.classList.add('has-hero-glb'));
-    mountMascotGLB(window.OS3D, { sectionId: 'programmes', mountId: 'programmes-mascot-mount', zPlane: 2, loop: 'run' })
+    // Run clip blends in with scroll velocity (§6.8) — idle at rest, striding
+    // while the visitor scrolls, same blend the hero uses.
+    mountMascotGLB(window.OS3D, { sectionId: 'programmes', mountId: 'programmes-mascot-mount', zPlane: 2, loop: 'idle', runBlend: true })
       .then((m) => m && document.body.classList.add('has-programmes-glb'));
   }
   // In-flow stages (own layout space) — live on mobile too; the GLB is webp-
