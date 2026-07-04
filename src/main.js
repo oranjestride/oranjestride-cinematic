@@ -19,6 +19,7 @@ import { renderGlobalLayers, renderFooter, initRibbon } from './sections/shell.j
 import { renderPreloader, initPreloader } from './sections/preloader.js';
 import { renderNav, initNav, setActiveDot, closeMobileMenu } from './sections/nav.js';
 import { renderHero } from './sections/hero.js';
+import { renderBand } from './sections/band.js';
 import { renderStats } from './sections/stats.js';
 import { renderAbout } from './sections/about.js';
 import { renderExpertise } from './sections/expertise.js';
@@ -43,6 +44,7 @@ app.innerHTML = `
   ${renderNav()}
   <main>
     ${renderHero()}
+    ${renderBand()}
     ${renderStats()}
     ${renderAbout()}
     ${renderExpertise()}
@@ -107,7 +109,13 @@ if (!REDUCED) {
   // In-flow stages (own layout space) — live on mobile too; the GLB is webp-
   // compressed (~2.4 MB) and only the active section's mixer ever ticks.
   mountMascotGLB(window.OS3D, { sectionId: 'about', mountId: 'about-mascot-mount', zPlane: 2, loop: 'idle', onEnterClip: 'wave', react: true })
-    .then((m) => m && document.body.classList.add('has-about-glb'));
+    .then((m) => {
+      if (!m) return; // no GLB → the turnaround loop stays as About's media tier
+      document.body.classList.add('has-about-glb');
+      // Cross-fade the turnaround out (CSS), then stop its decode work.
+      const turn = $('.about-turn');
+      if (turn) { turn.classList.add('glb-superseded'); setTimeout(() => turn.pause?.(), 700); }
+    });
   // Mascot Lab spotlight card: drag to rotate; chips fire Wave/Run/Clap.
   mountMascotGLB(window.OS3D, { sectionId: 'mascot-lab', mountId: 'mascotlab-mount', zPlane: 2, loop: 'idle', onEnterClip: 'wave', react: true, dragRotate: true })
     .then((m) => initMascotLab(m));

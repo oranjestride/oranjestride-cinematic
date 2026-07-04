@@ -69,10 +69,12 @@ body.custom-cursor, body.custom-cursor * { cursor: none; }
   position: fixed; inset: 0; z-index: 55; pointer-events: none;
   background: radial-gradient(ellipse at center, transparent 45%, rgba(3, 6, 12, 0.55) 100%);
 }
+/* Circuit-trace ambient texture (§1 motif 3) — orthogonal traces + node dots
+   pulled from the brain/circuit emblem on Marut's jacket. */
 .facet-bg {
-  position: absolute; inset: 0; z-index: 1; pointer-events: none; opacity: 0.06;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64'><path d='M32 8 L44 26 L32 44 L20 26 Z' fill='none' stroke='%23ff6a00' stroke-width='1.2'/></svg>");
-  background-size: 64px 64px;
+  position: absolute; inset: 0; z-index: 1; pointer-events: none; opacity: 0.055;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='96' height='96'><g stroke='%23ff6a00' stroke-width='1' fill='none'><path d='M10 10h30v18h22'/><path d='M86 30v26h-24'/><path d='M14 86h30v-20'/><path d='M70 86v-14h16'/></g><g fill='%23ff6a00' stroke='none'><circle cx='10' cy='10' r='2.4'/><circle cx='62' cy='28' r='2.4'/><circle cx='86' cy='30' r='2.4'/><circle cx='62' cy='56' r='2.4'/><circle cx='44' cy='66' r='2.4'/><circle cx='14' cy='86' r='2.4'/><circle cx='70' cy='86' r='2.4'/></g></svg>");
+  background-size: 96px 96px;
   -webkit-mask-image: radial-gradient(ellipse at center, transparent 20%, #000 85%);
           mask-image: radial-gradient(ellipse at center, transparent 20%, #000 85%);
 }
@@ -89,6 +91,8 @@ body.custom-cursor, body.custom-cursor * { cursor: none; }
               background 0.25s var(--ease-cine), border-color 0.25s var(--ease-cine);
 }
 .cursor-ring.hover { width: 56px; height: 56px; background: var(--accent-orange-soft); border-color: var(--accent-orange); }
+/* Energy trail (§1 motif 2): comet glow scales with pointer speed (--trail set in cursor.js) */
+.cursor-ring { box-shadow: 0 0 calc(30px * var(--trail, 0)) rgba(255, 106, 0, calc(0.55 * var(--trail, 0))); }
 
 /* ============================================================================
    Character mascot (§6 Phase B) — pre-rendered pose stills, floating + parallax
@@ -155,28 +159,75 @@ body.has-hero-glb .mascot--hero { display: none; }
 body.has-contact-glb .contact-mascot-img,
 body.has-contact-glb .contact-mascot-floor { opacity: 0; }
 
-/* Nav mascot: tiny, inline beside the wordmark */
-.mascot--nav { position: static; width: 38px; }
+/* Pose stills are framed studio renders (turnaround frames, §8) — card them */
+.mascot--hero .mascot-img, .mascot--programmes .mascot-img,
+.mascot--tour .mascot-img, .mascot--clients .mascot-img {
+  border-radius: 16px; border: 1px solid var(--edge);
+  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.5);
+  filter: none;
+}
+.lab-fallback-img, .contact-mascot-img { border-radius: 16px; border: 1px solid var(--edge); }
+
+/* Nav mascot: tiny head-and-shoulders avatar beside the wordmark */
+.mascot--nav { position: static; width: 34px; }
 .mascot--nav .mascot-shadow { display: none; }
-.mascot--nav .mascot-img { filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.5)); animation-duration: 4s; }
+.mascot--nav .mascot-img {
+  width: 34px; height: 34px; object-fit: cover; object-position: 50% 12%;
+  border-radius: 10px; border: 1px solid var(--glass-border);
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.5)); animation: none;
+}
 
-/* Preloader mascot: small, above the wordmark */
-.mascot--pre { position: static; width: 120px; }
-.mascot--pre .mascot-shadow { display: none; }
-
-/* ---------- Preloader ---------- */
+/* ---------- Preloader (§5: cinematic video loader + fallbacks) ---------- */
 #preloader {
   position: fixed; inset: 0; z-index: 200; background: var(--bg-void);
-  display: grid; place-items: center;
+  display: grid; place-items: center; overflow: hidden;
   transition: opacity 0.8s var(--ease-cine), visibility 0.8s;
 }
 #preloader.done { opacity: 0; visibility: hidden; }
 #preloader canvas { width: 260px; height: 260px; }
-.pre-inner { display: grid; place-items: center; gap: 1.6rem; }
+
+/* Video tier — Marut's flight loop fills the frame */
+.pre-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.pre-video-scrim {
+  position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 40%, rgba(6, 10, 18, 0.55) 100%),
+              linear-gradient(180deg, transparent 62%, rgba(6, 10, 18, 0.78) 100%);
+}
+
+/* Static tier (canvas emblem) — hidden while the video loop runs */
+.pre-inner { display: none; place-items: center; gap: 1.6rem; position: relative; z-index: 2; }
+#preloader.static-mode .pre-video, #preloader.static-mode .pre-video-scrim { display: none; }
+#preloader.static-mode .pre-inner { display: grid; }
+#preloader.flash canvas { display: none; } /* reduced-motion flash: wordmark only */
+#preloader.static-mode .pre-hud-word { display: none; } /* emblem block has its own wordmark */
 .pre-word { font-family: var(--font-display); font-weight: 700; letter-spacing: 0.04em; font-size: 1.1rem; opacity: 0; animation: fadeIn 0.8s 0.3s forwards; }
-.pre-bar { width: 180px; height: 2px; background: rgba(255, 255, 255, 0.08); overflow: hidden; border-radius: 2px; }
+
+/* HUD — wordmark + real progress, shared by both tiers */
+.pre-hud {
+  position: absolute; bottom: clamp(2rem, 7vh, 4.5rem); left: 50%; transform: translateX(-50%);
+  z-index: 3; display: grid; justify-items: center; gap: 0.8rem;
+}
+.pre-hud-word { font-family: var(--font-display); font-weight: 700; font-size: 1rem; letter-spacing: 0.05em; text-shadow: 0 2px 18px rgba(3, 6, 12, 0.9); }
+.pre-bar { width: 220px; height: 2px; background: rgba(255, 255, 255, 0.14); overflow: hidden; border-radius: 2px; }
 .pre-bar > i { display: block; height: 100%; width: 0%; background: var(--accent-orange); box-shadow: 0 0 12px var(--accent-orange); }
+.pre-pct { font-family: var(--font-display); font-weight: 600; font-size: 0.72rem; letter-spacing: 0.22em; color: var(--text-muted); }
+.pre-pct::after { content: "%"; opacity: 0.7; }
 @keyframes fadeIn { to { opacity: 1; } }
+
+/* MARUT name reveal — DOM fallback for the troika 3D text (§7.3). Layered
+   text-shadow + stroke approximate the bevel without WebGL. */
+.marut-name {
+  position: fixed; left: 50%; top: 44%; transform: translate(-50%, -50%);
+  z-index: 210; opacity: 0; pointer-events: none;
+  font-family: var(--font-display); font-weight: 700;
+  font-size: clamp(3.2rem, 11vw, 8.5rem); letter-spacing: 0.12em;
+  color: var(--accent-orange);
+  -webkit-text-stroke: 2px rgba(30, 45, 61, 0.9);
+  text-shadow:
+    0 0 34px rgba(255, 106, 0, 0.55),
+    0 0 90px rgba(255, 106, 0, 0.3),
+    0 3px 0 rgba(6, 10, 18, 0.8);
+}
 
 /* ---------- Promo ribbon ---------- */
 .ribbon {
@@ -269,12 +320,19 @@ h2.headline { font-family: var(--font-display); font-weight: 700; font-size: cla
 .hero-scroll-hint::after { content: ""; width: 1px; height: 40px; background: linear-gradient(var(--accent-orange), transparent); animation: scrollPulse 2s var(--ease-cine) infinite; }
 @keyframes scrollPulse { 0%, 100% { opacity: 0.3; transform: scaleY(0.6); } 50% { opacity: 1; transform: scaleY(1); } }
 
+/* ---------- Brand-moment band (§6.2) — soaring footage, copy in lower third */
+.band-moment { min-height: 92vh; align-items: flex-end; }
+.band-moment .sec-content { padding-bottom: clamp(1rem, 6vh, 3rem); }
+.band-moment .headline { margin-bottom: 0; }
+
 /* ---------- Bands ---------- */
 .band { position: relative; padding: clamp(4rem, 12vh, 9rem) var(--gutter); background: linear-gradient(180deg, var(--bg-void), var(--bg-navy), var(--bg-void)); display: flex; align-items: center; overflow: hidden; }
 .band .sec-content { max-width: 1200px; }
 .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; text-align: center; }
 .stat { position: relative; padding: 1.5rem 1rem; }
-.stat strong { display: block; font-family: var(--font-display); font-weight: 700; font-size: clamp(2.8rem, 6vw, 5rem); line-height: 1; color: var(--accent-orange); text-shadow: 0 0 40px rgba(255, 106, 0, 0.3); }
+.stat strong { display: block; font-family: var(--font-display); font-weight: 700; font-size: clamp(2.8rem, 6vw, 5rem); line-height: 1; color: var(--accent-orange); text-shadow: 0 0 40px rgba(255, 106, 0, 0.3); transition: text-shadow 0.5s var(--ease-cine); }
+/* Energy tick while digits count up (§1 motif 2) — restrained, not a slot machine */
+.stat strong.ticking { text-shadow: 0 0 46px rgba(255, 106, 0, 0.6), 0 0 14px rgba(255, 106, 0, 0.45); }
 .stat span { display: block; margin-top: 0.7rem; font-size: 0.82rem; color: var(--text-muted); letter-spacing: 0.04em; }
 .stat + .stat::before { content: ""; position: absolute; left: 0; top: 20%; height: 60%; width: 1px; background: linear-gradient(transparent, var(--edge), transparent); }
 
@@ -311,11 +369,19 @@ h2.headline { font-family: var(--font-display); font-weight: 700; font-size: cla
   background: radial-gradient(ellipse at center, var(--accent-orange-soft), transparent 62%);
   filter: blur(26px);
 }
+/* Floor tier: framed studio still fills the pane (matches the footage grade) */
 .about-media .about-mascot-img {
-  position: relative; z-index: 2;
-  width: 84%; height: auto; object-fit: contain; align-self: end; margin-bottom: 6%;
-  filter: drop-shadow(0 30px 46px rgba(0, 0, 0, 0.6));
+  position: absolute; inset: 0; z-index: 2;
+  width: 100%; height: 100%; object-fit: cover;
+  animation: none; /* framed card — no cutout bob */
 }
+/* Instant tier: looped turnaround footage over the still, under the live GLB */
+.about-media .about-turn {
+  position: absolute; inset: 0; z-index: 3;
+  width: 100%; height: 100%; object-fit: cover;
+  transition: opacity 0.7s var(--ease-cine);
+}
+.about-media .about-turn.glb-superseded { opacity: 0; }
 .about-stage-floor {
   position: absolute; bottom: 7%; left: 50%; transform: translateX(-50%);
   width: 60%; height: 26px; z-index: 1;
@@ -333,7 +399,15 @@ body.has-programmes-glb .mascot--programmes { display: none; }
 .gem-card::before { content: ""; position: absolute; top: -30px; right: -30px; width: 120px; height: 120px; background: radial-gradient(circle, var(--accent-orange-soft), transparent 70%); opacity: 0; transition: opacity 0.4s; }
 .gem-card:hover { transform: translateY(-6px); border-color: var(--accent-orange); box-shadow: 0 20px 60px rgba(255, 106, 0, 0.18); }
 .gem-card:hover::before { opacity: 1; }
-.gem-icon { width: 46px; height: 46px; margin-bottom: 1rem; color: var(--accent-orange); }
+.gem-icon { width: 46px; height: 46px; margin-bottom: 1rem; color: var(--accent-orange); position: relative; }
+/* circuit trace running off the icon (§6.5) — node dot + fading line */
+.gem-icon::after {
+  content: ""; position: absolute; left: calc(100% + 10px); top: 50%; width: 54px; height: 5px;
+  background:
+    radial-gradient(circle 2.5px at 2.5px 50%, var(--accent-orange) 98%, transparent) no-repeat,
+    linear-gradient(90deg, var(--accent-orange) 6px, transparent 90%) no-repeat 0 50% / 100% 1.5px;
+  opacity: 0.4;
+}
 .gem-icon svg { width: 100%; height: 100%; }
 .gem-card h3 { font-family: var(--font-display); font-size: 1.15rem; margin-bottom: 0.6rem; }
 .gem-card p { font-size: 0.88rem; color: var(--text-muted); margin-bottom: 1rem; }
@@ -402,6 +476,16 @@ body.has-mascotlab-glb .lab-fallback-img { opacity: 0; }
    WebGL layer paints over the DOM, so a centered pill would sit under his feet. */
 .mascot-drag { cursor: grab; user-select: none; -webkit-user-select: none; }
 .mascot-drag.dragging { cursor: grabbing; }
+/* Fast drag-spins ignite a comet streak under the character (§1 motif 2;
+   --spin is fed by mascot.js from the drag velocity, decays with inertia) */
+.mascot-drag::after {
+  content: ""; position: absolute; left: 50%; bottom: 8%;
+  width: 76%; height: 24%; transform: translateX(-50%);
+  border-radius: 50%; pointer-events: none;
+  background: radial-gradient(ellipse at center, rgba(255, 106, 0, 0.5), rgba(255, 106, 0, 0.14) 45%, transparent 68%);
+  filter: blur(16px);
+  opacity: var(--spin, 0); transition: opacity 0.25s;
+}
 .drag-hint {
   position: absolute; bottom: 0.9rem; left: 0.9rem;
   display: none; align-items: center; gap: 0.45rem; z-index: 3;
@@ -447,7 +531,14 @@ body.mascot-dragged .drag-hint { opacity: 0; }
 .consult-icon svg { width: 100%; height: 100%; }
 .consult-item h4 { font-family: var(--font-display); font-size: 1.05rem; margin-bottom: 0.4rem; }
 .consult-item p { font-size: 0.86rem; color: var(--text-muted); }
-.hud { padding: 1.6rem; border-radius: 18px; background: rgba(6, 10, 18, 0.55); border: 1px solid rgba(255, 106, 0, 0.25); backdrop-filter: blur(12px); box-shadow: inset 0 0 60px rgba(255, 106, 0, 0.06); }
+.hud { padding: 1.6rem; border-radius: 18px; background: rgba(6, 10, 18, 0.55); border: 1px solid rgba(255, 106, 0, 0.25); backdrop-filter: blur(12px); box-shadow: inset 0 0 60px rgba(255, 106, 0, 0.06); position: relative; }
+/* Circuit-trace corner brackets (§1 motif 3) on HUD panels */
+.hud::before, .hud::after {
+  content: ""; position: absolute; width: 24px; height: 24px;
+  border: 1.5px solid var(--accent-orange); opacity: 0.65; pointer-events: none;
+}
+.hud::before { top: -1px; left: -1px; border-right: 0; border-bottom: 0; border-top-left-radius: 18px; }
+.hud::after { bottom: -1px; right: -1px; border-left: 0; border-top: 0; border-bottom-right-radius: 18px; }
 .hud h4 { font-family: var(--font-display); font-size: 0.82rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent-orange); margin-bottom: 1.2rem; }
 .data-row { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; font-size: 0.85rem; border-bottom: 1px dashed rgba(255, 255, 255, 0.07); }
 .data-row strong { color: var(--accent-orange); font-family: var(--font-display); }
@@ -570,8 +661,10 @@ footer { position: relative; z-index: 3; padding: 3rem var(--gutter); background
   .lab-split { flex-direction: column; min-height: 0; }
   .lab-card { min-height: 0; }
   .lab-stage { min-height: 300px; padding-top: 1rem; }
-  /* Declutter mascots on small screens — keep hero + closing only */
-  .mascot--about, .mascot--programmes, .mascot--tour, .mascot--clients { display: none; }
+  /* Declutter mascots on small screens — programmes keeps its flat run still
+     (§6.8: mobile's substitute for the desktop live Run instance) */
+  .mascot--about, .mascot--tour, .mascot--clients { display: none; }
+  .mascot--programmes { --mw: clamp(110px, 26vw, 160px); opacity: 0.9; }
   .mascot--hero { --mw: clamp(120px, 34vw, 190px); right: 0; opacity: 0.9; }
   .contact-mascot-stage { min-height: 220px; }
 }
@@ -584,7 +677,7 @@ footer { position: relative; z-index: 3; padding: 3rem var(--gutter); background
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
   .grain, #gl-canvas { display: none; }
-  .sec-video { display: none; }
+  .sec-video, .pre-video, .pre-video-scrim, .about-turn { display: none; }
   .sec-poster { opacity: 1; }
   .reveal, .stagger > * { opacity: 1 !important; transform: none !important; }
   /* Mascots stay visible but static (no bob/parallax) */

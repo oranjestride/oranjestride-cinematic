@@ -25,11 +25,13 @@ export function runCounts() {
     const dec = parseInt(el.dataset.decimals || '0', 10);
     const suffix = el.dataset.suffix || '';
     const dur = 1600, t0 = performance.now();
+    el.classList.add('ticking'); // energy glow while digits change (§1 motif 2)
     (function step(now) {
       const k = Math.min(1, (now - t0) / dur);
       const e = 1 - Math.pow(1 - k, 3);
       el.textContent = (target * e).toFixed(dec) + (k === 1 ? suffix : '');
       if (k < 1) requestAnimationFrame(step);
+      else el.classList.remove('ticking');
     })(t0);
   });
 }

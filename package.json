@@ -13,7 +13,8 @@
   "dependencies": {
     "@studio-freight/lenis": "^1.0.42",
     "gsap": "^3.12.5",
-    "three": "^0.160.1"
+    "three": "^0.160.1",
+    "troika-three-text": "^0.52.4"
   },
   "devDependencies": {
     "puppeteer-core": "^25.3.0",

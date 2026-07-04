@@ -1,8 +1,9 @@
-// 2 · About — split layout, principles stagger. The media pane is now the
-// character mascot "at the source" (video retired, §1). The mascot stands on a
-// soft reflective plinth — a nod to the old footage's wet-floor closing shot.
+// 2 · About — split layout, principles stagger. Media pane is a three-tier
+// stack (§6.4): the looped turnaround footage plays the moment the section
+// nears the viewport (instant, no WebGL wait) and cross-fades to the live GLB
+// once it mounts; the flat pose still is the reduced-motion / no-video floor.
 import { about } from '../data/content.js';
-import { posePath } from '../utils/helpers.js';
+import { posePath, videoPath, posterPath } from '../utils/helpers.js';
 
 export function renderAbout() {
   return `
@@ -22,12 +23,15 @@ export function renderAbout() {
           </div>
         </div>
 
-        <!-- Media pane: live mascot mounts here on the shared canvas; the flat
-             pose image below is the static fallback (reduced-motion / no GLB). -->
+        <!-- Media pane (three tiers): turnaround loop (instant) → live GLB
+             (cross-fades in over the shared canvas) → flat pose still (floor). -->
         <div class="about-media about-stage reveal" id="about-mascot-mount">
           <span class="about-stage-glow" aria-hidden="true"></span>
           <img class="mascot-img about-mascot-img" src="${posePath('idle', 'webp')}"
                alt="The OranjeStride mascot" decoding="async" />
+          <video class="about-turn" data-src="${videoPath('mascot-turnaround')}"
+                 poster="${posterPath('mascot-turnaround')}"
+                 muted loop playsinline preload="metadata" aria-hidden="true"></video>
           <span class="about-stage-floor" aria-hidden="true"></span>
         </div>
       </div>

@@ -271,10 +271,11 @@ export async function mountMascotGLB(sceneAPI, opts = {}) {
   // ---- Drag-to-rotate (pointer + touch) on the mount element (§drag) ----
   // touch-action: pan-y keeps vertical page scroll working on mobile while a
   // horizontal drag spins the character. Inertia decays after release.
-  let dragYaw = 0, dragVel = 0, dragging = false;
+  let dragYaw = 0, dragVel = 0, dragging = false, dragEl = null;
   if (dragRotate && mountId) {
     const el = document.getElementById(mountId);
     if (el) {
+      dragEl = el;
       el.style.pointerEvents = 'auto';
       el.style.touchAction = 'pan-y';
       // Above .sec-content (z4) so pointer events reach an overlay mount; the
@@ -352,6 +353,8 @@ export async function mountMascotGLB(sceneAPI, opts = {}) {
 
       // Face the camera; drag spins (with inertia), cursor adds a subtle turn.
       if (!dragging && Math.abs(dragVel) > 0.0001) { dragYaw += dragVel; dragVel *= 0.94; }
+      // Fast spins ignite an orange energy streak under the character (§1 motif 2).
+      if (dragEl) dragEl.style.setProperty('--spin', Math.min(1, Math.abs(dragVel) * 5).toFixed(2));
       const targetYaw = baseYaw + dragYaw + (react && !dragging ? pointer.x * 0.4 : 0);
       rig.rotation.y += (targetYaw - rig.rotation.y) * (dragging ? 0.5 : 0.08);
 

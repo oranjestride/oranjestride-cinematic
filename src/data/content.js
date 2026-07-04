@@ -247,3 +247,13 @@ export const datastride = {
 export const ribbon = {
   text: 'New cohort enrolling — limited seats · India AI Learning Tour 2026',
 };
+
+// Brand-moment band (§6.2) — the one copy addition of the Marut build: a short
+// eyebrow/headline pair over the soaring footage, in the hero's voice.
+export const band = {
+  video: 'mascot-soaring-banner',
+  eyebrow: 'The Mark in Motion',
+  headA: 'Carry the ',
+  headAccent: 'Momentum',
+  dots: { brand: 'Stride' },
+};

@@ -24,6 +24,9 @@ export function initCursor({ reduced }) {
     dot.style.transform = `translate(${dx}px,${dy}px) translate(-50%,-50%)`;
     rx += (dx - rx) * 0.18; ry += (dy - ry) * 0.18;
     ring.style.transform = `translate(${rx}px,${ry}px) translate(-50%,-50%)`;
+    // Energy trail (§1 motif 2): the ring's lag distance ≈ pointer speed —
+    // fast moves ignite an orange comet glow, idle hovering stays clean.
+    ring.style.setProperty('--trail', Math.min(1, Math.hypot(dx - rx, dy - ry) / 150).toFixed(2));
     requestAnimationFrame(loop);
   })();
 

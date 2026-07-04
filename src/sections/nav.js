@@ -1,5 +1,5 @@
 // Sticky nav — appears after hero, wordmark + nav-mascot + section dots (§3.5).
-import { nav as navData } from '../data/content.js';
+import { nav as navData, band } from '../data/content.js';
 import { $, $$, wordmark, mascotMarkup } from '../utils/helpers.js';
 
 export function renderNav() {
@@ -24,7 +24,7 @@ export function initNav({ lenis, sections }) {
   sections.forEach((s) => {
     const b = document.createElement('button');
     b.dataset.id = s.id;
-    const label = navData.dots[s.id] || s.id;
+    const label = navData.dots[s.id] || band.dots[s.id] || s.id;
     b.title = label;
     b.setAttribute('aria-label', label);
     b.addEventListener('click', () => {

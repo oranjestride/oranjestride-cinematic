@@ -59,7 +59,28 @@ async function runWidth(width) {
   page.on('request', (r) => { if (r.url().includes('mascot.glb')) glbFetches.push(r.method()); });
 
   await page.goto(URL, { waitUntil: 'networkidle2', timeout: 60000 });
-  await sleep(4500); // preloader + GLB mount settle
+  // The video loader holds until real progress + the portal beat complete
+  // (~9s); body stays scroll-locked until the vortex wipe. Wait it out.
+  const loaderMode = await page.evaluate(() => {
+    const pre = document.getElementById('preloader');
+    return pre?.classList.contains('static-mode') ? 'static' : pre ? 'video' : 'gone';
+  });
+  await page.waitForFunction(() => !document.getElementById('preloader'), { timeout: 30000 })
+    .catch(() => fail('preloader did not clear within 30s'));
+  await sleep(1500); // GLB mount + hero cascade settle
+  if (!REDUCED) {
+    pass(`loader ran in ${loaderMode} mode`);
+    const marut = await page.evaluate(() => window.__marutShown || null);
+    marut ? pass(`MARUT name reveal fired (${marut})`) : fail('MARUT name reveal never fired');
+  }
+
+  // Brand-moment band (§6.2): first-class section with the soaring footage.
+  const bandOk = await page.evaluate(() => {
+    const s = document.getElementById('brand');
+    const v = s?.querySelector('.sec-video');
+    return !!(s && v && (v.src || v.dataset.src).includes('mascot-soaring-banner'));
+  });
+  bandOk ? pass('brand-moment band wired with soaring footage') : fail('brand band missing/miswired');
 
   // Full scroll-through, screenshotting each section.
   const sections = await page.evaluate(() =>
@@ -84,6 +105,14 @@ async function runWidth(width) {
     state.dragTargets ? fail(`reduced-motion: drag-rotate active`) : pass('reduced-motion: no drag targets');
     if (glbFetches.filter((m) => m === 'GET').length > 0) fail('reduced-motion: mascot.glb was fetched');
     else pass('reduced-motion: no mascot.glb fetch');
+    const reducedLoader = await page.evaluate(() => ({
+      preVideoShown: [...document.querySelectorAll('.pre-video')].some((v) => getComputedStyle(v).display !== 'none'),
+      aboutTurnShown: [...document.querySelectorAll('.about-turn')].some((v) => getComputedStyle(v).display !== 'none'),
+      marut: window.__marutShown || null,
+    }));
+    reducedLoader.preVideoShown ? fail('reduced-motion: loader video visible') : pass('reduced-motion: loader video hidden');
+    reducedLoader.aboutTurnShown ? fail('reduced-motion: about turnaround visible') : pass('reduced-motion: about turnaround hidden');
+    reducedLoader.marut ? fail('reduced-motion: MARUT reveal ran') : pass('reduced-motion: no MARUT reveal');
   } else if (NO_GLB) {
     const state = await page.evaluate(() => ({
       liveMascots: [...document.body.classList].filter((c) => c.endsWith('-glb')).length,
@@ -154,6 +183,17 @@ async function runWidth(width) {
       return !document.body.classList.contains('ribbon-on') ? true : 'did-not-dismiss';
     });
     ribbonOk === true ? pass('ribbon off by default + dismissible') : fail(`ribbon: ${ribbonOk}`);
+
+    // About media pane (§6.4): turnaround tier present; cross-faded out (and
+    // paused) once the live GLB mounts; still looping when there is no GLB.
+    const aboutOk = await page.evaluate(() => {
+      const turn = document.querySelector('#about .about-turn');
+      if (!turn) return 'no-turnaround-video';
+      if (document.body.classList.contains('has-about-glb'))
+        return turn.classList.contains('glb-superseded') || 'not-superseded-despite-glb';
+      return true;
+    });
+    aboutOk === true ? pass('about pane: turnaround/GLB tiers behave') : fail(`about pane: ${aboutOk}`);
 
     // Offscreen instances provably stop: with one section active, exactly one
     // skinned rig is visible, and an inactive rig's bones do not move over time.
