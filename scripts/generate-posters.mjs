@@ -3,7 +3,8 @@
 // Extracts a poster frame for each video in public/video/ into
 // public/img/posters/<name>.jpg for lazy-load + prefers-reduced-motion fallback.
 //
-// Requires ffmpeg on PATH:  brew install ffmpeg   (or)   apt install ffmpeg
+// Requires ffmpeg on PATH (brew install ffmpeg) — or point the FFMPEG env var
+// at any ffmpeg binary (e.g. the one bundled with python's imageio-ffmpeg).
 // Run with:  npm run posters
 // ============================================================================
 import { readdirSync, mkdirSync, existsSync } from 'node:fs';
@@ -12,6 +13,7 @@ import { join, basename, extname } from 'node:path';
 
 const VIDEO_DIR = 'public/video';
 const POSTER_DIR = 'public/img/posters';
+const FFMPEG = process.env.FFMPEG || 'ffmpeg';
 
 if (!existsSync(POSTER_DIR)) mkdirSync(POSTER_DIR, { recursive: true });
 
@@ -24,7 +26,7 @@ for (const file of videos) {
   const name = basename(file, extname(file));
   const out = join(POSTER_DIR, `${name}.jpg`);
   try {
-    execFileSync('ffmpeg', [
+    execFileSync(FFMPEG, [
       '-y', '-loglevel', 'error',
       '-ss', '0.15', '-i', join(VIDEO_DIR, file),
       '-frames:v', '1',
