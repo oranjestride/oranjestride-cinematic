@@ -14,6 +14,7 @@ import { initMascots, mountMascotGLB } from './three/mascot.js';
 import { initCursor } from './utils/cursor.js';
 import { initReveals } from './utils/reveal.js';
 import { initVideos } from './utils/video.js';
+import { prepareIntroStage, runMarutIntro } from './utils/intro.js';
 
 import { renderGlobalLayers, renderFooter, initRibbon } from './sections/shell.js';
 import { renderPreloader, initPreloader } from './sections/preloader.js';
@@ -97,12 +98,15 @@ initMascots({ reduced: REDUCED });          // DOM pose-swap mascots (nav/hero/a
 // resolves to null when the GLB is absent/broken → flat pose stays (no empty
 // pane). Only the active section's mixer ticks; mobile keeps flat poses (perf).
 const MOBILE = matchMedia('(max-width: 900px)').matches;
+let introStage = null;                       // centre-stage parking for the intro glide
+let heroInstPromise = Promise.resolve(null); // live hero instance (or null → flat intro)
 if (!REDUCED) {
   // Overlay mounts (float over section content) — desktop only, they'd crowd
   // small screens where the flat poses read better.
   if (!MOBILE) {
-    mountMascotGLB(window.OS3D, { sectionId: 'hero', mountId: 'hero-mascot-mount', zPlane: 2, loop: 'idle', onEnterClip: 'wave', react: true, runBlend: true, dragRotate: true })
-      .then((m) => m && document.body.classList.add('has-hero-glb'));
+    introStage = prepareIntroStage(); // park BEFORE mounting: auto-fit tracks the rect
+    heroInstPromise = mountMascotGLB(window.OS3D, { sectionId: 'hero', mountId: 'hero-mascot-mount', zPlane: 2, loop: 'idle', onEnterClip: null, react: true, runBlend: true, dragRotate: true })
+      .then((m) => { if (m) document.body.classList.add('has-hero-glb'); return m; });
     // Run clip blends in with scroll velocity (§6.8) — idle at rest, striding
     // while the visitor scrolls, same blend the hero uses.
     mountMascotGLB(window.OS3D, { sectionId: 'programmes', mountId: 'programmes-mascot-mount', zPlane: 2, loop: 'idle', runBlend: true })
@@ -173,6 +177,15 @@ addEventListener('keydown', (e) => {
 });
 
 // ---------------------------------------------------------------------------
-// 5 · Preloader last — it covers the initial asset load (§3.1, §8.8)
+// 5 · Preloader last — it covers the initial asset load (§3.1, §8.8).
+// When it hands over, the hero copy cascades in on the left while Marut
+// glides from centre-stage to his mount and introduces himself (intro.js).
 // ---------------------------------------------------------------------------
-initPreloader({ reduced: REDUCED, onDone: revealHero });
+initPreloader({
+  reduced: REDUCED,
+  onDone(mode) {
+    revealHero();
+    heroInstPromise.then((inst) =>
+      runMarutIntro({ stage: introStage, inst, mode, reduced: REDUCED }));
+  },
+});

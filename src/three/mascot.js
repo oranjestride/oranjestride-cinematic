@@ -161,6 +161,31 @@ function loadSharedGLB() {
     let animations = gltf.animations?.length ? gltf.animations : await loadSeparateAnims();
     if (animations.length) animations = remapClipsToSkeleton(animations, gltf.scene);
 
+    // Material pass. The image-to-3D bake ships ONE material with a single
+    // base-color texture — no emissive, no normal map — so the character's
+    // signature circuit glow only exists as paint. Recover it in-shader:
+    // saturated orange (trail/circuits/tail) and neon-cyan (trim) texels
+    // emit their own color; skin/cloth stay plain PBR. Clones share these
+    // material instances, so this compiles once for all five mounts.
+    gltf.scene.traverse((o) => {
+      if (!(o.isMesh || o.isSkinnedMesh) || !o.material) return;
+      const m = o.material;
+      m.envMapIntensity = 0.9;
+      m.onBeforeCompile = (sh) => {
+        sh.fragmentShader = sh.fragmentShader.replace(
+          '#include <emissivemap_fragment>',
+          `#include <emissivemap_fragment>
+          {
+            vec3 c = diffuseColor.rgb;
+            float orange = smoothstep(0.42, 0.78, c.r - c.b) * smoothstep(0.45, 0.85, c.r);
+            float cyan   = smoothstep(0.18, 0.55, c.b - c.r) * smoothstep(0.35, 0.80, c.b);
+            totalEmissiveRadiance += c * (orange * 1.6 + cyan * 1.2);
+          }`
+        );
+      };
+      m.needsUpdate = true;
+    });
+
     return { scene: gltf.scene, animations };
   })().catch((err) => {
     console.warn('[mascot] shared GLB load failed, using flat fallbacks:', err);

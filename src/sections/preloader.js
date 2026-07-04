@@ -2,18 +2,19 @@
 // Preloader — cinematic video loader (§5): Marut flies through golden clouds
 // on a seamless loop while REAL load progress fills the bar; when everything
 // is actually ready he dives into the portal (played once) and the footage's
-// own vortex becomes the wipe into the page, holding briefly on 3D "MARUT"
-// text (§7 — the only place his name appears as visible copy).
+// own vortex becomes the wipe into the page. The wipe opens onto the LIVE 3D
+// character standing where the footage landed him — the intro sequence
+// (main.js) then glides him aside and types his introduction.
 //
 // Fallback chain (§5.4):
 //   video loop (desktop + capable connections)
 //   → canvas particle-emblem loader (no video / slow start / save-data)
 //   → static branded flash under ~300ms (prefers-reduced-motion)
+//
+// onDone(mode) fires as the wipe begins, mode ∈ 'video' | 'static' | 'reduced'.
 // ============================================================================
 import gsap from 'gsap';
 import { videoPath, posterPath, mascotGLBPath, wordmark } from '../utils/helpers.js';
-
-const FONT_URL = `${import.meta.env.BASE_URL}fonts/space-grotesk-700.ttf`;
 
 export function renderPreloader() {
   return `
@@ -36,8 +37,6 @@ export function renderPreloader() {
       <span class="pre-pct" id="pre-pct">0</span>
     </div>
 
-    <!-- DOM name reveal — fallback when the 3D text can't render (§7.3) -->
-    <div class="marut-name" id="marut-name" aria-hidden="true">MARUT</div>
   </div>`;
 }
 
@@ -79,42 +78,6 @@ function realProgress(onStep) {
 }
 
 // ---------------------------------------------------------------------------
-// 3D name reveal (§7): troika SDF text in the shared Three scene, riding the
-// wipe timeline. Resolves null on any failure → caller uses the DOM fallback.
-// ---------------------------------------------------------------------------
-async function mountMarut3D() {
-  const api = window.OS3D;
-  if (!api?.enabled || !api.three) return null;
-  try {
-    const { Text } = await import('troika-three-text');
-    const t = new Text();
-    t.text = 'MARUT';
-    t.font = FONT_URL;
-    t.fontSize = 1.7;
-    t.letterSpacing = 0.08;
-    t.anchorX = 'center';
-    t.anchorY = 'middle';
-    t.color = 0xff6a00;
-    t.outlineWidth = 0.045;            // dark rim reads as a bevel against the glow
-    t.outlineColor = 0x1e2d3d;
-    t.outlineOpacity = 0.9;
-    t.fillOpacity = 0;
-    t.position.set(0, 0.2, 2);
-    t.renderOrder = 10;
-    await new Promise((res) => { t.sync(res); });
-    api.three.scene.add(t);
-    return {
-      obj: t,
-      setOpacity(o) { t.fillOpacity = o; t.outlineOpacity = o * 0.9; },
-      dispose() { api.three.scene.remove(t); t.dispose(); },
-    };
-  } catch (err) {
-    console.warn('[preloader] 3D name reveal unavailable, using DOM fallback:', err);
-    return null;
-  }
-}
-
-// ---------------------------------------------------------------------------
 export function initPreloader({ reduced, onDone }) {
   const pre = document.getElementById('preloader');
   const fill = document.getElementById('pre-fill');
@@ -123,20 +86,20 @@ export function initPreloader({ reduced, onDone }) {
   const cv = document.getElementById('pre-canvas');
   document.body.classList.add('locked');
 
-  const finishSimple = (delay) => {
+  const finishSimple = (delay, mode) => {
     setTimeout(() => {
       pre.classList.add('done');
       document.body.classList.remove('locked');
-      onDone?.();
+      onDone?.(mode);
       setTimeout(() => pre.remove(), 1000);
     }, delay);
   };
 
-  // --- Reduced motion: static branded flash, no video, no 3D text (§5.4/§9) ---
+  // --- Reduced motion: static branded flash, no video, no intro glide (§5.4/§9) ---
   if (reduced) {
     pre.classList.add('static-mode', 'flash');
     video.removeAttribute('src');
-    finishSimple(260);
+    finishSimple(260, 'reduced');
     return;
   }
 
@@ -186,7 +149,7 @@ export function initPreloader({ reduced, onDone }) {
     if (fill) fill.style.width = '100%';
     if (pct) pct.textContent = '100';
 
-    if (mode !== 'video') { finishSimple(700); revealMarutDOM(); return; }
+    if (mode !== 'video') { finishSimple(700, 'static'); return; }
 
     // Swap the loop for the one-shot portal dive.
     if (!portal.src) portal.src = videoPath('mascot-flight-portal');
@@ -205,11 +168,9 @@ export function initPreloader({ reduced, onDone }) {
     endP.then(() => vortexWipe());
   });
 
-  // --- Vortex wipe (§5.3) + MARUT reveal (§7), one GSAP timeline ---
-  async function vortexWipe() {
+  // --- Vortex wipe (§5.3): the footage's portal becomes the reveal mask ---
+  function vortexWipe() {
     document.body.classList.remove('locked');
-    const marut3d = await mountMarut3D();
-    const domName = document.getElementById('marut-name');
 
     const hole = { r: 0 };
     // Centered on the portal/landing spot in the footage (screen center, a
@@ -223,40 +184,15 @@ export function initPreloader({ reduced, onDone }) {
 
     const tl = gsap.timeline({
       onComplete() {
-        marut3d?.dispose();
         pre.remove();
         delete window.__loaderTL;
       },
     });
     window.__loaderTL = tl; // QA hook: scripts/qa.mjs seeks this to verify the beat
-    // Hero copy cascades in only after the name clears — the wipe opens onto
-    // the ambient scene, MARUT reads once, then the headline takes the stage.
-    tl.add(() => onDone?.(), 1.9);
+    // The wipe reveals the live character standing where the footage landed
+    // him; the intro sequence (main.js) takes over the moment it begins.
+    tl.add(() => onDone?.('video'), 0.15);
     tl.to(hole, { r: 142, duration: 1.25, ease: 'power3.inOut', onUpdate: apply }, 0);
-
-    if (marut3d) {
-      window.__marutShown = '3d'; // QA flag (scripts/qa.mjs)
-      const s = { o: 0 };
-      marut3d.obj.scale.setScalar(0.85);
-      tl.to(s, { o: 1, duration: 0.5, ease: 'power2.out', onUpdate: () => marut3d.setOpacity(s.o) }, 0.35)
-        .to(marut3d.obj.scale, { x: 1, y: 1, z: 1, duration: 0.9, ease: 'power3.out' }, 0.35)
-        .to(s, { o: 0, duration: 0.55, ease: 'power2.in', onUpdate: () => marut3d.setOpacity(s.o) }, 1.75);
-    } else {
-      revealMarutDOM(0.35);
-    }
-  }
-
-  // DOM name reveal (§7.3 fallback). Re-parented to <body> so neither the
-  // preloader's wipe mask nor its removal can clip the beat mid-read.
-  function revealMarutDOM(delay = 0) {
-    const domName = document.getElementById('marut-name');
-    if (!domName) return;
-    window.__marutShown = 'dom'; // QA flag (scripts/qa.mjs)
-    document.body.appendChild(domName);
-    gsap.timeline({ onComplete: () => domName.remove() })
-      .set(domName, { xPercent: -50, yPercent: -50, scale: 0.9 })
-      .to(domName, { opacity: 1, scale: 1, duration: 0.5, ease: 'power2.out', delay })
-      .to(domName, { opacity: 0, duration: 0.5, ease: 'power2.in' }, '+=0.7');
   }
 }
 

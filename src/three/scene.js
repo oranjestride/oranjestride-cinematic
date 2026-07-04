@@ -28,16 +28,28 @@ export function initScene({ reduced }) {
   }
   renderer.setPixelRatio(DPR);
   renderer.setSize(innerWidth, innerHeight);
+  // Filmic grade — without tone mapping the single-texture mascot reads as
+  // flat dark plastic; ACES matches the footage's warm cinematic register.
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.15;
 
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.1, 100);
   camera.position.set(0, 0, 12);
 
-  scene.add(new THREE.AmbientLight(0xffffff, 0.75));
-  const key = new THREE.DirectionalLight(0xff8a3a, 1.4); key.position.set(4, 6, 8); scene.add(key);
-  const rim = new THREE.DirectionalLight(0x2a4a6a, 0.9); rim.position.set(-6, -2, 4); scene.add(rim);
+  // Image-based lighting: PBR materials need an environment to have body.
+  import('three/examples/jsm/environments/RoomEnvironment.js').then(({ RoomEnvironment }) => {
+    const pmrem = new THREE.PMREMGenerator(renderer);
+    scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+    pmrem.dispose();
+  }).catch(() => {});
+
+  scene.add(new THREE.AmbientLight(0xfff1e0, 0.5));
+  const key = new THREE.DirectionalLight(0xffa45c, 1.5); key.position.set(4, 6, 8); scene.add(key);
+  // Cool rim kept faint — at 0.9 it used to drown the jacket in teal.
+  const rim = new THREE.DirectionalLight(0x35507a, 0.45); rim.position.set(-6, -2, 4); scene.add(rim);
   // Front fill from the camera so the mascot's face/jacket read against dark footage.
-  const fill = new THREE.DirectionalLight(0xfff2e6, 1.0); fill.position.set(0, 2, 12); scene.add(fill);
+  const fill = new THREE.DirectionalLight(0xfff2e6, 1.05); fill.position.set(0, 2, 12); scene.add(fill);
 
   const sprite = makeGlowSprite(new THREE.Color('#ff6a00'));
 

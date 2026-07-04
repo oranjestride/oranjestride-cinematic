@@ -214,20 +214,36 @@ body.has-contact-glb .contact-mascot-floor { opacity: 0; }
 .pre-pct::after { content: "%"; opacity: 0.7; }
 @keyframes fadeIn { to { opacity: 1; } }
 
-/* MARUT name reveal — DOM fallback for the troika 3D text (§7.3). Layered
-   text-shadow + stroke approximate the bevel without WebGL. */
-.marut-name {
-  position: fixed; left: 50%; top: 44%; transform: translate(-50%, -50%);
-  z-index: 210; opacity: 0; pointer-events: none;
-  font-family: var(--font-display); font-weight: 700;
-  font-size: clamp(3.2rem, 11vw, 8.5rem); letter-spacing: 0.12em;
-  color: var(--accent-orange);
-  -webkit-text-stroke: 2px rgba(30, 45, 61, 0.9);
-  text-shadow:
-    0 0 34px rgba(255, 106, 0, 0.55),
-    0 0 90px rgba(255, 106, 0, 0.3),
-    0 3px 0 rgba(6, 10, 18, 0.8);
+/* Marut's introduction bubble — typed beside the character after the loader.
+   z45 floats it over the WebGL layer (z40); the tail points at him. */
+.marut-bubble {
+  position: absolute; z-index: 45;
+  right: calc(2% + min(30vw, 352px)); top: 30%;
+  max-width: 260px; padding: 0.85rem 1.15rem;
+  opacity: 0; transform: translateY(10px) scale(0.92); transform-origin: 100% 100%;
+  transition: opacity 0.45s var(--ease-cine), transform 0.45s var(--ease-cine);
+  pointer-events: none;
+  font-family: var(--font-display); font-weight: 600;
+  font-size: clamp(1.05rem, 1.6vw, 1.35rem); color: var(--text-primary);
+  background: rgba(6, 10, 18, 0.78);
+  border: 1px solid var(--glass-border); border-radius: 16px 16px 4px 16px;
+  box-shadow: 0 14px 44px rgba(0, 0, 0, 0.5), 0 0 24px rgba(255, 106, 0, 0.12);
+  backdrop-filter: blur(10px);
 }
+.marut-bubble::after { /* tail toward the character */
+  content: ""; position: absolute; right: -8px; bottom: 10px;
+  width: 14px; height: 14px; transform: rotate(45deg);
+  background: rgba(6, 10, 18, 0.78);
+  border-top: 1px solid var(--glass-border); border-right: 1px solid var(--glass-border);
+}
+.marut-bubble.show { opacity: 1; transform: translateY(0) scale(1); }
+.marut-bubble.hide { opacity: 0; transform: translateY(-8px) scale(0.96); }
+.mb-caret {
+  display: inline-block; width: 2px; height: 1em; margin-left: 3px;
+  vertical-align: text-bottom; background: var(--accent-orange); opacity: 0;
+}
+.marut-bubble.typing .mb-caret { opacity: 1; animation: caretBlink 0.85s steps(1) infinite; }
+@keyframes caretBlink { 50% { opacity: 0; } }
 
 /* ---------- Promo ribbon ---------- */
 .ribbon {
@@ -665,7 +681,10 @@ footer { position: relative; z-index: 3; padding: 3rem var(--gutter); background
      (§6.8: mobile's substitute for the desktop live Run instance) */
   .mascot--about, .mascot--tour, .mascot--clients { display: none; }
   .mascot--programmes { --mw: clamp(110px, 26vw, 160px); opacity: 0.9; }
-  .mascot--hero { --mw: clamp(120px, 34vw, 190px); right: 0; opacity: 0.9; }
+  /* Lifted clear of the fixed DataStride badge in the corner */
+  .mascot--hero { --mw: clamp(120px, 34vw, 190px); right: 8px; bottom: 78px; opacity: 0.9; }
+  /* Intro bubble docks just above the flat hero card on small screens */
+  .marut-bubble { right: 4%; top: auto; bottom: calc(clamp(120px, 34vw, 190px) * 1.29 + 90px); max-width: 210px; }
   .contact-mascot-stage { min-height: 220px; }
 }
 @media (max-width: 560px) {

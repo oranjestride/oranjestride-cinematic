@@ -248,6 +248,12 @@ export const ribbon = {
   text: 'New cohort enrolling — limited seats · India AI Learning Tour 2026',
 };
 
+// Marut's self-introduction — typed into a speech bubble beside the live 3D
+// character as he glides to the hero's side after the loader.
+export const intro = {
+  bubble: "Hi, I'm Marut.",
+};
+
 // Brand-moment band (§6.2) — the one copy addition of the Marut build: a short
 // eyebrow/headline pair over the soaring footage, in the hero's voice.
 export const band = {

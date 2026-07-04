@@ -70,8 +70,12 @@ async function runWidth(width) {
   await sleep(1500); // GLB mount + hero cascade settle
   if (!REDUCED) {
     pass(`loader ran in ${loaderMode} mode`);
-    const marut = await page.evaluate(() => window.__marutShown || null);
-    marut ? pass(`MARUT name reveal fired (${marut})`) : fail('MARUT name reveal never fired');
+    // Marut's typed self-introduction beside the character (glide or flat tier)
+    const introOk = await page
+      .waitForFunction(() => document.getElementById('marut-bubble-text')?.textContent === "Hi, I'm Marut.", { timeout: 12000 })
+      .then(() => true).catch(() => false);
+    const tier = await page.evaluate(() => window.__marutIntro || null);
+    introOk ? pass(`Marut intro bubble typed (${tier} tier)`) : fail(`Marut intro bubble missing (tier: ${tier})`);
   }
 
   // Brand-moment band (§6.2): first-class section with the soaring footage.
@@ -108,11 +112,11 @@ async function runWidth(width) {
     const reducedLoader = await page.evaluate(() => ({
       preVideoShown: [...document.querySelectorAll('.pre-video')].some((v) => getComputedStyle(v).display !== 'none'),
       aboutTurnShown: [...document.querySelectorAll('.about-turn')].some((v) => getComputedStyle(v).display !== 'none'),
-      marut: window.__marutShown || null,
+      bubbleText: document.getElementById('marut-bubble-text')?.textContent || '',
     }));
     reducedLoader.preVideoShown ? fail('reduced-motion: loader video visible') : pass('reduced-motion: loader video hidden');
     reducedLoader.aboutTurnShown ? fail('reduced-motion: about turnaround visible') : pass('reduced-motion: about turnaround hidden');
-    reducedLoader.marut ? fail('reduced-motion: MARUT reveal ran') : pass('reduced-motion: no MARUT reveal');
+    reducedLoader.bubbleText === "Hi, I'm Marut." ? pass('reduced-motion: intro bubble static, full text') : fail(`reduced-motion: bubble text "${reducedLoader.bubbleText}"`);
   } else if (NO_GLB) {
     const state = await page.evaluate(() => ({
       liveMascots: [...document.body.classList].filter((c) => c.endsWith('-glb')).length,
