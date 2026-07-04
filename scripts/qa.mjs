@@ -24,6 +24,7 @@ const URL = arg('url', 'http://localhost:4318/');
 const OUT = arg('out', 'qa-shots');
 const WIDTHS = arg('widths', '375,820,1440').split(',').map(Number);
 const REDUCED = has('reduced');
+const NO_GLB = has('expect-no-glb'); // run with mascot.glb removed: assert flat fallback
 const SHOTS = !has('no-shots');
 const CHROME = arg('chrome', '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome');
 
@@ -83,6 +84,13 @@ async function runWidth(width) {
     state.dragTargets ? fail(`reduced-motion: drag-rotate active`) : pass('reduced-motion: no drag targets');
     if (glbFetches.filter((m) => m === 'GET').length > 0) fail('reduced-motion: mascot.glb was fetched');
     else pass('reduced-motion: no mascot.glb fetch');
+  } else if (NO_GLB) {
+    const state = await page.evaluate(() => ({
+      liveMascots: [...document.body.classList].filter((c) => c.endsWith('-glb')).length,
+      flatPoses: [...document.querySelectorAll('.mascot-img')].filter((i) => i.complete && i.naturalWidth > 0).length,
+    }));
+    state.liveMascots ? fail(`no-GLB: ${state.liveMascots} live mascots mounted anyway`) : pass('no-GLB: zero live mounts');
+    state.flatPoses > 0 ? pass(`no-GLB: ${state.flatPoses} flat pose stills rendered`) : fail('no-GLB: flat poses missing');
   } else {
     const gets = glbFetches.filter((m) => m === 'GET').length;
     if (gets > 1) fail(`mascot.glb GET fetched ${gets} times (want ≤1)`);
@@ -117,6 +125,59 @@ async function runWidth(width) {
       return !modal.classList.contains('open') ? true : 'did-not-close';
     });
     modalOk === true ? pass('clients modal open/close') : fail(`clients modal: ${modalOk}`);
+
+    // Clients hover caption (breachbunny parity: logo card reveals a one-liner)
+    const capOk = await page.evaluate(async () => {
+      const open = document.querySelector('#clients [data-open-clients], #clients .clients-cta, #clients button');
+      open?.click();
+      await new Promise((r) => setTimeout(r, 500));
+      const card = document.querySelector('.cg-card');
+      const cap = card?.querySelector('.cg-cap');
+      if (!card || !cap) return 'no-card-or-cap';
+      if (!cap.textContent.trim()) return 'empty-caption';
+      card.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
+      const shown = matchMedia('(hover: hover)').matches ? true : 'no-hover-device';
+      const modal = document.getElementById('clients-modal');
+      modal?.querySelector('[data-close], .modal-close, button')?.click();
+      return shown;
+    });
+    capOk === true ? pass('clients hover caption present') : fail(`clients caption: ${capOk}`);
+
+    // Promo ribbon (off by default; dismissible when enabled)
+    const ribbonOk = await page.evaluate(async () => {
+      if (document.body.classList.contains('ribbon-on')) return 'on-by-default';
+      document.body.classList.add('ribbon-on');
+      const close = document.getElementById('ribbon-close');
+      if (!close) return 'no-close-btn';
+      close.click();
+      await new Promise((r) => setTimeout(r, 100));
+      return !document.body.classList.contains('ribbon-on') ? true : 'did-not-dismiss';
+    });
+    ribbonOk === true ? pass('ribbon off by default + dismissible') : fail(`ribbon: ${ribbonOk}`);
+
+    // Offscreen instances provably stop: with one section active, exactly one
+    // skinned rig is visible, and an inactive rig's bones do not move over time.
+    const mixerOk = NO_GLB ? 'skipped (no GLB)' : await page.evaluate(async () => {
+      const rigs = [];
+      window.OS3D.three.scene.traverse((o) => {
+        if (o.type === 'Group' && o.parent === window.OS3D.three.scene) {
+          let sk = false; o.traverse((c) => { if (c.isSkinnedMesh) sk = true; });
+          if (sk) rigs.push(o);
+        }
+      });
+      if (rigs.length < 2) return `only ${rigs.length} rig(s)`;
+      const visible = rigs.filter((r) => r.visible);
+      if (visible.length > 1) return `${visible.length} rigs visible at once`;
+      const idle = rigs.find((r) => !r.visible);
+      let bone = null; idle.traverse((o) => { if (!bone && o.isBone) bone = o; });
+      const q0 = bone.quaternion.toArray().join(',');
+      await new Promise((r) => setTimeout(r, 600));
+      const q1 = bone.quaternion.toArray().join(',');
+      return q0 === q1 ? true : 'inactive rig still animating';
+    });
+    if (mixerOk !== 'skipped (no GLB)') {
+      mixerOk === true ? pass('offscreen mascots frozen (1 visible rig, inactive bones static)') : fail(`offscreen mixers: ${mixerOk}`);
+    }
 
     // Hero drag-rotate (grab the hero rig while the hero section is active)
     const hasHero = await page.evaluate(() => document.body.classList.contains('has-hero-glb'));
@@ -184,9 +245,11 @@ async function runWidth(width) {
     }
   }
 
-  // Console report
-  const errs = consoleMsgs.filter((m) => m.type !== 'warning');
-  const warns = consoleMsgs.filter((m) => m.type === 'warning');
+  // Console report. With mascot.glb deliberately removed, the availability
+  // probe's HEAD 404 is logged by the browser itself — expected, not a defect.
+  const expected = (m) => NO_GLB && /mascot(-anims)?\.(glb|fbx)|Failed to load resource.*404/i.test(m.text);
+  const errs = consoleMsgs.filter((m) => m.type !== 'warning' && !expected(m));
+  const warns = consoleMsgs.filter((m) => m.type === 'warning' && !expected(m));
   if (errs.length) fail(`console errors (${errs.length}): ${errs.map((e) => e.text).join(' | ').slice(0, 400)}`);
   else pass('zero console errors');
   if (warns.length) fail(`console warnings (${warns.length}): ${warns.map((e) => e.text).join(' | ').slice(0, 400)}`);
