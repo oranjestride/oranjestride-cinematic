@@ -679,17 +679,21 @@ footer { position: relative; z-index: 3; padding: 3rem var(--gutter); background
   .btn { justify-content: center; }
 }
 
-/* ---------- Reduced motion ---------- */
+/* ---------- Reduced motion ----------
+   Scoped to body:not(.motion-full) so the ?motion=full override (main.js)
+   can force the live tier — Windows' "animation effects off" setting flips
+   prefers-reduced-motion browser-wide, which would otherwise make the 3D
+   experience unreachable on such machines. */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
-  .grain, #gl-canvas { display: none; }
-  .sec-video, .pre-video, .pre-video-scrim { display: none; }
-  .sec-poster { opacity: 1; }
-  .reveal, .stagger > * { opacity: 1 !important; transform: none !important; }
+  body:not(.motion-full) *, body:not(.motion-full) *::before, body:not(.motion-full) *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
+  body:not(.motion-full) .grain, body:not(.motion-full) #gl-canvas { display: none; }
+  body:not(.motion-full) .sec-video, body:not(.motion-full) .pre-video, body:not(.motion-full) .pre-video-scrim { display: none; }
+  body:not(.motion-full) .sec-poster { opacity: 1; }
+  body:not(.motion-full) .reveal, body:not(.motion-full) .stagger > * { opacity: 1 !important; transform: none !important; }
   /* Mascots stay visible but static (no bob/parallax) */
-  .mascot { opacity: 1 !important; transform: none !important; }
-  .mascot-img { animation: none !important; }
-  .mascot--faint { opacity: 0.4 !important; }
+  body:not(.motion-full) .mascot { opacity: 1 !important; transform: none !important; }
+  body:not(.motion-full) .mascot-img { animation: none !important; }
+  body:not(.motion-full) .mascot--faint { opacity: 0.4 !important; }
   /* Spotlight card: no sweep, static soft glow instead */
-  .spot-sweep { animation: none !important; opacity: 0.5; transform: translate(-50%, -40%) scale(1); }
+  body:not(.motion-full) .spot-sweep { animation: none !important; opacity: 0.5; transform: translate(-50%, -40%) scale(1); }
 }
