@@ -10,11 +10,14 @@ import Lenis from '@studio-freight/lenis';
 
 import { $, $$ } from './utils/helpers.js';
 import { initScene } from './three/scene.js';
-import { initMascots, mountMascotGLB } from './three/mascot.js';
+import { createMarut } from './three/marut/index.js';
+import { initShowcase } from './three/showcase.js';
+import { initMascotFallback } from './three/mascot-fallback.js';
 import { initCursor } from './utils/cursor.js';
 import { initReveals } from './utils/reveal.js';
+import { initOverlayChoreo } from './utils/overlay.js';
 import { initVideos } from './utils/video.js';
-import { prepareIntroStage, runMarutIntro } from './utils/intro.js';
+import { runMarutIntro } from './utils/intro.js';
 
 import { renderGlobalLayers, renderFooter, initRibbon } from './sections/shell.js';
 import { renderPreloader, initPreloader } from './sections/preloader.js';
@@ -86,54 +89,36 @@ $$('a[href^="#"]').forEach((a) => a.addEventListener('click', (e) => {
 }));
 
 // ---------------------------------------------------------------------------
-// 3 · Three.js layer + character mascot (§8.5, §8.6)
+// 3 · Three.js layer + procedural mascot + scroll showcase (§8.5, §8.6)
 // ---------------------------------------------------------------------------
 window.OS3D = initScene({ reduced: REDUCED });
-initMascots({ reduced: REDUCED });          // DOM pose-swap mascots (nav/hero/about/…)
 
-// Live GLB mascots (§2) — one shared mascot.glb fetch, SkeletonUtils clone per
-// section, each anchored to a DOM mount box. All four embedded clips are used:
-// Idle (default loop) · Wave (hero/about enter) · Run (programmes loop, hero
-// scroll-blend) · Clap (contact enter — the closing "cheer" beat). Each mount
-// resolves to null when the GLB is absent/broken → flat pose stays (no empty
-// pane). Only the active section's mixer ticks; mobile keeps flat poses (perf).
+// The mascot is 100% code (src/three/marut/) — geometry, textures, and
+// animation all authored in JS. One instance, center stage, active in every
+// section; the camera does the traveling (src/three/showcase.js).
 const MOBILE = matchMedia('(max-width: 900px)').matches;
-let introStage = null;                       // centre-stage parking for the intro glide
-let heroInstPromise = Promise.resolve(null); // live hero instance (or null → flat intro)
-if (!REDUCED) {
-  // Overlay mounts (float over section content) — desktop only, they'd crowd
-  // small screens where the flat poses read better.
-  if (!MOBILE) {
-    introStage = prepareIntroStage(); // park BEFORE mounting: auto-fit tracks the rect
-    heroInstPromise = mountMascotGLB(window.OS3D, { sectionId: 'hero', mountId: 'hero-mascot-mount', zPlane: 2, loop: 'idle', onEnterClip: null, react: true, runBlend: true, dragRotate: true })
-      .then((m) => { if (m) document.body.classList.add('has-hero-glb'); return m; });
-    // Run clip blends in with scroll velocity (§6.8) — idle at rest, striding
-    // while the visitor scrolls, same blend the hero uses.
-    mountMascotGLB(window.OS3D, { sectionId: 'programmes', mountId: 'programmes-mascot-mount', zPlane: 2, loop: 'idle', runBlend: true })
-      .then((m) => m && document.body.classList.add('has-programmes-glb'));
-  }
-  // In-flow stages (own layout space) — live on mobile too; the GLB is webp-
-  // compressed (~2.4 MB) and only the active section's mixer ever ticks.
-  mountMascotGLB(window.OS3D, { sectionId: 'about', mountId: 'about-mascot-mount', zPlane: 2, loop: 'idle', onEnterClip: 'wave', react: true })
-    .then((m) => {
-      if (!m) return; // no GLB → the turnaround loop stays as About's media tier
-      document.body.classList.add('has-about-glb');
-      // Cross-fade the turnaround out (CSS), then stop its decode work.
-      const turn = $('.about-turn');
-      if (turn) { turn.classList.add('glb-superseded'); setTimeout(() => turn.pause?.(), 700); }
-    });
-  // Mascot Lab spotlight card: drag to rotate; chips fire Wave/Run/Clap.
-  mountMascotGLB(window.OS3D, { sectionId: 'mascot-lab', mountId: 'mascotlab-mount', zPlane: 2, loop: 'idle', onEnterClip: 'wave', react: true, dragRotate: true })
-    .then((m) => initMascotLab(m));
-  mountMascotGLB(window.OS3D, { sectionId: 'contact', mountId: 'contact-mascot-mount', zPlane: 2, loop: 'idle', onEnterClip: 'cheer', react: true })
-    .then((m) => m && document.body.classList.add('has-contact-glb'));
+let marut = null;
+let showcase = null;
+if (!REDUCED && window.OS3D.enabled) {
+  marut = createMarut({ quality: MOBILE ? 'low' : 'high' });
+  window.OS3D.three.registerMascot(marut);
+  document.body.classList.add('has-marut');
+  showcase = initShowcase({ sceneAPI: window.OS3D, marut, reduced: REDUCED });
+  showcase?.prepareIntro(); // park the camera on the loader's landing close-up
+  initMascotLab(marut);     // clip chips (Wave / Run / Cheer) drive the animator
+} else {
+  initMascotFallback();     // reduced-motion tier: flat pose stills
 }
+// Preloader progress hook: the procedural build is synchronous, so just
+// signal readiness on the next frame.
+window.__marutReady = new Promise((r) => requestAnimationFrame(() => r(!!marut)));
 
 // ---------------------------------------------------------------------------
-// 4 · Video layer (§8.3) + reveals + interactions (§8.7)
+// 4 · Video layer (§8.3) + reveals + overlay choreography + interactions (§8.7)
 // ---------------------------------------------------------------------------
 initVideos({ reduced: REDUCED });
 const { revealHero } = initReveals();
+if (showcase) initOverlayChoreo({ reduced: REDUCED });
 
 const sections = $$('main .section, main .band');
 initNav({ lenis, sections });
@@ -144,15 +129,25 @@ initDataStride({ lenis });
 initRibbon();
 initCursor({ reduced: REDUCED });
 
-// Active-section tracking → nav dots + 3D layer (§3.5, §6).
+// Active-section tracking → nav dots + 3D layer + showcase poses (§3.5, §6).
 const activeIO = new IntersectionObserver((ens) => {
   ens.forEach((en) => {
     if (en.intersectionRatio < 0.5) return;
     setActiveDot(en.target.id);
     window.OS3D?.setActive(en.target.id);
+    showcase?.applySection(en.target.id);
   });
 }, { threshold: [0.5] });
 sections.forEach((s) => activeIO.observe(s));
+
+// Layout shifts (programme tab switches, clients modal) move section offsets —
+// refresh so the camera timeline re-anchors to the new scroll positions.
+// Delegated: the clients-modal tabs are injected after init.
+addEventListener('click', (e) => {
+  if (e.target.closest?.('#programmes .tab, #cg-tabs button')) {
+    setTimeout(() => showcase?.refresh(), 350);
+  }
+});
 
 // Scroll velocity → mascot lean + ember speed (§6.6).
 (function scrollVelocity() {
@@ -178,14 +173,14 @@ addEventListener('keydown', (e) => {
 
 // ---------------------------------------------------------------------------
 // 5 · Preloader last — it covers the initial asset load (§3.1, §8.8).
-// When it hands over, the hero copy cascades in on the left while Marut
-// glides from centre-stage to his mount and introduces himself (intro.js).
+// The wipe opens on a centre-stage close-up of the live procedural Marut;
+// the camera then pulls back to the hero frame while he waves and types his
+// introduction (intro.js).
 // ---------------------------------------------------------------------------
 initPreloader({
   reduced: REDUCED,
   onDone(mode) {
     revealHero();
-    heroInstPromise.then((inst) =>
-      runMarutIntro({ stage: introStage, inst, mode, reduced: REDUCED }));
+    runMarutIntro({ showcase, marut, mode, reduced: REDUCED });
   },
 });

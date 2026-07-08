@@ -129,17 +129,15 @@ body.custom-cursor, body.custom-cursor * { cursor: none; }
 .mascot--tour { left: 1%; bottom: 0; --mw: clamp(140px, 15vw, 240px); }
 .mascot--clients { right: 3%; bottom: 0; --mw: clamp(120px, 13vw, 200px); }
 
-/* Live GLB takes over the hero → hide the flat hero pose */
-body.has-hero-glb .mascot--hero { display: none; }
-
-/* Invisible mount box: defines where/how big a live GLB mascot renders (§2).
-   The 3D mascot is auto-fit to this rect via screen→world projection. */
-.mascot-mount { position: absolute; pointer-events: none; z-index: 0; }
-#hero-mascot-mount { right: 2%; bottom: 4%; width: min(34vw, 400px); height: 66%; }
-#programmes-mascot-mount { left: 1%; bottom: 2%; width: min(13vw, 200px); height: 42%; }
+/* Showcase mode (live procedural Marut on the persistent canvas): the flat
+   section stills stand down — nav + preloader cutouts stay. The About pane
+   keeps its framed glow as an empty stage the camera composes him into. */
+body.showcase main .mascot { display: none; }
+body.showcase .about-mascot-img,
+body.showcase .contact-mascot-img { display: none; }
 
 /* Contact: mascot stage lives in the LEFT column under the tokens — never
-   behind the form. Flat cutout fades out once the live GLB mounts. */
+   behind the form. Shown on the reduced-motion tier only. */
 .contact-mascot-stage {
   position: relative; margin-top: 2.2rem; min-height: 280px;
   display: flex; align-items: flex-end; justify-content: center;
@@ -156,10 +154,7 @@ body.has-hero-glb .mascot--hero { display: none; }
   background: radial-gradient(ellipse at center, rgba(255, 106, 0, 0.4), transparent 70%);
   filter: blur(11px);
 }
-body.has-contact-glb .contact-mascot-img,
-body.has-contact-glb .contact-mascot-floor { opacity: 0; }
-
-/* Pose stills are framed studio renders (turnaround frames, §8) — card them */
+/* Pose stills are framed studio renders (§8) — card them */
 .mascot--hero .mascot-img, .mascot--programmes .mascot-img,
 .mascot--tour .mascot-img, .mascot--clients .mascot-img {
   border-radius: 16px; border: 1px solid var(--edge);
@@ -289,7 +284,8 @@ main { position: relative; z-index: 3; }
 }
 .section.video-section { background: var(--bg-void); }
 #about { background: var(--bg-void); }
-.sec-video { position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%; object-fit: cover; filter: brightness(0.7) contrast(1.08) saturate(1.05); }
+/* graded darker than the original — the 3D character owns the frame now */
+.sec-video { position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%; object-fit: cover; filter: brightness(0.55) contrast(1.08) saturate(0.95); }
 /* Dual scrim: left-biased horizontal wash (nearly all copy is left-aligned) +
    vertical letterbox — keeps text readable over bright/busy footage. */
 .sec-video-scrim {
@@ -391,24 +387,12 @@ h2.headline { font-family: var(--font-display); font-weight: 700; font-size: cla
   width: 100%; height: 100%; object-fit: cover;
   animation: none; /* framed card — no cutout bob */
 }
-/* Instant tier: looped turnaround footage over the still, under the live GLB */
-.about-media .about-turn {
-  position: absolute; inset: 0; z-index: 3;
-  width: 100%; height: 100%; object-fit: cover;
-  transition: opacity 0.7s var(--ease-cine);
-}
-.about-media .about-turn.glb-superseded { opacity: 0; }
 .about-stage-floor {
   position: absolute; bottom: 7%; left: 50%; transform: translateX(-50%);
   width: 60%; height: 26px; z-index: 1;
   background: radial-gradient(ellipse at center, rgba(255, 106, 0, 0.42), transparent 70%);
   filter: blur(12px);
 }
-/* When a live GLB actually mounts for a section, retire that section's flat pose */
-body.has-about-glb .about-mascot-img,
-body.has-about-glb .about-stage-floor { opacity: 0; }
-body.has-programmes-glb .mascot--programmes { display: none; }
-
 /* ---------- Expertise ---------- */
 .grid-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.3rem; margin-top: 2.6rem; }
 .gem-card { position: relative; padding: 1.6rem; border-radius: 18px; background: linear-gradient(160deg, rgba(30, 45, 61, 0.55), rgba(23, 49, 74, 0.25)); border: 1px solid var(--glass-border); backdrop-filter: blur(14px); transition: transform 0.4s var(--ease-cine), box-shadow 0.4s, border-color 0.4s; overflow: hidden; }
@@ -475,7 +459,7 @@ body.has-programmes-glb .mascot--programmes { display: none; }
 .lab-chip:focus-visible { outline: 2px solid var(--accent-orange); outline-offset: 3px; }
 /* chips only make sense with the live 3D instance */
 .lab-chips { visibility: hidden; }
-body.has-mascotlab-glb .lab-chips { visibility: visible; }
+body.has-marut .lab-chips { visibility: visible; }
 
 .lab-stage { flex: 1; position: relative; display: flex; align-items: flex-end; justify-content: center; }
 .lab-fallback-img {
@@ -484,7 +468,7 @@ body.has-mascotlab-glb .lab-chips { visibility: visible; }
   animation: mascotBob 5.5s ease-in-out infinite;
   transition: opacity 0.5s;
 }
-body.has-mascotlab-glb .lab-fallback-img { opacity: 0; }
+body.has-marut .lab-fallback-img { opacity: 0; }
 
 /* Drag-to-rotate affordance (only shown once the live mesh is interactive;
    fades away after the first drag). Grab cursor on non-custom-cursor devices.
@@ -493,7 +477,7 @@ body.has-mascotlab-glb .lab-fallback-img { opacity: 0; }
 .mascot-drag { cursor: grab; user-select: none; -webkit-user-select: none; }
 .mascot-drag.dragging { cursor: grabbing; }
 /* Fast drag-spins ignite a comet streak under the character (§1 motif 2;
-   --spin is fed by mascot.js from the drag velocity, decays with inertia) */
+   --spin is fed by showcase.js from the drag velocity, decays with inertia) */
 .mascot-drag::after {
   content: ""; position: absolute; left: 50%; bottom: 8%;
   width: 76%; height: 24%; transform: translateX(-50%);
@@ -512,7 +496,7 @@ body.has-mascotlab-glb .lab-fallback-img { opacity: 0; }
   pointer-events: none; transition: opacity 0.6s;
 }
 .drag-hint svg { width: 15px; height: 15px; color: var(--accent-orange); }
-body.has-mascotlab-glb .drag-hint { display: inline-flex; }
+body.has-marut .drag-hint { display: inline-flex; }
 body.mascot-dragged .drag-hint { opacity: 0; }
 
 /* ---------- Testimonials ---------- */
@@ -685,6 +669,9 @@ footer { position: relative; z-index: 3; padding: 3rem var(--gutter); background
   .mascot--hero { --mw: clamp(120px, 34vw, 190px); right: 8px; bottom: 78px; opacity: 0.9; }
   /* Intro bubble docks just above the flat hero card on small screens */
   .marut-bubble { right: 4%; top: auto; bottom: calc(clamp(120px, 34vw, 190px) * 1.29 + 90px); max-width: 210px; }
+  /* Live showcase: mobile waypoint stands Marut small top-right, under the
+     badge line — the bubble sits just above him, tail pointing down at him */
+  body.showcase .marut-bubble { top: 9%; bottom: auto; }
   .contact-mascot-stage { min-height: 220px; }
 }
 @media (max-width: 560px) {
@@ -696,7 +683,7 @@ footer { position: relative; z-index: 3; padding: 3rem var(--gutter); background
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
   .grain, #gl-canvas { display: none; }
-  .sec-video, .pre-video, .pre-video-scrim, .about-turn { display: none; }
+  .sec-video, .pre-video, .pre-video-scrim { display: none; }
   .sec-poster { opacity: 1; }
   .reveal, .stagger > * { opacity: 1 !important; transform: none !important; }
   /* Mascots stay visible but static (no bob/parallax) */

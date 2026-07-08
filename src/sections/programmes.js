@@ -31,10 +31,9 @@ export function renderProgrammes() {
         </div>
       </div>
     </div>
+    <!-- Flat run still: reduced-motion tier only — the live tier's run is the
+         procedural Marut sprinting in the showcase camera frame. -->
     ${mascotMarkup('run', 'programmes')}
-    <!-- Live GLB mounts here and plays the Run clip (staircase climb, §3);
-         the flat run pose above is the fallback when no GLB is present. -->
-    <div class="mascot-mount" id="programmes-mascot-mount" aria-hidden="true"></div>
   </section>`;
 }
 

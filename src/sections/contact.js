@@ -27,8 +27,8 @@ export function renderContact() {
               </div>`).join('')}
           </div>
           <!-- Mascot stage: fills the empty space under the tokens (never behind
-               the form). Live GLB mounts here (Clap on section-enter); the flat
-               cutout below is the reduced-motion / no-GLB fallback. -->
+               the form). Reduced-motion tier only — the live tier frames the
+               procedural Marut cheering in the section's top-left instead. -->
           <div class="contact-mascot-stage reveal" id="contact-mascot-mount" aria-hidden="true">
             <img class="contact-mascot-img" src="${posePath('idle', 'webp')}" alt="" decoding="async" />
             <span class="contact-mascot-floor"></span>

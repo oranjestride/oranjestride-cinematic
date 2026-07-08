@@ -5,9 +5,11 @@
 //                       [--widths 375,820,1440] [--reduced] [--no-shots]
 //
 // Per width: full scroll-through, per-section screenshots, console
-// error/warning capture, and a network count of mascot.glb fetches.
+// error/warning capture, and a zero-model-fetch assert (the mascot is 100%
+// procedural — src/three/marut/ — nothing under /models/ may be requested).
 // At desktop width it also drives the interactive states (Mascot Lab chips +
-// drag-rotate, Clients modal + hover captions, Programme tabs).
+// drag-rotate, Clients modal + hover captions, Programme tabs) and checks the
+// live render budget via window.__marutStats + camera state via __camState.
 // With --reduced it emulates prefers-reduced-motion and asserts no WebGL.
 // Exits non-zero if any console error/warning or assertion failure occurred.
 // ============================================================================
@@ -24,9 +26,8 @@ const URL = arg('url', 'http://localhost:4318/');
 const OUT = arg('out', 'qa-shots');
 const WIDTHS = arg('widths', '375,820,1440').split(',').map(Number);
 const REDUCED = has('reduced');
-const NO_GLB = has('expect-no-glb'); // run with mascot.glb removed: assert flat fallback
 const SHOTS = !has('no-shots');
-const CHROME = arg('chrome', '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome');
+const CHROME = arg('chrome', 'C:/Program Files/Google/Chrome/Application/chrome.exe');
 
 if (SHOTS) mkdirSync(OUT, { recursive: true });
 
@@ -47,7 +48,12 @@ async function runWidth(width) {
   console.log(`\n=== ${label}px ===`);
   const page = await browser.newPage();
   await page.setViewport({ width, height: Math.round(width < 500 ? 812 : width < 1000 ? 1180 : 900) });
-  if (REDUCED) await page.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
+  // Always emulate explicitly: an OS with animations disabled flips
+  // prefers-reduced-motion on for every local browser, which would silently
+  // downgrade the non-reduced pass to the flat tier (see marut-shot.mjs).
+  await page.emulateMediaFeatures([
+    { name: 'prefers-reduced-motion', value: REDUCED ? 'reduce' : 'no-preference' },
+  ]);
 
   const consoleMsgs = [];
   page.on('pageerror', (e) => consoleMsgs.push({ type: 'pageerror', text: e.message }));
@@ -55,8 +61,8 @@ async function runWidth(width) {
     const t = m.type();
     if (t === 'error' || t === 'warning') consoleMsgs.push({ type: t, text: m.text() });
   });
-  const glbFetches = [];
-  page.on('request', (r) => { if (r.url().includes('mascot.glb')) glbFetches.push(r.method()); });
+  const modelFetches = [];
+  page.on('request', (r) => { if (r.url().includes('/models/')) modelFetches.push(r.url()); });
 
   await page.goto(URL, { waitUntil: 'networkidle2', timeout: 60000 });
   // The video loader holds until real progress + the portal beat complete
@@ -67,7 +73,7 @@ async function runWidth(width) {
   });
   await page.waitForFunction(() => !document.getElementById('preloader'), { timeout: 30000 })
     .catch(() => fail('preloader did not clear within 30s'));
-  await sleep(1500); // GLB mount + hero cascade settle
+  await sleep(1500); // hero cascade + intro glide settle
   if (!REDUCED) {
     pass(`loader ran in ${loaderMode} mode`);
     // Marut's typed self-introduction beside the character (glide or flat tier)
@@ -97,37 +103,49 @@ async function runWidth(width) {
   await page.evaluate(() => scrollTo(0, document.body.scrollHeight));
   await sleep(600);
 
+  // The mascot is procedural — nothing may be fetched from /models/ ever.
+  modelFetches.length ? fail(`/models/ fetched: ${modelFetches.join(', ')}`) : pass('zero /models/ fetches');
+
   if (REDUCED) {
-    // No live WebGL / drag / parallax under reduced motion.
+    // No live WebGL / drag / parallax under reduced motion — flat stills only.
     const state = await page.evaluate(() => ({
       glEnabled: !!window.OS3D?.enabled,
-      liveMascots: [...document.body.classList].filter((c) => c.endsWith('-glb')).length,
+      hasMarut: document.body.classList.contains('has-marut'),
       dragTargets: document.querySelectorAll('.mascot-drag').length,
+      flatPoses: [...document.querySelectorAll('.mascot-img')].filter((i) => i.complete && i.naturalWidth > 0).length,
     }));
     state.glEnabled ? fail(`reduced-motion: WebGL still enabled`) : pass('reduced-motion: WebGL layer off');
-    state.liveMascots ? fail(`reduced-motion: ${state.liveMascots} live mascots mounted`) : pass('reduced-motion: no live mascots');
+    state.hasMarut ? fail('reduced-motion: live Marut mounted') : pass('reduced-motion: no live Marut');
     state.dragTargets ? fail(`reduced-motion: drag-rotate active`) : pass('reduced-motion: no drag targets');
-    if (glbFetches.filter((m) => m === 'GET').length > 0) fail('reduced-motion: mascot.glb was fetched');
-    else pass('reduced-motion: no mascot.glb fetch');
+    state.flatPoses > 0 ? pass(`reduced-motion: ${state.flatPoses} flat pose stills rendered`) : fail('reduced-motion: flat poses missing');
     const reducedLoader = await page.evaluate(() => ({
       preVideoShown: [...document.querySelectorAll('.pre-video')].some((v) => getComputedStyle(v).display !== 'none'),
-      aboutTurnShown: [...document.querySelectorAll('.about-turn')].some((v) => getComputedStyle(v).display !== 'none'),
       bubbleText: document.getElementById('marut-bubble-text')?.textContent || '',
     }));
     reducedLoader.preVideoShown ? fail('reduced-motion: loader video visible') : pass('reduced-motion: loader video hidden');
-    reducedLoader.aboutTurnShown ? fail('reduced-motion: about turnaround visible') : pass('reduced-motion: about turnaround hidden');
     reducedLoader.bubbleText === "Hi, I'm Marut." ? pass('reduced-motion: intro bubble static, full text') : fail(`reduced-motion: bubble text "${reducedLoader.bubbleText}"`);
-  } else if (NO_GLB) {
-    const state = await page.evaluate(() => ({
-      liveMascots: [...document.body.classList].filter((c) => c.endsWith('-glb')).length,
-      flatPoses: [...document.querySelectorAll('.mascot-img')].filter((i) => i.complete && i.naturalWidth > 0).length,
-    }));
-    state.liveMascots ? fail(`no-GLB: ${state.liveMascots} live mascots mounted anyway`) : pass('no-GLB: zero live mounts');
-    state.flatPoses > 0 ? pass(`no-GLB: ${state.flatPoses} flat pose stills rendered`) : fail('no-GLB: flat poses missing');
   } else {
-    const gets = glbFetches.filter((m) => m === 'GET').length;
-    if (gets > 1) fail(`mascot.glb GET fetched ${gets} times (want ≤1)`);
-    else pass(`mascot.glb GET fetches: ${gets}`);
+    // Live tier: procedural Marut in the scene, showcase camera driving,
+    // render budget within §3.7 (scene total incl. embers/floor/videos).
+    const live = await page.evaluate(() => ({
+      hasMarut: document.body.classList.contains('has-marut'),
+      showcase: document.body.classList.contains('showcase'),
+      inScene: !!(window.__marutRoot && window.__marutRoot.parent),
+      stats: window.__marutStats || null,
+      // pluck numbers only — GSAP stamps a circular `_gsap` cache onto its
+      // tween target, which silently nukes evaluate() serialization
+      cam: window.__camState ? { fov: window.__camState.fov, pz: window.__camState.pz } : null,
+    }));
+    live.hasMarut && live.inScene ? pass('live procedural Marut in scene') : fail(`live Marut missing (has-marut ${live.hasMarut}, inScene ${live.inScene})`);
+    live.showcase ? pass('showcase mode active') : fail('showcase mode not active');
+    // Scene TOTAL (character + embers + floor + glow sprites); baseline ~11.2k
+    // tris / ~79 calls at the hero frame — thresholds leave modest headroom.
+    if (!live.stats) fail('__marutStats missing');
+    else if (live.stats.tris > 30000 || live.stats.calls > 100) fail(`render budget blown: ${live.stats.tris} tris / ${live.stats.calls} calls`);
+    else pass(`render budget ok (${live.stats.tris} tris / ${live.stats.calls} calls)`);
+    if (!live.cam) fail('__camState missing');
+    else if (live.cam.fov >= 40 && live.cam.fov <= 60 && Math.abs(live.cam.pz) <= 12) pass(`camera state sane (fov ${live.cam.fov.toFixed(1)}, pz ${live.cam.pz.toFixed(2)})`);
+    else fail(`camera state out of range: ${JSON.stringify(live.cam)}`);
   }
 
   // Interactive states — exercise at the widest, non-reduced pass.
@@ -188,87 +206,64 @@ async function runWidth(width) {
     });
     ribbonOk === true ? pass('ribbon off by default + dismissible') : fail(`ribbon: ${ribbonOk}`);
 
-    // About media pane (§6.4): turnaround tier present; cross-faded out (and
-    // paused) once the live GLB mounts; still looping when there is no GLB.
+    // About media pane: the flat still stands down while the showcase camera
+    // composes the live Marut into the framed stage.
     const aboutOk = await page.evaluate(() => {
-      const turn = document.querySelector('#about .about-turn');
-      if (!turn) return 'no-turnaround-video';
-      if (document.body.classList.contains('has-about-glb'))
-        return turn.classList.contains('glb-superseded') || 'not-superseded-despite-glb';
-      return true;
+      const img = document.querySelector('#about .about-mascot-img');
+      if (!img) return 'no-still';
+      return getComputedStyle(img).display === 'none' || 'flat still visible in showcase mode';
     });
-    aboutOk === true ? pass('about pane: turnaround/GLB tiers behave') : fail(`about pane: ${aboutOk}`);
+    aboutOk === true ? pass('about pane: flat still stands down in showcase') : fail(`about pane: ${aboutOk}`);
 
-    // Offscreen instances provably stop: with one section active, exactly one
-    // skinned rig is visible, and an inactive rig's bones do not move over time.
-    const mixerOk = NO_GLB ? 'skipped (no GLB)' : await page.evaluate(async () => {
-      const rigs = [];
-      window.OS3D.three.scene.traverse((o) => {
-        if (o.type === 'Group' && o.parent === window.OS3D.three.scene) {
-          let sk = false; o.traverse((c) => { if (c.isSkinnedMesh) sk = true; });
-          if (sk) rigs.push(o);
-        }
+    // The animator's breath channel never sleeps — a frozen rig means the
+    // channel-compose update loop died somewhere. Wait in FRAMES, not wall
+    // time: SwiftShader frame rates collapse late in a run, and a 600ms wall
+    // clock can span zero rendered frames (false "static").
+    const breathOk = await page.evaluate(async () => {
+      const root = window.__marutRoot;
+      if (!root) return 'no-root';
+      const snap = () => {
+        const a = [];
+        root.traverse((o) => a.push(o.rotation.x, o.rotation.y, o.rotation.z));
+        return a.join(',');
+      };
+      const s0 = snap();
+      let frames = 0;
+      await new Promise((res) => {
+        const t0 = performance.now();
+        const step = () => {
+          frames += 1;
+          if (frames >= 8 || performance.now() - t0 > 5000) res();
+          else requestAnimationFrame(step);
+        };
+        requestAnimationFrame(step);
       });
-      if (rigs.length < 2) return `only ${rigs.length} rig(s)`;
-      const visible = rigs.filter((r) => r.visible);
-      if (visible.length > 1) return `${visible.length} rigs visible at once`;
-      const idle = rigs.find((r) => !r.visible);
-      let bone = null; idle.traverse((o) => { if (!bone && o.isBone) bone = o; });
-      const q0 = bone.quaternion.toArray().join(',');
-      await new Promise((r) => setTimeout(r, 600));
-      const q1 = bone.quaternion.toArray().join(',');
-      return q0 === q1 ? true : 'inactive rig still animating';
+      if (frames < 8) return `only ${frames} frames rendered in 5s`;
+      return snap() !== s0 ? true : 'rig static (breath channel dead)';
     });
-    if (mixerOk !== 'skipped (no GLB)') {
-      mixerOk === true ? pass('offscreen mascots frozen (1 visible rig, inactive bones static)') : fail(`offscreen mixers: ${mixerOk}`);
-    }
+    breathOk === true ? pass('animator alive (breath channel moving)') : fail(`animator: ${breathOk}`);
 
-    // Hero drag-rotate (grab the hero rig while the hero section is active)
-    const hasHero = await page.evaluate(() => document.body.classList.contains('has-hero-glb'));
-    if (hasHero) {
-      await page.evaluate(() => scrollTo(0, 0));
-      await sleep(1200);
-      const hr = await page.evaluate(() => {
-        const b = document.getElementById('hero-mascot-mount').getBoundingClientRect();
-        return { x: b.x + b.width / 2, y: b.y + b.height / 2 };
-      });
-      const heroYaw = () => page.evaluate(() => {
-        let y = null;
-        window.OS3D.three.scene.traverse((o) => {
-          if (y === null && o.type === 'Group' && o.visible && o.parent === window.OS3D.three.scene) {
-            let sk = false; o.traverse((c) => { if (c.isSkinnedMesh) sk = true; });
-            if (sk) y = o.rotation.y;
-          }
-        });
-        return y;
-      });
-      const hy0 = await heroYaw();
-      await page.mouse.move(hr.x, hr.y); await page.mouse.down();
-      for (let i = 1; i <= 8; i++) { await page.mouse.move(hr.x - i * 20, hr.y); await sleep(30); }
-      await page.mouse.up();
-      await sleep(700);
-      const hy1 = await heroYaw();
-      Math.abs((hy1 ?? 0) - (hy0 ?? 0)) > 0.15 ? pass(`hero drag-rotate spins (Δyaw ${(hy1 - hy0).toFixed(2)})`) : fail('hero drag-rotate did not rotate');
-    }
-
-    // Mascot Lab: chips + drag-rotate (only when the live GLB actually mounted)
-    const hasLab = await page.evaluate(() => document.body.classList.contains('has-mascotlab-glb'));
+    // Mascot Lab: chips + drag-rotate on the live procedural instance.
+    // Scroll in STEPS: an instant jump leaves the overlay choreography's
+    // scrubbed entrance behind (sec-content stays visibility:hidden and eats
+    // the pointer events) — stepped scrolling matches real input and lets the
+    // scrub catch up.
+    const hasLab = await page.evaluate(() => document.body.classList.contains('has-marut'));
     if (hasLab) {
-      await page.evaluate(() => document.getElementById('mascot-lab')?.scrollIntoView({ block: 'center' }));
+      for (let step = 1; step <= 4; step++) {
+        await page.evaluate((k) => {
+          const el = document.getElementById('mascot-lab');
+          const target = el.offsetTop - (innerHeight - el.offsetHeight) / 2;
+          scrollTo(0, scrollY + (target - scrollY) * k);
+        }, step / 4);
+        await sleep(350);
+      }
       await sleep(1200);
       await page.evaluate(() => document.querySelector('#mascot-lab .lab-chip')?.click());
       await sleep(400);
       pass('mascot-lab chip clicked (no throw)');
-      const yawOf = () => page.evaluate(() => {
-        let y = null;
-        window.OS3D.three.scene.traverse((o) => {
-          if (y === null && o.type === 'Group' && o.visible && o.parent === window.OS3D.three.scene) {
-            let sk = false; o.traverse((c) => { if (c.isSkinnedMesh) sk = true; });
-            if (sk) y = o.rotation.y;
-          }
-        });
-        return y;
-      });
+      // Drag yaw lands on the rig root (animation.js composes yawBase + dragYaw).
+      const yawOf = () => page.evaluate(() => window.__marutRoot?.rotation.y ?? null);
       const y0 = await yawOf();
       const r = await page.evaluate(() => {
         const b = document.getElementById('mascotlab-mount').getBoundingClientRect();
@@ -285,15 +280,13 @@ async function runWidth(width) {
       Number(hint) === 0 ? pass('drag hint faded after first drag') : fail(`drag hint opacity ${hint} after drag`);
       if (SHOTS) await page.screenshot({ path: `${OUT}/${label}-mascotlab-after-drag.png` });
     } else {
-      console.log('  · mascot-lab live GLB not mounted (flat fallback) — skipping drag test');
+      fail('mascot-lab: live Marut missing at desktop width');
     }
   }
 
-  // Console report. With mascot.glb deliberately removed, the availability
-  // probe's HEAD 404 is logged by the browser itself — expected, not a defect.
-  const expected = (m) => NO_GLB && /mascot(-anims)?\.(glb|fbx)|Failed to load resource.*404/i.test(m.text);
-  const errs = consoleMsgs.filter((m) => m.type !== 'warning' && !expected(m));
-  const warns = consoleMsgs.filter((m) => m.type === 'warning' && !expected(m));
+  // Console report.
+  const errs = consoleMsgs.filter((m) => m.type !== 'warning');
+  const warns = consoleMsgs.filter((m) => m.type === 'warning');
   if (errs.length) fail(`console errors (${errs.length}): ${errs.map((e) => e.text).join(' | ').slice(0, 400)}`);
   else pass('zero console errors');
   if (warns.length) fail(`console warnings (${warns.length}): ${warns.map((e) => e.text).join(' | ').slice(0, 400)}`);

@@ -1,4 +1,4 @@
-// 6 · India AI Learning Tour — globe layer + pulsing feature callouts (§5.6).
+// 6 · India AI Learning Tour — globe footage backdrop + pulsing feature callouts (§5.6).
 import { tour } from '../data/content.js';
 import { videoBlock, mascotMarkup } from '../utils/helpers.js';
 

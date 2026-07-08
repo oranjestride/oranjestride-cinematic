@@ -1,9 +1,9 @@
-// 2 · About — split layout, principles stagger. Media pane is a three-tier
-// stack (§6.4): the looped turnaround footage plays the moment the section
-// nears the viewport (instant, no WebGL wait) and cross-fades to the live GLB
-// once it mounts; the flat pose still is the reduced-motion / no-video floor.
+// 2 · About — split layout, principles stagger. The media pane is an empty
+// framed stage in the live tier — the showcase camera composes the procedural
+// Marut into it (close-up waypoint); the flat pose still fills the frame only
+// under prefers-reduced-motion / no-WebGL.
 import { about } from '../data/content.js';
-import { posePath, videoPath, posterPath } from '../utils/helpers.js';
+import { posePath } from '../utils/helpers.js';
 
 export function renderAbout() {
   return `
@@ -23,15 +23,12 @@ export function renderAbout() {
           </div>
         </div>
 
-        <!-- Media pane (three tiers): turnaround loop (instant) → live GLB
-             (cross-fades in over the shared canvas) → flat pose still (floor). -->
+        <!-- Media pane: empty framed stage the showcase camera fills with the
+             live Marut; the flat still shows only on the reduced-motion tier. -->
         <div class="about-media about-stage reveal" id="about-mascot-mount">
           <span class="about-stage-glow" aria-hidden="true"></span>
           <img class="mascot-img about-mascot-img" src="${posePath('idle', 'webp')}"
                alt="The OranjeStride mascot" decoding="async" />
-          <video class="about-turn" data-src="${videoPath('mascot-turnaround')}"
-                 poster="${posterPath('mascot-turnaround')}"
-                 muted loop playsinline preload="metadata" aria-hidden="true"></video>
           <span class="about-stage-floor" aria-hidden="true"></span>
         </div>
       </div>

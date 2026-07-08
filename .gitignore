@@ -3,11 +3,13 @@ dist
 .DS_Store
 *.log
 
-# Heavy 3D source material (FBX/OBJ) — the exported public/models/mascot.glb is what ships
+# Heavy 3D source material from the retired GLB pipeline (mascot is 100% code now)
 mascot animations/
 # Build-spec prompt docs (not part of the app)
 *-prompt.md
 mascot-immersive-update-prompt.md
 # QA output (scripts/qa.mjs screenshots)
 qa-shots/
+# Dev screenshot harness output (scripts/marut-shot.mjs)
+scripts/shots/
 claude-code-loop-*.md

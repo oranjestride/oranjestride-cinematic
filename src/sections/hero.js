@@ -18,7 +18,6 @@ export function renderHero() {
       </div>
     </div>
     ${mascotMarkup('wave', 'hero', { label: 'OranjeStride mascot' })}
-    <div class="mascot-mount" id="hero-mascot-mount" aria-hidden="true"></div>
     <!-- Marut's self-intro: typed beside the character after the loader -->
     <div class="marut-bubble" id="marut-bubble" role="status">
       <span id="marut-bubble-text"></span><i class="mb-caret" aria-hidden="true"></i>

@@ -16,14 +16,12 @@ export function initVideos({ reduced }) {
 
   if (reduced) return; // posters only; no playback/scrub under reduced-motion
 
-  // Autoplay/pause non-scrubbed videos based on visibility. A video the live
-  // GLB has superseded (.glb-superseded, e.g. About's turnaround once the 3D
-  // instance cross-fades in) stays paused — no decode work behind the mesh.
+  // Autoplay/pause non-scrubbed videos based on visibility.
   const playIO = new IntersectionObserver((ens) => {
     ens.forEach((en) => {
       const v = en.target;
       if (v.dataset.scrub) return;
-      if (en.isIntersecting && !v.classList.contains('glb-superseded')) v.play?.().catch(() => {});
+      if (en.isIntersecting) v.play?.().catch(() => {});
       else v.pause?.();
     });
   }, { threshold: 0.1 });

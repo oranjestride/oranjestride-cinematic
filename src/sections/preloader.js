@@ -14,7 +14,7 @@
 // onDone(mode) fires as the wipe begins, mode ∈ 'video' | 'static' | 'reduced'.
 // ============================================================================
 import gsap from 'gsap';
-import { videoPath, posterPath, mascotGLBPath, wordmark } from '../utils/helpers.js';
+import { videoPath, posterPath, wordmark } from '../utils/helpers.js';
 
 export function renderPreloader() {
   return `
@@ -65,9 +65,9 @@ function realProgress(onStep) {
     ? Promise.resolve()
     : new Promise((res) => heroV.addEventListener('loadedmetadata', res, { once: true })));
 
-  // mascot GLB reachable? (content-type sniff — an SPA-fallback HTML 200 is a miss)
-  track(0.2, fetch(mascotGLBPath(), { method: 'HEAD' })
-    .then((h) => { if (!h.ok || (h.headers.get('content-type') || '').includes('text/html')) throw 0; }));
+  // procedural mascot assembled (synchronous geometry build — resolves on the
+  // first frame after main.js creates it; no network involved)
+  track(0.2, window.__marutReady || Promise.resolve());
 
   // full window load
   track(0.3, document.readyState === 'complete'

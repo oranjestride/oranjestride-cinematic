@@ -1,12 +1,12 @@
 // ============================================================================
 // scene.js — persistent Three.js layer on #gl-canvas, composited OVER section
-// videos and UNDER the UI (§3.3). Owns: ember field, globe (Tour), radial grid
-// (Consulting). The character mascot lives in the DOM (src/three/mascot.js);
-// its optional live Hero mesh mounts here via the exposed `three` hook.
+// videos and UNDER the UI (§3.3). Owns: ember field, the showcase floor, and
+// the procedural Marut registered by main.js (src/three/marut/). The camera
+// is driven per-frame by the scroll showcase (src/three/showcase.js).
 // ============================================================================
 import * as THREE from 'three';
 import { makeGlowSprite, createEmbers } from './particles.js';
-import { createGlobe, createRadialGrid } from './globe.js';
+import { makeContactShadow } from './marut/textures.js';
 
 // No-op API so main.js can always call safely (reduced-motion / no-WebGL).
 function stubAPI() {
@@ -18,7 +18,7 @@ export function initScene({ reduced }) {
   if (reduced || !canvas || !window.WebGLRenderingContext) return stubAPI();
 
   const mobile = matchMedia('(max-width: 900px)').matches;
-  const DPR = Math.min(devicePixelRatio || 1, 2); // cap DPR (§3.8)
+  const DPR = Math.min(devicePixelRatio || 1, mobile ? 1.5 : 2); // cap DPR (§3.8)
 
   let renderer;
   try {
@@ -44,12 +44,16 @@ export function initScene({ reduced }) {
     pmrem.dispose();
   }).catch(() => {});
 
-  scene.add(new THREE.AmbientLight(0xfff1e0, 0.5));
-  const key = new THREE.DirectionalLight(0xffa45c, 1.5); key.position.set(4, 6, 8); scene.add(key);
-  // Cool rim kept faint — at 0.9 it used to drown the jacket in teal.
-  const rim = new THREE.DirectionalLight(0x35507a, 0.45); rim.position.set(-6, -2, 4); scene.add(rim);
+  // Vinyl-toy studio rig matched to the reference boards: hemisphere bounce
+  // lifts the charcoal blacks with a top-down gradient (a flat warm ambient
+  // let them crush), the key is desaturated + top-dominant, and the cool rim
+  // comes from BEHIND-left/above so it edges sleeves/legs instead of washing
+  // the jacket front.
+  scene.add(new THREE.HemisphereLight(0xdfe8f2, 0x3a3f4a, 0.65));
+  const key = new THREE.DirectionalLight(0xffd9b0, 1.25); key.position.set(3, 7, 6); scene.add(key);
+  const rim = new THREE.DirectionalLight(0x5f8fd6, 0.6); rim.position.set(-4, 3, -6); scene.add(rim);
   // Front fill from the camera so the mascot's face/jacket read against dark footage.
-  const fill = new THREE.DirectionalLight(0xfff2e6, 1.05); fill.position.set(0, 2, 12); scene.add(fill);
+  const fill = new THREE.DirectionalLight(0xfff4ea, 0.85); fill.position.set(0, 2, 12); scene.add(fill);
 
   const sprite = makeGlowSprite(new THREE.Color('#ff6a00'));
 
@@ -58,8 +62,22 @@ export function initScene({ reduced }) {
   const embers = createEmbers({ count, sprite, mobile });
   scene.add(embers.points);
 
-  const globe = createGlobe(); scene.add(globe.group);
-  const radial = createRadialGrid(); scene.add(radial.group);
+  // Showcase floor: blob contact shadow + faint brand ring ground the mascot
+  // as the camera orbits (there's no real ground plane in the footage).
+  const blob = new THREE.Mesh(
+    new THREE.CircleGeometry(1.5, 48),
+    new THREE.MeshBasicMaterial({ map: makeContactShadow(), transparent: true, depthWrite: false, opacity: 0.55 }),
+  );
+  blob.rotation.x = -Math.PI / 2;
+  blob.position.y = 0.001;
+  scene.add(blob);
+  const ring = new THREE.Mesh(
+    new THREE.RingGeometry(1.1, 1.14, 64),
+    new THREE.MeshBasicMaterial({ color: 0xff6a00, transparent: true, opacity: 0.15, depthWrite: false, side: THREE.DoubleSide }),
+  );
+  ring.rotation.x = -Math.PI / 2;
+  ring.position.y = 0.002;
+  scene.add(ring);
 
   // ---- state driven by main.js ----
   let activeId = 'hero';
@@ -67,7 +85,7 @@ export function initScene({ reduced }) {
   const pointer = new THREE.Vector2(0, 0);
   const pointerLerp = new THREE.Vector2(0, 0);
 
-  // per-frame callbacks + live mascot instances (mounted async via mountMascotGLB)
+  // per-frame callbacks + the live procedural mascot (registered by main.js)
   const tickCbs = [];
   const mascots = [];
   const clock = new THREE.Clock();
@@ -78,23 +96,20 @@ export function initScene({ reduced }) {
       scene,
       camera,
       addTick: (fn) => tickCbs.push(fn),
-      registerMascot: (m) => { mascots.push(m); m.setActive(m.sectionId === activeId); },
+      registerMascot: (m) => {
+        mascots.push(m);
+        m.setActive(m.sectionId === '*' || m.sectionId === activeId);
+        if (m.root && !m.root.parent) scene.add(m.root);
+      },
     },
     setActive(id) {
       activeId = id;
-      // Globe/radial stay hidden: with the canvas raised above content they'd
-      // render in front of the section text, and the section videos already
-      // carry the globe/tunnel motifs. Kept in-scene for a future 2-canvas pass.
-      globe.group.visible = false;
-      radial.group.visible = false;
-      // Same visibility pattern, generalized per live mascot instance (§2).
-      for (const m of mascots) m.setActive(m.sectionId === id);
+      // '*' = the showcase mascot: always active, every section.
+      for (const m of mascots) m.setActive(m.sectionId === '*' || m.sectionId === id);
     },
     setScrollVelocity(v) { scrollVel = v; },
     setPointer(x, y) { pointer.set(x, y); },
   };
-
-  const lerpScale = (obj, target, a) => obj.scale.setScalar(THREE.MathUtils.lerp(obj.scale.x, target, a));
 
   function tick() {
     const dt = Math.min(clock.getDelta(), 0.05);
@@ -102,19 +117,18 @@ export function initScene({ reduced }) {
 
     embers.update(scrollVel, pointerLerp);
 
-    if (globe.group.visible || globe.group.scale.x > 0.02) globe.update();
-    lerpScale(globe.group, globe.group.visible ? 1 : 0.01, 0.08);
-
-    if (radial.group.visible) radial.update();
-
-    // Only the active section's mascot ticks its mixer — offscreen ones idle (§5).
-    for (const m of mascots) if (m.active) m.update({ dt, pointer: pointerLerp, scrollVel });
+    // camera passed through for the head-look gate (eases off when orbiting behind)
+    for (const m of mascots) if (m.active) m.update({ dt, pointer: pointerLerp, scrollVel, camera });
 
     for (const fn of tickCbs) fn({ pointer: pointerLerp, scrollVel });
 
     renderer.render(scene, camera);
+    // QA hook (scripts/qa.mjs): live draw-call/triangle budget check (§3.7)
+    stats.tris = renderer.info.render.triangles;
+    stats.calls = renderer.info.render.calls;
     requestAnimationFrame(tick);
   }
+  const stats = (window.__marutStats = { tris: 0, calls: 0 });
   requestAnimationFrame(tick);
 
   addEventListener('resize', () => {

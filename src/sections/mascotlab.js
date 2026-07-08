@@ -1,8 +1,8 @@
 // Interstitial · Mascot Lab — vanilla port of the shadcn/aceternity
 // "SplineSceneBasic" spotlight card: dark card, animated spotlight sweep,
-// gradient headline left, interactive 3D right. The Spline scene is replaced
-// by our live GLB mascot (mounted via mountMascotGLB in main.js); the clip
-// chips trigger its real Mixamo animations (Wave / Run / Clap).
+// gradient headline left, interactive 3D right. The 3D slot is the live
+// procedural Marut (src/three/marut/), framed here by the showcase camera
+// with drag-to-rotate on; the clip chips drive his animator one-shots.
 import { mascotLab } from '../data/content.js';
 import { posePath, $, $$ } from '../utils/helpers.js';
 
@@ -58,9 +58,10 @@ export function renderMascotLab() {
 }
 
 // Wire the clip chips once the live instance exists (called from main.js).
+// Without one (reduced-motion / no-WebGL) the chips + drag hint stay hidden —
+// CSS gates them on body.has-marut, added alongside the instance in main.js.
 export function initMascotLab(instance) {
-  if (!instance) return; // no GLB / reduced-motion / mobile → chips stay hidden (CSS)
-  document.body.classList.add('has-mascotlab-glb');
+  if (!instance) return;
   $$('#mascot-lab .lab-chip').forEach((btn) => {
     btn.addEventListener('click', () => {
       instance.play?.(btn.dataset.clip);

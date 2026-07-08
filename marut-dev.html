@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Marut — dev stage</title>
+    <style>
+      html, body { margin: 0; height: 100%; overflow: hidden; background: #0a1020; }
+      #dev-canvas { display: block; width: 100%; height: 100%; }
+      #hud { position: fixed; top: 10px; left: 12px; color: #9fb2d8; font: 12px/1.5 monospace; pointer-events: none; }
+    </style>
+  </head>
+  <body>
+    <canvas id="dev-canvas"></canvas>
+    <div id="hud">marut dev stage — drag to orbit · window.__marut · window.__marutStats</div>
+    <script type="module">
+      import { startDevStage } from '/src/three/marut/devstage.js';
+      startDevStage();
+    </script>
+  </body>
+</html>

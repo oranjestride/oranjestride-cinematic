@@ -34,7 +34,7 @@ src/
   style.css                # design tokens + all layout
   data/content.js          # ALL copy as exported constants (edit copy here)
   sections/                # one module per section (render + init)
-  three/                   # scene.js, particles.js, globe.js, mascot.js
+  three/                   # scene.js, particles.js, showcase.js, marut/ (procedural mascot)
   utils/                   # helpers, cursor, reveal, video
 public/
   video/                   # the 8 .mp4 files (exact names below)
@@ -99,46 +99,41 @@ Lower the base `1400` for weaker GPUs; the mobile branch already drops ~70% (§3
 
 ---
 
-## (e) Regenerate / replace the character mascot
+## (e) Procedural mascot — `src/three/marut/`
 
-The mascot (§6) is the illustrated OranjeStride character — source art at
-`public/img/mascot/mascot-character.png`. It follows the "one 3D asset, many flat renders"
-pattern: most sections show a pre-rendered **pose still**; the hero can optionally upgrade to a
-live rigged mesh. Code lives in `src/three/mascot.js`; placement/CSS in `src/style.css`
-(`.mascot*`). Poses are injected per section via `mascotMarkup(pose, variant)` (`src/utils/helpers.js`).
+Marut, the OranjeStride character, is **100% code** — no model files, no imports. Every
+edge, surface, and the glowing arrow tail is authored as Three.js geometry with
+canvas-generated textures at runtime (reference art: `public/img/mascot/poses/idle.png`).
 
-**Pose stills** — `public/img/mascot/poses/{idle,wave,point,run,cheer}.webp`
-Only `idle.webp` currently ships (a transparent cutout of the source art; `idle.png` is the
-non-webp fallback). Each mascot `<img>` uses a fallback chain **`<pose>.webp → idle.webp → idle.png`**,
-so any pose that isn't rendered yet degrades to idle automatically. To add the real poses:
+```
+src/three/marut/
+  index.js      createMarut({quality}) — assembles the character, returns the instance API
+  palette.js    colors + shared MeshStandardMaterial singleton
+  textures.js   CanvasTexture makers (circuit-print jacket, text decals, contact shadow)
+  rig.js        boneless rig — nested Object3D joints (root→hips→spine→chest→…)
+  poses.js      declarative Euler pose targets (idle, confident, point, openArms, runReady)
+  animation.js  MarutAnimator — channel-compose: base+breath+loco+overlay summed per frame
+  geometry/     head, hair, torso, limbs, shoes, tail builders
+```
 
-1. **(Phase A — outside this repo)** Feed `mascot-character.png` into an image-to-3D tool
-   (Meshy.ai / Tripo3D / Luma), auto-rig (Meshy or Mixamo), apply Idle / Wave / Point / Run /
-   Cheer clips.
-2. Render each pose as a transparent PNG/WebP from a straight-on 3/4 angle and drop them into
-   `public/img/mascot/poses/` with the exact names above. They're picked up on next load — no
-   code change. (The shipped `idle.webp` was produced in-repo by white-background flood-fill of
-   the source art with Pillow; re-run that if you replace the character art.)
+One instance stands at world origin for the whole page; the scroll showcase
+(`src/three/showcase.js`) scrubs a master GSAP timeline that flies the camera between
+per-section waypoints (`frameX` declares where he lands on screen; the aim is solved
+numerically per aspect ratio, with mobile waypoint overrides ≤900px). Poses and one-shots
+are driven by the active-section observer in `src/main.js`, and the Mascot Lab chips call
+`marut.play('wave'|'run'|'cheer')` directly.
 
-**Live 3D mesh** — `public/models/mascot.glb` (+ optional `public/models/mascot-anims.{glb,fbx}`)
-`mountMascotGLB()` (in `src/three/mascot.js`) loads the model once, clones it per section
-(Hero + About) with `SkeletonUtils`, plays `Idle` by default, fires `Wave` on section-enter,
-and blends `Run` by scroll velocity — all in plain Three.js (no React/R3F needed).
+Iterate on him in isolation at **`/marut-dev.html`** (orbit controls, pose/clip buttons,
+`window.__marutStats` budget readout). Render budget: ~21k tris, ≤38 draw calls for the
+character; `scripts/qa.mjs` asserts the live scene total each run.
 
-- **Clips:** it uses the model's embedded animations if present; otherwise it loads a **separate
-  Mixamo file** at `public/models/mascot-anims.glb` (or `.fbx`). Track names are auto-remapped to
-  the model's bones, bridging the common Mixamo mismatch (`mixamorig:Hips` vs `mixamorigHips`).
-  Clips are matched by name: `/idle|breath/`, `/wave|greet/`, `/run|stride|walk/`, `/clap|cheer/`.
-- **Validity gate:** after posing, it measures the *skinned* bounds. If the rig **collapses to a
-  point** (broken skin weights — common from image-to-3D → Mixamo → over-decimation), it bails to
-  the flat pose so a section never goes empty. **Validate any GLB in
-  [gltf-viewer.donmccurdy.com](https://gltf-viewer.donmccurdy.com/) first — play a clip and confirm
-  the character moves without collapsing.** Keep the mesh ~15–40k tris (don't over-decimate; that
-  is what scrambles skin weights).
-- **Fallback-safe:** missing/broken model or `prefers-reduced-motion` → flat pose stills, no breakage.
+**Flat pose stills** — `public/img/mascot/poses/{idle,wave,point,run,cheer}.webp` — are the
+`prefers-reduced-motion` / no-WebGL tier only (`src/three/mascot-fallback.js`). Each mascot
+`<img>` uses the fallback chain **`<pose>.webp → idle.webp → idle.png`**, so a missing pose
+degrades to idle automatically.
 
-Where each pose appears: nav `idle` · hero `wave`(→GLB) · about (→GLB) · programmes `run` ·
-India Tour `point` · clients faint `idle` · closing `cheer` · preloader `idle`.
+Where each flat pose appears (reduced tier): nav `idle` · hero `wave` · about `idle` ·
+programmes `run` · India Tour `point` · clients faint `idle` · closing `cheer` · preloader `idle`.
 
 ---
 
