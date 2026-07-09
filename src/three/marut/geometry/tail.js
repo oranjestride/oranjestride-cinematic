@@ -95,9 +95,11 @@ export function buildTail({ joints, mats, quality }) {
   // The arrowhead is the tail's DELIBERATE glow (design brief: "glowing
   // arrow tail"): emissive sits well past the bloom threshold so the halo
   // is guaranteed at every camera angle, not an env-reflection accident.
+  // env kept low — IBL specular over the flat facets washed the saturated
+  // orange to butter-yellow; the boards' arrowhead is vivid orange
   const headMat = new THREE.MeshStandardMaterial({
-    color: COLORS.tail, roughness: 0.3, envMapIntensity: 1.3,
-    emissive: 0xffb45f, emissiveIntensity: 2.0, flatShading: true,
+    color: COLORS.tail, roughness: 0.38, envMapIntensity: 0.7,
+    emissive: 0xff8a2a, emissiveIntensity: 1.0, flatShading: true,
   });
   const arrowhead = new THREE.Mesh(headGeo, headMat);
   const tipPos = curve.getPointAt(1);

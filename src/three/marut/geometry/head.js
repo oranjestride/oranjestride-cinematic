@@ -58,11 +58,13 @@ function makeFacePainter(quality) {
   const skinHex = '#' + COLORS.skin.toString(16).padStart(6, '0');
 
   const almond = (m) => {
-    // through-points: outer, upper peak, inner, lower valley (spec table)
+    // through-points: outer, upper peak, inner, lower valley — M9 sized up
+    // ~15% over the spec table (the boards' eyes dominate the face; the
+    // first pass read as dots from hero distance)
     ctx.beginPath();
-    ctx.moveTo(X(m * 0.073), Y(-0.060));
-    ctx.quadraticCurveTo(X(m * 0.045), Y(-0.035), X(m * 0.017), Y(-0.066));
-    ctx.quadraticCurveTo(X(m * 0.045), Y(-0.087), X(m * 0.073), Y(-0.060));
+    ctx.moveTo(X(m * 0.080), Y(-0.058));
+    ctx.quadraticCurveTo(X(m * 0.045), Y(-0.031), X(m * 0.015), Y(-0.066));
+    ctx.quadraticCurveTo(X(m * 0.045), Y(-0.091), X(m * 0.080), Y(-0.058));
     ctx.closePath();
   };
 
@@ -112,10 +114,11 @@ function makeFacePainter(quality) {
     ctx.ellipse(X(0), Y(-0.121), S(0.016), S(0.005), 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // --- brows: long tapered polygons wrapping toward the temples ---
+    // --- brows: thick angular wedges wrapping toward the temples (the
+    //     boards' fiercest feature — deep inner dip, high arc) ---
     ctx.fillStyle = '#17100b';
     for (const m of [1, -1]) {
-      const P = [[0.013, -0.050], [0.013, -0.040], [0.055, -0.029], [0.108, -0.040], [0.055, -0.045]];
+      const P = [[0.010, -0.054], [0.012, -0.038], [0.058, -0.026], [0.110, -0.040], [0.058, -0.048]];
       ctx.beginPath();
       ctx.moveTo(X(m * P[0][0]), Y(P[0][1]));
       for (let i = 1; i < P.length; i++) ctx.lineTo(X(m * P[i][0]), Y(P[i][1]));
@@ -129,74 +132,82 @@ function makeFacePainter(quality) {
       almond(m);
       ctx.clip();
       // sclera
-      ctx.fillStyle = '#ede6da';
-      ctx.fillRect(X(m * 0.073) - S(0.08), Y(-0.045), S(0.16), S(0.05));
-      // iris — radial gradient, big (64% of the opening)
-      const cx = X(m * 0.045), cy = Y(-0.063);
-      const ig = ctx.createRadialGradient(cx, cy, 0, cx, cy, S(0.018));
-      ig.addColorStop(0, '#8a5638');
-      ig.addColorStop(0.6, '#6f4430');
+      ctx.fillStyle = '#f2ebe0';
+      ctx.fillRect(X(m * 0.080) - S(0.09), Y(-0.040), S(0.18), S(0.058));
+      // iris — radial gradient, big (64% of the opening), warmer amber
+      const cx = X(m * 0.045), cy = Y(-0.062);
+      const ig = ctx.createRadialGradient(cx, cy, 0, cx, cy, S(0.021));
+      ig.addColorStop(0, '#a06438');
+      ig.addColorStop(0.6, '#7a4a2e');
       ig.addColorStop(1, '#3a1b0c');
       ctx.fillStyle = ig;
       ctx.beginPath();
-      ctx.arc(cx, cy, S(0.018), 0, Math.PI * 2);
+      ctx.arc(cx, cy, S(0.021), 0, Math.PI * 2);
       ctx.fill();
       // pupil
       ctx.fillStyle = '#140a05';
       ctx.beginPath();
-      ctx.arc(cx, cy, S(0.0065), 0, Math.PI * 2);
+      ctx.arc(cx, cy, S(0.0075), 0, Math.PI * 2);
       ctx.fill();
       // catchlight — same screen side on both eyes
       ctx.fillStyle = '#ffffff';
       ctx.beginPath();
-      ctx.arc(X(m * 0.045 - 0.006), Y(-0.056), S(0.003), 0, Math.PI * 2);
+      ctx.arc(X(m * 0.045 - 0.007), Y(-0.053), S(0.004), 0, Math.PI * 2);
       ctx.fill();
       // blink: skin-colored lid descends over the opening
       if (blink > 0.01) {
-        const top = -0.047, bottom = -0.077;
+        const top = -0.043, bottom = -0.081;
         const lidY = top + blink * (bottom - top);
         ctx.fillStyle = skinHex;
-        ctx.fillRect(X(m * 0.073) - S(0.08), Y(top) - 2, S(0.16), Y(lidY) - Y(top) + 2);
+        ctx.fillRect(X(m * 0.080) - S(0.09), Y(top) - 2, S(0.18), Y(lidY) - Y(top) + 2);
       }
       ctx.restore();
 
       // upper lash band with outer wing
       ctx.strokeStyle = '#241108';
-      ctx.lineWidth = S(0.007);
+      ctx.lineWidth = S(0.009);
       ctx.lineCap = 'round';
       ctx.beginPath();
-      ctx.moveTo(X(m * 0.017), Y(-0.066));
-      ctx.quadraticCurveTo(X(m * 0.045), Y(-0.035), X(m * 0.073), Y(-0.060));
-      ctx.lineTo(X(m * 0.081), Y(-0.057));
+      ctx.moveTo(X(m * 0.015), Y(-0.066));
+      ctx.quadraticCurveTo(X(m * 0.045), Y(-0.031), X(m * 0.080), Y(-0.058));
+      ctx.lineTo(X(m * 0.089), Y(-0.054));
       ctx.stroke();
       // subtle lower-lid line
       ctx.strokeStyle = '#b4622a';
       ctx.lineWidth = S(0.002);
       ctx.beginPath();
-      ctx.moveTo(X(m * 0.020), Y(-0.068));
-      ctx.quadraticCurveTo(X(m * 0.045), Y(-0.085), X(m * 0.070), Y(-0.063));
+      ctx.moveTo(X(m * 0.018), Y(-0.068));
+      ctx.quadraticCurveTo(X(m * 0.045), Y(-0.089), X(m * 0.077), Y(-0.061));
       ctx.stroke();
       // closed-lash curve at full blink
       if (blink >= 0.95) {
         ctx.strokeStyle = '#241108';
         ctx.lineWidth = S(0.004);
         ctx.beginPath();
-        ctx.moveTo(X(m * 0.017), Y(-0.066));
-        ctx.quadraticCurveTo(X(m * 0.045), Y(-0.080), X(m * 0.073), Y(-0.060));
+        ctx.moveTo(X(m * 0.015), Y(-0.066));
+        ctx.quadraticCurveTo(X(m * 0.045), Y(-0.084), X(m * 0.080), Y(-0.058));
         ctx.stroke();
       }
     }
 
-    // --- mouth: confident smirk (+x corner rides higher) ---
+    // nostril accents — anchors the nose wedge into the paint
+    ctx.fillStyle = 'rgba(140,60,15,0.5)';
+    for (const m of [1, -1]) {
+      ctx.beginPath();
+      ctx.ellipse(X(m * 0.011), Y(-0.118), S(0.0045), S(0.003), 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // --- mouth: confident smirk (+x corner rides higher), board-wide ---
     ctx.strokeStyle = '#5e2610';
-    ctx.lineWidth = S(0.0045);
+    ctx.lineWidth = S(0.006);
     ctx.lineCap = 'round';
     ctx.beginPath();
-    ctx.moveTo(X(-0.038), Y(-0.146));
-    ctx.bezierCurveTo(X(-0.014), Y(-0.156), X(0.014), Y(-0.156), X(0.038), Y(-0.144));
-    ctx.lineTo(X(0.046), Y(-0.138));
-    ctx.moveTo(X(-0.038), Y(-0.146));
-    ctx.lineTo(X(-0.046), Y(-0.140));
+    ctx.moveTo(X(-0.046), Y(-0.146));
+    ctx.bezierCurveTo(X(-0.018), Y(-0.158), X(0.018), Y(-0.158), X(0.046), Y(-0.142));
+    ctx.lineTo(X(0.054), Y(-0.133));
+    ctx.moveTo(X(-0.046), Y(-0.146));
+    ctx.lineTo(X(-0.054), Y(-0.139));
     ctx.stroke();
     // lower-lip shade
     ctx.fillStyle = 'rgba(164,78,19,0.40)';

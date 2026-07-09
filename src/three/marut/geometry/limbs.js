@@ -76,18 +76,20 @@ function makeHandGeometry(m) {
   knuckle.translate(0, -0.088, 0.006);
   parts.push(knuckle);
 
+  // fingers ride TOGETHER, fatter and curled — the boards read as one solid
+  // relaxed mitt, not four splayed digits (skeletal from hero distance)
   const fingers = [
-    { x: -0.036, len: 0.040, droop: 0.28 },
-    { x: -0.012, len: 0.048, droop: 0.28 },
-    { x: 0.012, len: 0.043, droop: 0.30 },
-    { x: 0.036, len: 0.030, droop: 0.35 },
+    { x: -0.030, len: 0.038, droop: 0.46 },
+    { x: -0.010, len: 0.044, droop: 0.44 },
+    { x: 0.010, len: 0.040, droop: 0.46 },
+    { x: 0.030, len: 0.029, droop: 0.52 },
   ];
   for (const f of fingers) {
-    const g = new THREE.CapsuleGeometry(0.014, f.len, 3, 8);
+    const g = new THREE.CapsuleGeometry(0.016, f.len, 3, 8);
     g.translate(0, -f.len / 2 - 0.014, 0);
     const mtx = new THREE.Matrix4()
-      .makeRotationFromEuler(new THREE.Euler(-f.droop, 0, m * (f.x / 0.036) * -0.06))
-      .setPosition(m * f.x, -0.09, 0.004);
+      .makeRotationFromEuler(new THREE.Euler(-f.droop, 0, m * (f.x / 0.030) * -0.025))
+      .setPosition(m * f.x, -0.088, 0.006);
     g.applyMatrix4(mtx);
     parts.push(g);
   }
@@ -123,7 +125,8 @@ export function buildArms({ joints, mats, quality }) {
     // shoulder ball — spherical v mapped into the zone's upper half so the
     // dome top samples the raglan orange and the underside falls into the
     // black web (reads as one garment, not a stuck-on balloon)
-    const cap = new THREE.SphereGeometry(0.074, radial, quality === 'low' ? 8 : 12);
+    const cap = new THREE.SphereGeometry(0.080, radial, quality === 'low' ? 8 : 12);
+    cap.scale(1, 1, 0.88); // slightly lens-shaped — a full ball read as a pad
     {
       const uv = cap.attributes.uv;
       for (let i = 0; i < uv.count; i++) {
@@ -136,15 +139,15 @@ export function buildArms({ joints, mats, quality }) {
     up.add(new THREE.Mesh(cap, jacketMat));
 
     // upper sleeve: shoulder → elbow
-    const upper = sleeveTube([[0.075, 0], [0.069, -0.12], [0.061, -0.235]], radial, upperZone);
+    const upper = sleeveTube([[0.082, 0], [0.074, -0.12], [0.064, -0.235]], radial, upperZone);
     up.add(new THREE.Mesh(upper, jacketMat));
 
     // forearm: elbow → cuff flare
-    const fore = sleeveTube([[0.060, 0], [0.057, -0.10], [0.054, -0.175]], radial, foreZone);
+    const fore = sleeveTube([[0.066, 0], [0.061, -0.10], [0.056, -0.175]], radial, foreZone);
     lo.add(new THREE.Mesh(fore, jacketMat));
 
     // dark ribbed knit cuff + skin wrist stub (cuff is NEVER orange)
-    const cuff = new THREE.Mesh(ribbedBand(0.047, 0.044, 0.05, quality === 'low' ? 10 : 18), mats.cuffRib);
+    const cuff = new THREE.Mesh(ribbedBand(0.050, 0.047, 0.05, quality === 'low' ? 10 : 18), mats.cuffRib);
     cuff.position.y = -0.198;
     lo.add(cuff);
     const stub = new THREE.Mesh(new THREE.CylinderGeometry(0.026, 0.026, 0.024, 8), mats.skin);
@@ -153,7 +156,7 @@ export function buildArms({ joints, mats, quality }) {
 
     // cyan strip on the outer upper arm (boards 34/37)
     const strip = new THREE.Mesh(new THREE.CapsuleGeometry(0.005, 0.055, 3, 6), mats.trimCyan);
-    strip.position.set(m * 0.072, -0.055, 0.012);
+    strip.position.set(m * 0.079, -0.055, 0.012);
     strip.rotation.z = m * 0.35;
     up.add(strip);
 
@@ -195,17 +198,17 @@ export function buildLegs({ joints, mats, quality }) {
     const loJ = joints[`leg${s}_lo`];
 
     // thigh: faceted taper with the crease ridge
-    const thigh = crease(new THREE.CylinderGeometry(0.093, 0.078, 0.38, radial, 3));
+    const thigh = crease(new THREE.CylinderGeometry(0.086, 0.073, 0.38, radial, 3));
     thigh.translate(0, -0.19, 0);
     upJ.add(new THREE.Mesh(thigh, mats.pantsFacet));
 
     // knee break + shin taper with calf push
     const parts = [];
-    const knee = new THREE.SphereGeometry(0.074, radial, quality === 'low' ? 6 : 8);
+    const knee = new THREE.SphereGeometry(0.069, radial, quality === 'low' ? 6 : 8);
     knee.scale(1, 0.9, 1.05);
     knee.translate(0, 0.005, 0.006);
     parts.push(knee);
-    const shin = crease(new THREE.CylinderGeometry(0.072, 0.048, 0.36, radial, 3));
+    const shin = crease(new THREE.CylinderGeometry(0.067, 0.048, 0.36, radial, 3));
     // calf: push the mid-ring's back vertices out
     {
       const pos = shin.attributes.position;
@@ -241,17 +244,17 @@ export function buildLegs({ joints, mats, quality }) {
       m * (r + 0.004) * Math.cos(SEAM_AZ), y, -(r + 0.004) * Math.sin(SEAM_AZ),
     );
     const thighTube = new THREE.TubeGeometry(
-      new THREE.CatmullRomCurve3([seamAt(0.091, -0.05), seamAt(0.084, -0.21), seamAt(0.077, -0.385)]),
+      new THREE.CatmullRomCurve3([seamAt(0.084, -0.05), seamAt(0.078, -0.21), seamAt(0.072, -0.385)]),
       10, 0.004, 6,
     );
     upJ.add(new THREE.Mesh(thighTube, mats.trimCyan));
     const shinTube = new THREE.TubeGeometry(
-      new THREE.CatmullRomCurve3([seamAt(0.073, 0.005), seamAt(0.066, -0.17), seamAt(0.05, -0.35)]),
+      new THREE.CatmullRomCurve3([seamAt(0.068, 0.005), seamAt(0.062, -0.17), seamAt(0.05, -0.35)]),
       10, 0.004, 6,
     );
     loJ.add(new THREE.Mesh(shinTube, mats.trimCyan));
     // caps so the knee bend never opens a visible gap
-    for (const [joint, y, r] of [[upJ, -0.385, 0.077], [loJ, 0.005, 0.073]]) {
+    for (const [joint, y, r] of [[upJ, -0.385, 0.072], [loJ, 0.005, 0.068]]) {
       const capS = new THREE.Mesh(new THREE.SphereGeometry(0.004, 6, 5), mats.trimCyan);
       capS.position.copy(seamAt(r, y));
       joint.add(capS);

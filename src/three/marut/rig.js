@@ -21,10 +21,10 @@ export const DIMS = {
   chestDY: 0.20,   // chest 1.24
   neckDY: 0.14,    // neck 1.38
   headDY: 0.08,    // head pivot 1.46
-  clavDX: 0.055,   // clav near the sternum so shrug/breath arcs read
-  clavDY: 0.065,   // clav at (±0.055, 1.305)
-  shoulderDX: 0.165,
-  shoulderDY: -0.065, // shoulder pivot lands at (±0.22, 1.24) — sloped line
+  clavDX: 0.065,   // clav near the sternum so shrug/breath arcs read
+  clavDY: 0.065,   // clav at (±0.065, 1.305)
+  shoulderDX: 0.19,
+  shoulderDY: -0.065, // shoulder pivot lands at (±0.255, 1.24) — hero V width
   armUpLen: 0.235,
   armLoLen: 0.235,
   handLen: 0.17,   // chunky vinyl mitts — 68% of head height

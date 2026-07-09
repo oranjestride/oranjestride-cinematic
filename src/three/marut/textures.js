@@ -45,7 +45,7 @@ const INK = {
   panelDeep: css(0xf08038),  // → ~#C65A1D
   panelLite: css(0xffc080),  // → ~#FF9A4A
   zipTape: css(0xf87a30),    // → ~#E8641E
-  circuitDim: css(0x8a5638),
+  circuitDim: css(0xc27a3e), // boards show the chest traces clearly — was too dim under ACES
   backPrint: css(0xffa14a),  // → ~#F59236
   nodeGold: css(0xffd88f),   // → ~#FFC978
   emblemFill: css(0x1a0f0a),
@@ -145,7 +145,7 @@ export function makeJacketMaps({ size = 2048 } = {}) {
   for (const ctx of [b, e]) {
     const dim = ctx === b ? INK.circuitDim : css(0x4a2c1c);
     const node = ctx === b ? INK.nodeGold : css(0x4a2c1c);
-    for (const r of FRONT_RUNS) run(ctx, r, 4, dim, 6, node);
+    for (const r of FRONT_RUNS) run(ctx, r, 6, dim, 9, node);
     // sparse dotted field
     const rng = mulberry32(777);
     ctx.save();

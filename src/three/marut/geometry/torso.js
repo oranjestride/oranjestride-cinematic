@@ -5,9 +5,11 @@
 // ribbed knit hem band, metal zipper pull, and the silver-framed chest chip.
 // Profiles are authored in WORLD y then shifted into joint-local space.
 //
-// Proportions from the boards: chest half-width 0.195 (y 1.24), waist 0.17
-// (y 1.006), hem 0.19 at the band top 0.916, shoulder line 1.335 tapering to
-// the collar base 1.40; collar top 1.44 (the chin at 1.439 overlaps it).
+// Proportions from the boards (M9 re-measure): the figure is a hero V —
+// chest half-width 0.222 (y 1.30), waist 0.170 (y 1.006), hem 0.190 at the
+// band top 0.916, shoulder line 1.335 tapering to the collar base 1.40;
+// collar top 1.44 (the chin at 1.439 overlaps it). The first pass under-read
+// the chest by ~13% and the mascot read as a tube.
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { JACKET_Y0, JACKET_Y1, TORSO_V0, makeChipCoreTexture } from '../textures.js';
@@ -25,12 +27,12 @@ const LOWER_PROFILE = [
 ];
 const UPPER_PROFILE = [
   [0.179, SPLIT_Y],
-  [0.185, 1.161], // armpit
-  [0.195, 1.24],  // chest
-  [0.197, 1.30],
-  [0.185, 1.335], // shoulder line
-  [0.130, 1.385],
-  [0.088, 1.40],  // collar base
+  [0.192, 1.161], // armpit
+  [0.213, 1.24],  // chest
+  [0.222, 1.30],
+  [0.210, 1.335], // shoulder line
+  [0.148, 1.385],
+  [0.092, 1.40],  // collar base
 ];
 
 function lathe(profile, worldToLocal, segments) {
@@ -103,9 +105,9 @@ export function buildTorso({ joints, mats, quality }) {
 
   // --- stand-up collar 1.40→1.44, chest-local (0.16→0.20) ---
   const collarPts = [
-    new THREE.Vector2(0.088, 0.16),
-    new THREE.Vector2(0.092, 0.18),
-    new THREE.Vector2(0.096, 0.20),
+    new THREE.Vector2(0.092, 0.16),
+    new THREE.Vector2(0.096, 0.18),
+    new THREE.Vector2(0.100, 0.20),
   ];
   const collar = new THREE.Mesh(new THREE.LatheGeometry(collarPts, seg, Math.PI), mats.jacket);
   collar.scale.z = 0.78; // the neck opening is rounder than the torso
@@ -113,7 +115,7 @@ export function buildTorso({ joints, mats, quality }) {
 
   // piping: front arc only + two short capsules down the collar's front edges
   const rim = new THREE.Mesh(
-    new THREE.TorusGeometry(0.094, 0.005, 8, seg, 3.5),
+    new THREE.TorusGeometry(0.098, 0.005, 8, seg, 3.5),
     mats.jacketTrim,
   );
   rim.rotation.x = Math.PI / 2;
@@ -160,7 +162,10 @@ export function buildTorso({ joints, mats, quality }) {
     mats.chipCoreMapped.emissive = new THREE.Color(0xffffff);
     // hero glow under scene.js' bloom pass: the radial-gradient emissiveMap
     // keeps motif detail while the hot center crosses threshold → orange halo
-    mats.chipCoreMapped.emissiveIntensity = 2.2;
+    // 1.4 keeps the sun motif readable (2.2 blew the core to a white
+    // square); the radial gradient's hot center still crosses the bloom
+    // threshold for a slim halo
+    mats.chipCoreMapped.emissiveIntensity = 1.4;
 
     mats.chipCoreMapped.emissiveMap = coreTex;
   }

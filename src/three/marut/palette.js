@@ -16,7 +16,9 @@ export const COLORS = {
   jacketOrange: 0xf5761c, // satin shoulder/side panels, zip trim
   ribbing: 0x1b1d22,      // collar/cuffs/hem knit — most matte on the figure
   circuit: 0xffb066,
-  hair: 0x1a1c21,           // blue-black blades + base cap (vertex color)
+  hair: 0x1d1b1a,           // warm charcoal blades + base cap (vertex color) —
+                            // the old blue-black hex saturated slate-BLUE under
+                            // the pale-blue hemisphere sky on up-facing facets
   hairOrange: 0xed7420,     // solid orange blades (vertex color)
   hairOrangeDeep: 0xa8500f, // burnt-orange variant on ~30% of orange blades
   pants: 0x232630,        // slightly bluer/lighter than the jacket
@@ -55,7 +57,9 @@ export function makeMaterials() {
     cuffRib: M({ color: 0x171921, roughness: 0.85, envMapIntensity: 0.4, flatShading: true }),
     // faceted jogger legs — hard normal breaks carry the low-poly read
     pantsFacet: M({ color: 0x14161d, roughness: 0.65, envMapIntensity: 0.5, flatShading: true }),
-    hair: M({ vertexColors: true, flatShading: true, roughness: 0.45, envMapIntensity: 1.0 }),
+    // matte-ish — at rough 0.45/env 1.0 a black blade facet mirrored the cool
+    // hemisphere+rim and flashed slate-BLUE dead center of the fringe
+    hair: M({ vertexColors: true, flatShading: true, roughness: 0.62, envMapIntensity: 0.55 }),
     pants: M({ color: COLORS.pants, roughness: 0.8, envMapIntensity: 0.5 }),
     // white-hot core on the seam piping; 1.8 puts it just over the bloom
     // threshold so the cyan strips grow a slim neon halo (breachbunny trim)

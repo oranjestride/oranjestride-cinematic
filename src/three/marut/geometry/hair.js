@@ -100,7 +100,9 @@ export function buildHair({ joints, mats, quality }) {
     geo.applyMatrix4(m);
     geos.push(geo);
   }
-  const jitter = (v) => v + rand(rng, -0.12, 0.12);
+  // M9: boards show ~15 BIG sculpted pyramids, not a thicket of thin flicks —
+  // every zone runs fewer, fatter, taller blades with tighter jitter
+  const jitter = (v) => v + rand(rng, -0.08, 0.08);
 
   // --- base cap: kills scalp show-through; vertex-clamped to the hairline
   //     so the edge reads as a hard graphic rim under flat shading ---
@@ -128,21 +130,21 @@ export function buildHair({ joints, mats, quality }) {
   // --- FRINGE: above the forehead hairline, flicking up + slightly forward,
   //     outer blades splay sideways; the orange heart of the hairdo ---
   {
-    const count = n(12);
+    const count = n(8);
     for (let i = 0; i < count; i++) {
       const az = jitter(((i + 0.5) / count - 0.5) * 2 * (50 * Math.PI / 180));
       const base = capPoint(az, hairlineY(az) + rand(rng, 0.008, 0.03));
       const radial = base.clone().sub(C).normalize();
       const grow = radial.multiplyScalar(0.25)
         .add(new THREE.Vector3(0.5 * Math.sin(az), 1.0, 0.2));
-      const forced = Math.abs(az) < 0.12; // center-front blade always orange
-      blade(base, grow, rand(rng, 0.09, 0.14), rand(rng, 0.03, 0.045),
-        forced ? orangeMain : pickColor(0.65));
+      const forced = Math.abs(az) < 0.30; // front-center cluster always orange
+      blade(base, grow, rand(rng, 0.11, 0.17), rand(rng, 0.045, 0.065),
+        forced ? orangeMain : pickColor(0.85));
     }
   }
 
   // --- CROWN: two rings radiating away from the rear-of-center whorl ---
-  for (const [ringY, count] of [[0.030, n(8)], [0.012, n(8)]]) {
+  for (const [ringY, count] of [[0.030, n(6)], [0.012, n(6)]]) {
     for (let i = 0; i < count; i++) {
       const az = jitter((i / count) * Math.PI * 2);
       const base = capPoint(az, ringY + rand(rng, -0.006, 0.006));
@@ -153,46 +155,46 @@ export function buildHair({ joints, mats, quality }) {
       const grow = radial.multiplyScalar(0.35)
         .addScaledVector(hw, 0.35)
         .add(new THREE.Vector3(0, 0.85, -0.55));
-      blade(base, grow, rand(rng, 0.12, 0.19), rand(rng, 0.035, 0.055), pickColor(0.4));
+      blade(base, grow, rand(rng, 0.15, 0.22), rand(rng, 0.05, 0.075), pickColor(0.4));
     }
   }
 
   // --- SIDES: temple-to-behind-ear band, swept hard back ---
   for (const m of [1, -1]) {
-    const count = n(8);
+    const count = n(5);
     for (let i = 0; i < count; i++) {
       const az = m * jitter((50 + (i / (count - 1)) * 75) * Math.PI / 180);
       const base = capPoint(az, rand(rng, -0.03, 0.01));
       const radial = base.clone().sub(C).normalize();
       const grow = radial.multiplyScalar(0.4)
         .add(new THREE.Vector3(m * 0.25, 0.45, -0.9));
-      blade(base, grow, rand(rng, 0.06, 0.11), rand(rng, 0.025, 0.04), pickColor(0.25));
+      blade(base, grow, rand(rng, 0.08, 0.13), rand(rng, 0.038, 0.055), pickColor(0.25));
     }
   }
 
   // --- BACK UPPER (occiput): big, nearly horizontal — the rear overhang ---
   {
-    const count = n(10);
+    const count = n(7);
     for (let i = 0; i < count; i++) {
       const az = Math.PI + jitter(((i + 0.5) / count - 0.5) * 2 * (55 * Math.PI / 180));
       const base = capPoint(az, rand(rng, -0.02, 0.02));
       const radial = base.clone().sub(C).normalize();
       const grow = radial.multiplyScalar(0.3)
         .add(new THREE.Vector3(0, 0.45, -1.0));
-      blade(base, grow, rand(rng, 0.13, 0.2), rand(rng, 0.04, 0.058), pickColor(0.08));
+      blade(base, grow, rand(rng, 0.15, 0.22), rand(rng, 0.055, 0.078), pickColor(0.08));
     }
   }
 
   // --- HERO CLUSTER: top-center-back, tallest points of the character
   //     (tips ≈ spec-local 0.18 → world ~1.80) — always black ---
   {
-    const count = n(4);
+    const count = n(3);
     for (let i = 0; i < count; i++) {
       const az = Math.PI + rand(rng, -0.35, 0.35);
       const base = capPoint(az, rand(rng, 0.026, 0.036));
       const grow = new THREE.Vector3(rand(rng, -0.12, 0.12), 0.75, -0.65);
       tmp.copy(black).offsetHSL(0, 0, rand(rng, -0.012, 0.018));
-      blade(base, grow, rand(rng, 0.16, 0.2), rand(rng, 0.045, 0.065), tmp);
+      blade(base, grow, rand(rng, 0.18, 0.23), rand(rng, 0.06, 0.082), tmp);
     }
   }
 
