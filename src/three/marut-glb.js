@@ -90,30 +90,48 @@ export async function mountMarutGLB() {
   const model = gltf.scene;
   model.traverse((o) => { if (o.isMesh || o.isSkinnedMesh) o.frustumCulled = false; });
 
-  // Emissive recovery: the bake ships one base-color texture, no emissive
-  // map. Saturated orange (circuits/tail/trim) and neon-cyan texels emit
-  // their own color — intensities sized for the M8 bloom threshold (1.25 in
-  // linear HDR) so the trim halos like the reference site's neon.
+  // Material pass. The bake ships one base-color texture — no emissive,
+  // roughness, or normal maps — so surface character is recovered in-shader:
+  // - emissive recovery: saturated orange (circuits/trim) and neon-cyan
+  //   texels emit their own color, sized to graze the M8 bloom threshold
+  //   (a soft halo, not the earlier lantern glow)
+  // - luminance-derived micro-roughness: dark cloth reads matte, bright
+  //   skin/trim reads satin — fakes the missing roughness map
+  // - velvet rim sheen: a faint warm fresnel lift that carves the sculpt's
+  //   muscle/fold silhouettes out of the dark backdrop (fake bounce)
   model.traverse((o) => {
     if (!(o.isMesh || o.isSkinnedMesh) || !o.material) return;
     const m = o.material;
     m.envMapIntensity = 0.9;
+    if (m.map) m.map.anisotropy = 8; // crisp bake detail at glancing angles
     m.onBeforeCompile = (sh) => {
-      sh.fragmentShader = sh.fragmentShader.replace(
-        '#include <emissivemap_fragment>',
-        `#include <emissivemap_fragment>
-        {
-          vec3 c = diffuseColor.rgb;
-          // hot saturated orange ONLY (circuit print / trim) — skin is also
-          // orange-family but desaturated; the g-channel guard excludes it,
-          // otherwise the whole character radiates
-          float orange = smoothstep(0.52, 0.85, c.r - c.b)
-                       * smoothstep(0.50, 0.90, c.r)
-                       * (1.0 - smoothstep(0.62, 0.80, c.g));
-          float cyan   = smoothstep(0.18, 0.55, c.b - c.r) * smoothstep(0.35, 0.80, c.b);
-          totalEmissiveRadiance += c * (orange * 1.2 + cyan * 1.8);
-        }`
-      );
+      sh.fragmentShader = sh.fragmentShader
+        .replace(
+          '#include <roughnessmap_fragment>',
+          `#include <roughnessmap_fragment>
+          {
+            float lum = dot(diffuseColor.rgb, vec3(0.2126, 0.7152, 0.0722));
+            roughnessFactor = clamp(roughnessFactor * (1.15 - lum * 0.35), 0.25, 1.0);
+          }`
+        )
+        .replace(
+          '#include <emissivemap_fragment>',
+          `#include <emissivemap_fragment>
+          {
+            vec3 c = diffuseColor.rgb;
+            // hot saturated orange ONLY (circuit print / trim) — skin is
+            // also orange-family but desaturated; the g-channel guard
+            // excludes it, otherwise the whole character radiates
+            float orange = smoothstep(0.52, 0.85, c.r - c.b)
+                         * smoothstep(0.50, 0.90, c.r)
+                         * (1.0 - smoothstep(0.62, 0.80, c.g));
+            float cyan   = smoothstep(0.18, 0.55, c.b - c.r) * smoothstep(0.35, 0.80, c.b);
+            totalEmissiveRadiance += c * (orange * 0.85 + cyan * 1.35);
+            // velvet rim — normal falloff against the view carves the sculpt
+            float rim = pow(1.0 - clamp(dot(normalize(vViewPosition), normal), 0.0, 1.0), 3.0);
+            totalEmissiveRadiance += vec3(1.0, 0.72, 0.5) * rim * 0.055;
+          }`
+        );
     };
     m.needsUpdate = true;
   });
@@ -159,9 +177,28 @@ export async function mountMarutGLB() {
 
   const run = action('run');
 
+  // Bones for post-mixer overlays (applied AFTER mixer.update each frame, so
+  // they ride on top of whatever the clips do):
+  // - head: cursor-look ("he sees you") + chin lift
+  // - spine chain/neck: posture straightening — the Mixamo idle + this bind
+  //   pose slouch forward (rounded shoulders, jutting head); a small counter-
+  //   rotation distributed along the chain stands him upright without
+  //   fighting the animation
+  let headBone = null;
+  const postureBones = []; // [bone, straighten x-offset (rad)]
+  const STRAIGHTEN = { spine: -0.05, spine1: -0.06, spine2: -0.07, neck: -0.07 };
+  model.traverse((o) => {
+    if (!o.isBone) return;
+    const n = o.name.replace(/^mixamorig[:_]?/i, '').toLowerCase();
+    if (n === 'head') headBone = o;
+    else if (STRAIGHTEN[n] != null) postureBones.push([o, STRAIGHTEN[n]]);
+  });
+  const CHIN_LIFT = -0.06;
+
   // --- yaw / locomotion state (mirrors the procedural animator's contract) --
   let yawTarget = 0, dragYaw = 0, dragging = false;
   let locoTarget = 0, runW = 0;
+  let lookX = 0, lookY = 0, lookEnabled = true;
 
   const inst = {
     sectionId: '*',
@@ -173,17 +210,28 @@ export async function mountMarutGLB() {
       root.visible = on;
     },
 
-    // wave | cheer | run | point — one-shot on top of the idle loop.
-    // 'point' has no clip in the Mixamo set → wave reads as the gesture.
+    // wave | cheer | run | point — one-shot with the idle loop DUCKED under
+    // it ('point' has no clip in the Mixamo set → wave reads as the gesture).
+    // Playing both at full weight blended the gesture 50/50 with idle and
+    // every emotion came out mushy — crossfade out, then restore idle.
     play(name) {
       const a = action(name === 'point' ? 'wave' : name);
-      if (!a || a === idle) return;
+      if (!a || a === idle || !mixer) return;
       a.reset();
       a.setLoop(THREE.LoopOnce);
       a.clampWhenFinished = false;
+      // snappier gestures read more confident than Mixamo's neutral pacing
+      a.timeScale = name === 'cheer' ? 1.15 : 1.05;
       a.setEffectiveWeight(1);
-      a.fadeIn(0.2);
+      a.fadeIn(0.18);
       a.play();
+      idle?.fadeOut(0.18);
+      const restore = (e) => {
+        if (e.action !== a) return;
+        mixer.removeEventListener('finished', restore);
+        idle?.reset().fadeIn(0.3).play();
+      };
+      mixer.addEventListener('finished', restore);
     },
 
     // Base poses are a procedural concept — the sculpt idles through all of
@@ -196,20 +244,40 @@ export async function mountMarutGLB() {
     // correct even when frames are scarce (software rasterizers)
     addDragYaw(d) { dragYaw += d; root.rotation.y += d; },
     setDragging(on) { dragging = on; },
-    setLookEnabled() {},
+    setLookEnabled(on) { lookEnabled = !!on; },
 
-    update({ dt, scrollVel }) {
+    update({ dt, pointer, scrollVel }) {
       if (mixer) mixer.update(dt);
 
       const target = yawTarget + dragYaw;
       root.rotation.y += (target - root.rotation.y) * (dragging ? 0.5 : 0.08);
 
-      // scroll velocity blends the run clip in (showcase loco + free scroll)
+      // scroll velocity blends the run clip in (showcase loco + free scroll);
+      // cadence speeds up with intensity and the whole figure leans into it —
+      // Mixamo's neutral jog reads like a treadmill without the lean
       if (run) {
         const want = Math.max(locoTarget, Math.min(1, Math.abs(scrollVel) * 40));
-        runW += (want - runW) * 0.08;
+        runW += (want - runW) * 0.1;
         run.setEffectiveWeight(runW);
+        run.timeScale = 0.85 + 0.45 * runW;
         if (runW > 0.01 && !run.isRunning()) run.play();
+        root.rotation.x = runW * 0.11;
+      }
+
+      // posture straightening — counter the clips' slouch along the spine
+      // chain (eases off while running: the run SHOULD lean)
+      const straighten = 1 - runW * 0.7;
+      for (const [bone, off] of postureBones) bone.rotation.x += off * straighten;
+
+      // cursor head-look + chin lift, applied over the clip pose; eased hard
+      // so it never fights the gesture clips
+      if (headBone && !dragging) {
+        const wantX = lookEnabled && pointer ? pointer.x * 0.35 : 0;
+        const wantY = lookEnabled && pointer ? pointer.y * 0.2 : 0;
+        lookX += (wantX - lookX) * 0.06;
+        lookY += (wantY - lookY) * 0.06;
+        headBone.rotation.y += lookX;
+        headBone.rotation.x += lookY + CHIN_LIFT * straighten;
       }
     },
 

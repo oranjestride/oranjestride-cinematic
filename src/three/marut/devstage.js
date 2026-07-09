@@ -49,7 +49,7 @@ export function startDevStage() {
     });
     composer = new EffectComposer(renderer, target);
     composer.addPass(new RenderPass(scene, camera));
-    const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.55, 0.35, 1.25);
+    const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.45, 0.35, 1.25);
     // same alpha-preserving blend fix as scene.js (opaque bg here, but the
     // two rigs must stay in lockstep so shots match the site)
     bloom.blendMaterial.blending = THREE.CustomBlending;
