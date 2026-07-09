@@ -103,7 +103,15 @@ export async function mountMarutGLB() {
     if (!(o.isMesh || o.isSkinnedMesh) || !o.material) return;
     const m = o.material;
     m.envMapIntensity = 0.9;
-    if (m.map) m.map.anisotropy = 8; // crisp bake detail at glancing angles
+    if (m.map) {
+      m.map.anisotropy = 8; // crisp bake detail at glancing angles
+      // height-from-albedo: reuse the base-color bake as a bump map — the
+      // painted brows/lips/nostrils/seams gain real surface relief under the
+      // light rig (the bake ships no normal map; tiny scale = skin texture,
+      // not embossing)
+      m.bumpMap = m.map;
+      m.bumpScale = 0.6;
+    }
     m.onBeforeCompile = (sh) => {
       sh.fragmentShader = sh.fragmentShader
         .replace(
@@ -186,14 +194,16 @@ export async function mountMarutGLB() {
   //   fighting the animation
   let headBone = null;
   const postureBones = []; // [bone, straighten x-offset (rad)]
-  const STRAIGHTEN = { spine: -0.05, spine1: -0.06, spine2: -0.07, neck: -0.07 };
+  // ~60% of the first-pass correction — full strength tipped him BACKWARD;
+  // a natural stance keeps a slight relaxed S-curve, not a plumb line
+  const STRAIGHTEN = { spine: -0.03, spine1: -0.035, spine2: -0.04, neck: -0.045 };
   model.traverse((o) => {
     if (!o.isBone) return;
     const n = o.name.replace(/^mixamorig[:_]?/i, '').toLowerCase();
     if (n === 'head') headBone = o;
     else if (STRAIGHTEN[n] != null) postureBones.push([o, STRAIGHTEN[n]]);
   });
-  const CHIN_LIFT = -0.06;
+  const CHIN_LIFT = -0.035;
 
   // --- yaw / locomotion state (mirrors the procedural animator's contract) --
   let yawTarget = 0, dragYaw = 0, dragging = false;
@@ -220,16 +230,17 @@ export async function mountMarutGLB() {
       a.reset();
       a.setLoop(THREE.LoopOnce);
       a.clampWhenFinished = false;
-      // snappier gestures read more confident than Mixamo's neutral pacing
-      a.timeScale = name === 'cheer' ? 1.15 : 1.05;
+      // near-native pacing + longer eases (slow in/out) — the sped-up first
+      // pass read jittery, not confident
+      a.timeScale = name === 'cheer' ? 1.05 : 1.0;
       a.setEffectiveWeight(1);
-      a.fadeIn(0.18);
+      a.fadeIn(0.25);
       a.play();
-      idle?.fadeOut(0.18);
+      idle?.fadeOut(0.25);
       const restore = (e) => {
         if (e.action !== a) return;
         mixer.removeEventListener('finished', restore);
-        idle?.reset().fadeIn(0.3).play();
+        idle?.reset().fadeIn(0.45).play();
       };
       mixer.addEventListener('finished', restore);
     },
@@ -261,7 +272,7 @@ export async function mountMarutGLB() {
         run.setEffectiveWeight(runW);
         run.timeScale = 0.85 + 0.45 * runW;
         if (runW > 0.01 && !run.isRunning()) run.play();
-        root.rotation.x = runW * 0.11;
+        root.rotation.x = runW * 0.08;
       }
 
       // posture straightening — counter the clips' slouch along the spine
@@ -272,8 +283,8 @@ export async function mountMarutGLB() {
       // cursor head-look + chin lift, applied over the clip pose; eased hard
       // so it never fights the gesture clips
       if (headBone && !dragging) {
-        const wantX = lookEnabled && pointer ? pointer.x * 0.35 : 0;
-        const wantY = lookEnabled && pointer ? pointer.y * 0.2 : 0;
+        const wantX = lookEnabled && pointer ? pointer.x * 0.28 : 0;
+        const wantY = lookEnabled && pointer ? pointer.y * 0.16 : 0;
         lookX += (wantX - lookX) * 0.06;
         lookY += (wantY - lookY) * 0.06;
         headBone.rotation.y += lookX;

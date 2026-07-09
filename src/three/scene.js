@@ -90,7 +90,7 @@ export function initScene({ reduced }) {
     // threshold sits ABOVE anything lit diffuse can reach (~1.0 with this
     // rig) so only genuine emissives bloom — at 0.9 the orange shoes/hair
     // caught the key light and glowed like lamps
-    const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.45, 0.35, 1.25);
+    const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.25, 0.35, 1.25);
     // The stock pass breaks transparent canvases: its blur mips hardcode
     // alpha 1 and the additive blend sums that into the framebuffer, turning
     // the whole background opaque black (hiding the section videos below).
