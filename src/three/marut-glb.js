@@ -14,6 +14,8 @@
 // in-shader), and the posed-bounds validity gate.
 // ============================================================================
 import * as THREE from 'three';
+import { makeMaterials } from './marut/palette.js';
+import { buildTail } from './marut/geometry/tail.js';
 
 const GLB_URL = '/models/mascot.glb';
 const TARGET_HEIGHT = 1.80; // world units — matches the procedural rig, so
@@ -185,6 +187,27 @@ export async function mountMarutGLB() {
 
   const run = action('run');
 
+  // --- signature glowing arrow tail — the sculpt ships without one, so the
+  //     procedural tail (board-matched tube + circuit glyphs + chevron head)
+  //     is grafted onto the hip bone: it rides the clips' hip motion and
+  //     sways on top. The mount neutralizes the bone's world rotation/scale
+  //     so the tail builds in the same world axes it was authored in. ---
+  let tailMount = null;
+  {
+    let hips = null;
+    model.traverse((o) => { if (!hips && o.isBone && /hips$/i.test(o.name.replace(/^mixamorig[:_]?/i, ''))) hips = o; });
+    const parent = hips || inner;
+    parent.updateWorldMatrix(true, false);
+    tailMount = new THREE.Group();
+    parent.add(tailMount);
+    const ws = new THREE.Vector3(); parent.getWorldScale(ws);
+    const wq = new THREE.Quaternion(); parent.getWorldQuaternion(wq);
+    tailMount.position.copy(parent.worldToLocal(new THREE.Vector3(0, 0.80, -0.11)));
+    tailMount.quaternion.copy(wq.invert());
+    tailMount.scale.set(1 / ws.x, 1 / ws.y, 1 / ws.z);
+    buildTail({ joints: { tailRoot: tailMount }, mats: makeMaterials(), quality: 'high' });
+  }
+
   // Bones for post-mixer overlays (applied AFTER mixer.update each frame, so
   // they ride on top of whatever the clips do):
   // - head: cursor-look ("he sees you") + chin lift
@@ -194,21 +217,29 @@ export async function mountMarutGLB() {
   //   fighting the animation
   let headBone = null;
   const postureBones = []; // [bone, straighten x-offset (rad)]
+  const shoulderBones = []; // [clavicle bone, retract sign]
   // ~60% of the first-pass correction — full strength tipped him BACKWARD;
   // a natural stance keeps a slight relaxed S-curve, not a plumb line
-  const STRAIGHTEN = { spine: -0.03, spine1: -0.035, spine2: -0.04, neck: -0.045 };
+  const STRAIGHTEN = { spine: -0.03, spine1: -0.035, spine2: -0.055, neck: -0.045 };
   model.traverse((o) => {
     if (!o.isBone) return;
     const n = o.name.replace(/^mixamorig[:_]?/i, '').toLowerCase();
     if (n === 'head') headBone = o;
     else if (STRAIGHTEN[n] != null) postureBones.push([o, STRAIGHTEN[n]]);
+    // clavicles roll forward in the bind (slouched shoulders) — retract by
+    // rotating about the world up-axis: left (+x) toward -z, right mirrored
+    else if (n === 'leftshoulder') shoulderBones.push([o, 1]);
+    else if (n === 'rightshoulder') shoulderBones.push([o, -1]);
   });
   const CHIN_LIFT = -0.035;
+  const RETRACT = 0.12;
+  const Y_UP = new THREE.Vector3(0, 1, 0);
 
   // --- yaw / locomotion state (mirrors the procedural animator's contract) --
   let yawTarget = 0, dragYaw = 0, dragging = false;
   let locoTarget = 0, runW = 0;
   let lookX = 0, lookY = 0, lookEnabled = true;
+  let t = 0; // tail-sway clock
 
   const inst = {
     sectionId: '*',
@@ -258,7 +289,14 @@ export async function mountMarutGLB() {
     setLookEnabled(on) { lookEnabled = !!on; },
 
     update({ dt, pointer, scrollVel }) {
+      t += dt;
       if (mixer) mixer.update(dt);
+
+      // tail sway on top of the hip motion it inherits from the clips
+      if (tailMount) {
+        tailMount.rotation.y = Math.sin(t * 0.9) * 0.08 + Math.sin(t * 1.7) * 0.03;
+        tailMount.rotation.x = Math.sin(t * 0.7) * 0.04;
+      }
 
       const target = yawTarget + dragYaw;
       root.rotation.y += (target - root.rotation.y) * (dragging ? 0.5 : 0.08);
@@ -279,6 +317,8 @@ export async function mountMarutGLB() {
       // chain (eases off while running: the run SHOULD lean)
       const straighten = 1 - runW * 0.7;
       for (const [bone, off] of postureBones) bone.rotation.x += off * straighten;
+      // shoulder retraction — pulls the rolled-forward clavicles back
+      for (const [bone, m] of shoulderBones) bone.rotateOnWorldAxis(Y_UP, m * RETRACT * straighten);
 
       // cursor head-look + chin lift, applied over the clip pose; eased hard
       // so it never fights the gesture clips

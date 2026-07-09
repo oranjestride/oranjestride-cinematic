@@ -90,7 +90,7 @@ export const mascotLab = {
   label: 'Interactive 3D',
   headA: 'Meet the ',
   headAccent: 'Stride Runner',
-  sub: 'The OranjeStride mark, brought to life — a 3D character built entirely in code, rendered live in your browser, carrying the momentum we build into every programme.',
+  sub: 'The OranjeStride mark, brought to life — a fully rigged 3D character rendered live in your browser, carrying the momentum we build into every programme.',
   hint: 'Take him for a spin:',
   clips: [
     { clip: 'wave', label: 'Wave' },
