@@ -104,7 +104,7 @@ export function buildHair({ joints, mats, quality }) {
 
   // --- base cap: kills scalp show-through; vertex-clamped to the hairline
   //     so the edge reads as a hard graphic rim under flat shading ---
-  const cap = new THREE.SphereGeometry(R, lowQ ? 16 : 24, lowQ ? 8 : 12, 0, Math.PI * 2, 0, Math.PI * 0.8);
+  const cap = new THREE.SphereGeometry(R, lowQ ? 16 : 32, lowQ ? 8 : 16, 0, Math.PI * 2, 0, Math.PI * 0.8);
   cap.scale(S.x, S.y, S.z);
   cap.translate(C.x, C.y, C.z);
   {

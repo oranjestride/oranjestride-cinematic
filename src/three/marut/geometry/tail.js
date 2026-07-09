@@ -24,8 +24,10 @@ const GLYPH_TS = [0.30, 0.42, 0.55, 0.68, 0.80];
 
 export function buildTail({ joints, mats, quality }) {
   const tailRoot = joints.tailRoot;
-  const tubular = quality === 'low' ? 28 : 48;
-  const radial = quality === 'low' ? 8 : 10;
+  // glossy vinyl — dense rings so the strong rim/env highlights sweep along
+  // the tube without polygon kinks (48×10 kinked visibly on the S-bend)
+  const tubular = quality === 'low' ? 28 : 80;
+  const radial = quality === 'low' ? 8 : 14;
 
   const curve = new THREE.CatmullRomCurve3(CURVE_POINTS.map((p) => new THREE.Vector3(...p)));
 
@@ -89,10 +91,13 @@ export function buildTail({ joints, mats, quality }) {
     depth: 0.022, bevelEnabled: true, bevelThickness: 0.007, bevelSize: 0.007, bevelSegments: 1,
   });
   headGeo.translate(0, 0.03, -0.011);
-  // faceted like the boards — local flat-shaded variant of the tail vinyl
+  // faceted like the boards — local flat-shaded variant of the tail vinyl.
+  // The arrowhead is the tail's DELIBERATE glow (design brief: "glowing
+  // arrow tail"): emissive sits well past the bloom threshold so the halo
+  // is guaranteed at every camera angle, not an env-reflection accident.
   const headMat = new THREE.MeshStandardMaterial({
     color: COLORS.tail, roughness: 0.3, envMapIntensity: 1.3,
-    emissive: 0xff8a2a, emissiveIntensity: 0.35, flatShading: true,
+    emissive: 0xffb45f, emissiveIntensity: 2.0, flatShading: true,
   });
   const arrowhead = new THREE.Mesh(headGeo, headMat);
   const tipPos = curve.getPointAt(1);

@@ -4,8 +4,10 @@
 //
 // The boards are a vinyl-toy product shot: blacks never crush (charcoal
 // floor ~#1b1d22), sheen is differentiated per surface family (matte knit →
-// satin skin/panels → gloss shoes/tail), and emissives are calibrated for
-// ACES 1.15 with NO bloom pass — these are exact screen values.
+// satin skin/panels → gloss shoes/tail). Emissives are calibrated for
+// ACES 1.15 + the UnrealBloomPass in scene.js (threshold 0.9 in linear):
+// intensities that push linear luminance past ~0.9 grow a halo, the rest
+// stay flat glows — that's the selective-bloom line, tune with care.
 import * as THREE from 'three';
 
 export const COLORS = {
@@ -55,17 +57,20 @@ export function makeMaterials() {
     pantsFacet: M({ color: 0x14161d, roughness: 0.65, envMapIntensity: 0.5, flatShading: true }),
     hair: M({ vertexColors: true, flatShading: true, roughness: 0.45, envMapIntensity: 1.0 }),
     pants: M({ color: COLORS.pants, roughness: 0.8, envMapIntensity: 0.5 }),
-    // white-hot core reads on the back view's seam piping; no bloom pass, so
-    // this is the exact screen value — 1.4 glows without washing out
-    trimCyan: M({ color: 0x0a2530, emissive: 0x5fd8ff, emissiveIntensity: 1.4, roughness: 0.5 }),
-    shoe: M({ color: COLORS.shoe, roughness: 0.34, envMapIntensity: 1.25 }),
+    // white-hot core on the seam piping; 1.8 puts it just over the bloom
+    // threshold so the cyan strips grow a slim neon halo (breachbunny trim)
+    trimCyan: M({ color: 0x0a2530, emissive: 0x5fd8ff, emissiveIntensity: 2.6, roughness: 0.5 }),
+    // env kept moderate — at 1.25 the IBL specular on the bright orange
+    // pushed the whole shoe past the bloom threshold (glowed like a lamp)
+    shoe: M({ color: COLORS.shoe, roughness: 0.42, envMapIntensity: 0.85 }),
     sole: M({ color: COLORS.sole, roughness: 0.9, envMapIntensity: 0.35 }),
     // lit vinyl tube with faint inner warmth; the GLYPHS carry the glow
     tail: M({ color: COLORS.tail, roughness: 0.3, envMapIntensity: 1.3,
               emissive: 0xff8a2a, emissiveIntensity: 0.35 }),
-    tailGlyph: M({ color: 0x381505, emissive: COLORS.tailGlyph, emissiveIntensity: 1.6, roughness: 0.3 }),
+    tailGlyph: M({ color: 0x381505, emissive: COLORS.tailGlyph, emissiveIntensity: 2.4, roughness: 0.3 }),
     chipFrame: M({ color: COLORS.chipFrame, metalness: 0.85, roughness: 0.35, envMapIntensity: 1.0 }),
-    chipCore: M({ color: 0x381505, emissive: COLORS.chipGlow, emissiveIntensity: 1.7,
+    // hero glow — deep into bloom range: white-hot core + wide orange halo
+    chipCore: M({ color: 0x381505, emissive: COLORS.chipGlow, emissiveIntensity: 2.4,
                   roughness: 0.12, envMapIntensity: 1.5 }),
     eyeWhite: M({ color: 0xf7f2e9, roughness: 0.25, envMapIntensity: 1.0 }),
     iris: M({ color: COLORS.iris, roughness: 0.25 }),

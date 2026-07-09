@@ -138,10 +138,12 @@ async function runWidth(width) {
     }));
     live.hasMarut && live.inScene ? pass('live procedural Marut in scene') : fail(`live Marut missing (has-marut ${live.hasMarut}, inScene ${live.inScene})`);
     live.showcase ? pass('showcase mode active') : fail('showcase mode not active');
-    // Scene TOTAL (character + embers + floor + glow sprites); baseline ~11.2k
-    // tris / ~79 calls at the hero frame — thresholds leave modest headroom.
+    // Scene TOTAL (character + embers + floor + glow sprites) per frame.
+    // M8 full-definition pass roughly doubled character density and the bloom
+    // composer adds its quad passes to `calls` (info accumulates the whole
+    // frame now) — thresholds sized to that with modest headroom.
     if (!live.stats) fail('__marutStats missing');
-    else if (live.stats.tris > 30000 || live.stats.calls > 100) fail(`render budget blown: ${live.stats.tris} tris / ${live.stats.calls} calls`);
+    else if (live.stats.tris > 60000 || live.stats.calls > 120) fail(`render budget blown: ${live.stats.tris} tris / ${live.stats.calls} calls`);
     else pass(`render budget ok (${live.stats.tris} tris / ${live.stats.calls} calls)`);
     if (!live.cam) fail('__camState missing');
     else if (live.cam.fov >= 40 && live.cam.fov <= 60 && Math.abs(live.cam.pz) <= 12) pass(`camera state sane (fov ${live.cam.fov.toFixed(1)}, pz ${live.cam.pz.toFixed(2)})`);

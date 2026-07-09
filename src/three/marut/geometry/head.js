@@ -223,7 +223,9 @@ export function buildHead({ joints, mats, quality }) {
   head.add(frame);
 
   const skinShadow = new THREE.MeshStandardMaterial({ color: 0xc05a18, roughness: 0.55, envMapIntensity: 0.6 });
-  const radial = quality === 'low' ? 10 : 14;
+  // 28 radial keeps the skull silhouette facet-free at hero close-up
+  // distance (14 showed polygon steps on the crown/jaw under the rim light)
+  const radial = quality === 'low' ? 10 : 28;
 
   // --- skull: lathe + five sculpt ops, smooth normals ---
   const pts = SKULL_PROFILE.map(([r, y]) => new THREE.Vector2(r, y));
@@ -256,7 +258,7 @@ export function buildHead({ joints, mats, quality }) {
   //     as the inner ear without real cavity geometry ---
   const earGeos = [];
   for (const m of [1, -1]) {
-    const shell = new THREE.SphereGeometry(0.032, 8, 6);
+    const shell = new THREE.SphereGeometry(0.032, quality === 'low' ? 8 : 14, quality === 'low' ? 6 : 10);
     shell.scale(0.45, 1.02, 0.75);
     const mtx = new THREE.Matrix4()
       .makeRotationY(-m * 0.25)
@@ -264,7 +266,7 @@ export function buildHead({ joints, mats, quality }) {
     shell.applyMatrix4(mtx);
     earGeos.push(shell);
 
-    const bowl = new THREE.Mesh(new THREE.SphereGeometry(0.018, 8, 6), skinShadow);
+    const bowl = new THREE.Mesh(new THREE.SphereGeometry(0.018, 10, 8), skinShadow);
     bowl.scale.set(0.3, 0.8, 0.6);
     bowl.position.set(m * 0.120, -0.075, -0.042);
     bowl.rotation.y = -m * 0.25;
@@ -353,7 +355,7 @@ export function buildHead({ joints, mats, quality }) {
   // --- neck: short + thick, tucks under the jaw and inside the collar.
   //     Parented to the neck joint so head yaw doesn't shear it.
   //     (neck joint world 1.38; cylinder spans world 1.36–1.49) ---
-  const neckMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.040, 0.052, 0.13, 10), mats.skin);
+  const neckMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.040, 0.052, 0.13, quality === 'low' ? 10 : 18), mats.skin);
   neckMesh.position.y = 0.045;
   joints.neck.add(neckMesh);
 }

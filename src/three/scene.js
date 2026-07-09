@@ -5,6 +5,10 @@
 // is driven per-frame by the scroll showcase (src/three/showcase.js).
 // ============================================================================
 import * as THREE from 'three';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { makeGlowSprite, createEmbers } from './particles.js';
 import { makeContactShadow } from './marut/textures.js';
 
@@ -48,12 +52,59 @@ export function initScene({ reduced }) {
   // lifts the charcoal blacks with a top-down gradient (a flat warm ambient
   // let them crush), the key is desaturated + top-dominant, and the cool rim
   // comes from BEHIND-left/above so it edges sleeves/legs instead of washing
-  // the jacket front.
+  // the jacket front. A warm brand-orange counter-rim from behind-right carves
+  // the silhouette out of the dark footage (showcase-character convention).
   scene.add(new THREE.HemisphereLight(0xdfe8f2, 0x3a3f4a, 0.65));
   const key = new THREE.DirectionalLight(0xffd9b0, 1.25); key.position.set(3, 7, 6); scene.add(key);
-  const rim = new THREE.DirectionalLight(0x5f8fd6, 0.6); rim.position.set(-4, 3, -6); scene.add(rim);
+  const rim = new THREE.DirectionalLight(0x5f8fd6, 1.1); rim.position.set(-4, 3, -6); scene.add(rim);
+  const rimWarm = new THREE.DirectionalLight(0xff7a2a, 0.85); rimWarm.position.set(4, 2.5, -5); scene.add(rimWarm);
   // Front fill from the camera so the mascot's face/jacket read against dark footage.
   const fill = new THREE.DirectionalLight(0xfff4ea, 0.85); fill.position.set(0, 2, 12); scene.add(fill);
+
+  // Bloom post-pass (desktop only — mobile keeps the direct render path).
+  // Since r152 tone mapping only applies on the default framebuffer, so the
+  // composer chain runs in linear HDR: emissives with intensity > threshold
+  // bloom "selectively" for free, and OutputPass applies ACES + sRGB at the
+  // end. samples:4 restores MSAA that the canvas loses under a composer.
+  // Alpha matters here — this canvas composites over the section videos, so
+  // the RenderPass clear keeps alpha 0 and bloom adds its halo additively.
+  // Software rasterizers (QA's SwiftShader, VMs) collapse to <1fps under the
+  // full-res bloom chain + MSAA — skip the composer there so frame-driven
+  // logic (intro typing, tweens) still runs; real GPUs take the full path.
+  let software = false;
+  try {
+    const gl = renderer.getContext();
+    const dbg = gl.getExtension('WEBGL_debug_renderer_info');
+    const gpu = dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : '';
+    software = /swiftshader|llvmpipe|software|basic render/i.test(gpu);
+  } catch (_) { /* keep full path if the probe fails */ }
+
+  let composer = null;
+  if (!mobile && !software) {
+    const target = new THREE.WebGLRenderTarget(innerWidth * DPR, innerHeight * DPR, {
+      type: THREE.HalfFloatType,
+      samples: renderer.capabilities.isWebGL2 ? 4 : 0,
+    });
+    composer = new EffectComposer(renderer, target);
+    composer.addPass(new RenderPass(scene, camera));
+    // threshold sits ABOVE anything lit diffuse can reach (~1.0 with this
+    // rig) so only genuine emissives bloom — at 0.9 the orange shoes/hair
+    // caught the key light and glowed like lamps
+    const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.55, 0.35, 1.25);
+    // The stock pass breaks transparent canvases: its blur mips hardcode
+    // alpha 1 and the additive blend sums that into the framebuffer, turning
+    // the whole background opaque black (hiding the section videos below).
+    // Add color only, keep destination alpha — halo pixels stay alpha 0 and
+    // the browser composites them additively over the page.
+    bloom.blendMaterial.blending = THREE.CustomBlending;
+    bloom.blendMaterial.blendEquation = THREE.AddEquation;
+    bloom.blendMaterial.blendSrc = THREE.OneFactor;
+    bloom.blendMaterial.blendDst = THREE.OneFactor;
+    bloom.blendMaterial.blendSrcAlpha = THREE.ZeroFactor;
+    bloom.blendMaterial.blendDstAlpha = THREE.OneFactor;
+    composer.addPass(bloom);
+    composer.addPass(new OutputPass());
+  }
 
   const sprite = makeGlowSprite(new THREE.Color('#ff6a00'));
 
@@ -111,7 +162,13 @@ export function initScene({ reduced }) {
     setPointer(x, y) { pointer.set(x, y); },
   };
 
+  // With a composer each frame is several internal render() calls and
+  // info auto-reset would leave stats reflecting only the last quad pass —
+  // reset manually at frame start so tris/calls cover the whole frame.
+  renderer.info.autoReset = false;
+
   function tick() {
+    renderer.info.reset();
     const dt = Math.min(clock.getDelta(), 0.05);
     pointerLerp.lerp(pointer, 0.05);
 
@@ -122,7 +179,7 @@ export function initScene({ reduced }) {
 
     for (const fn of tickCbs) fn({ pointer: pointerLerp, scrollVel });
 
-    renderer.render(scene, camera);
+    composer ? composer.render() : renderer.render(scene, camera);
     // QA hook (scripts/qa.mjs): live draw-call/triangle budget check (§3.7)
     stats.tris = renderer.info.render.triangles;
     stats.calls = renderer.info.render.calls;
@@ -135,6 +192,7 @@ export function initScene({ reduced }) {
     camera.aspect = innerWidth / innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(innerWidth, innerHeight);
+    composer?.setSize(innerWidth, innerHeight);
   }, { passive: true });
 
   return API;

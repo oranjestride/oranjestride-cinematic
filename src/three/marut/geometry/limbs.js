@@ -71,7 +71,7 @@ function makeHandGeometry(m) {
   palm.translate(0, -0.045, 0);
   parts.push(palm);
 
-  const knuckle = new THREE.SphereGeometry(0.02, 8, 6);
+  const knuckle = new THREE.SphereGeometry(0.02, 10, 8);
   knuckle.scale(1.9, 0.7, 1.0);
   knuckle.translate(0, -0.088, 0.006);
   parts.push(knuckle);
@@ -83,7 +83,7 @@ function makeHandGeometry(m) {
     { x: 0.036, len: 0.030, droop: 0.35 },
   ];
   for (const f of fingers) {
-    const g = new THREE.CapsuleGeometry(0.014, f.len, 3, 6);
+    const g = new THREE.CapsuleGeometry(0.014, f.len, 3, 8);
     g.translate(0, -f.len / 2 - 0.014, 0);
     const mtx = new THREE.Matrix4()
       .makeRotationFromEuler(new THREE.Euler(-f.droop, 0, m * (f.x / 0.036) * -0.06))
@@ -93,7 +93,7 @@ function makeHandGeometry(m) {
   }
   // thumb sweeps FORWARD off the palm's inner front corner (boards show
   // thumbs toward +z with arms down, not splayed sideways)
-  const thumb = new THREE.CapsuleGeometry(0.016, 0.040, 3, 6);
+  const thumb = new THREE.CapsuleGeometry(0.016, 0.040, 3, 8);
   thumb.translate(0, -0.035, 0);
   const tm = new THREE.Matrix4()
     .makeRotationFromEuler(new THREE.Euler(0.5, 0, m * 0.55))
@@ -107,7 +107,9 @@ function makeHandGeometry(m) {
 }
 
 export function buildArms({ joints, mats, quality }) {
-  const radial = quality === 'low' ? 8 : 10;
+  // sleeves are smooth-shaded — 16 radial removes the polygon silhouette
+  // steps that read as "cheap" at hero/lab close-up distance
+  const radial = quality === 'low' ? 8 : 16;
   const jacketMat = mats.jacketMapped || mats.jacket;
 
   for (const s of ['L', 'R']) {
@@ -121,7 +123,7 @@ export function buildArms({ joints, mats, quality }) {
     // shoulder ball — spherical v mapped into the zone's upper half so the
     // dome top samples the raglan orange and the underside falls into the
     // black web (reads as one garment, not a stuck-on balloon)
-    const cap = new THREE.SphereGeometry(0.074, radial, 8);
+    const cap = new THREE.SphereGeometry(0.074, radial, quality === 'low' ? 8 : 12);
     {
       const uv = cap.attributes.uv;
       for (let i = 0; i < uv.count; i++) {
@@ -161,11 +163,13 @@ export function buildArms({ joints, mats, quality }) {
 }
 
 export function buildLegs({ joints, mats, quality }) {
-  const radial = 8;
+  // legs stay flat-shaded (the boards' deliberate low-poly jogger read) but
+  // 12 sides refines the facets from "chunky octagon" to "stylized crease"
+  const radial = quality === 'low' ? 8 : 12;
   const ribs = quality === 'low' ? 10 : 18;
 
   // waistband under the jacket hem band (world ~0.845) + fly tab
-  const band = new THREE.Mesh(new THREE.CylinderGeometry(0.150, 0.146, 0.05, 16), mats.pants);
+  const band = new THREE.Mesh(new THREE.CylinderGeometry(0.150, 0.146, 0.05, quality === 'low' ? 16 : 24), mats.pants);
   band.scale.z = 0.62;
   band.position.y = -0.075;
   joints.hips.add(band);
@@ -197,7 +201,7 @@ export function buildLegs({ joints, mats, quality }) {
 
     // knee break + shin taper with calf push
     const parts = [];
-    const knee = new THREE.SphereGeometry(0.074, radial, 6);
+    const knee = new THREE.SphereGeometry(0.074, radial, quality === 'low' ? 6 : 8);
     knee.scale(1, 0.9, 1.05);
     knee.translate(0, 0.005, 0.006);
     parts.push(knee);

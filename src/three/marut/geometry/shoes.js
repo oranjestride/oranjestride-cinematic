@@ -47,7 +47,7 @@ function roundedRect(w, h, r) {
 }
 
 export function buildShoes({ joints, mats, quality }) {
-  const curveSeg = quality === 'low' ? 6 : 10;
+  const curveSeg = quality === 'low' ? 6 : 16;
 
   for (const s of ['L', 'R']) {
     const foot = joints[`foot${s}`];
@@ -108,7 +108,7 @@ export function buildShoes({ joints, mats, quality }) {
     {
       // collar tops out at world ~0.147 so the pant cuff (bottom 0.13)
       // overlaps it by a whisker instead of fighting it
-      const collar = new THREE.CylinderGeometry(0.037, 0.0455, 0.058, 18, 1, true);
+      const collar = new THREE.CylinderGeometry(0.037, 0.0455, 0.058, quality === 'low' ? 18 : 24, 1, true);
       const pos = collar.attributes.position;
       for (let i = 0; i < pos.count; i++) {
         const y = pos.getY(i), z = pos.getZ(i);

@@ -4,6 +4,10 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { createMarut } from './index.js';
 
 export function startDevStage() {
@@ -31,8 +35,32 @@ export function startDevStage() {
   // same light rig as scene.js — keep these literals in lockstep
   scene.add(new THREE.HemisphereLight(0xdfe8f2, 0x3a3f4a, 0.65));
   const key = new THREE.DirectionalLight(0xffd9b0, 1.25); key.position.set(3, 7, 6); scene.add(key);
-  const rim = new THREE.DirectionalLight(0x5f8fd6, 0.6); rim.position.set(-4, 3, -6); scene.add(rim);
+  const rim = new THREE.DirectionalLight(0x5f8fd6, 1.1); rim.position.set(-4, 3, -6); scene.add(rim);
+  const rimWarm = new THREE.DirectionalLight(0xff7a2a, 0.85); rimWarm.position.set(4, 2.5, -5); scene.add(rimWarm);
   const fill = new THREE.DirectionalLight(0xfff4ea, 0.85); fill.position.set(0, 2, 12); scene.add(fill);
+
+  // same bloom chain as scene.js; ?bloom=0 disables it for pure-geometry
+  // board-comparison shots (halos read as silhouette error next to a board)
+  let composer = null;
+  if (url.get('bloom') !== '0') {
+    const target = new THREE.WebGLRenderTarget(innerWidth, innerHeight, {
+      type: THREE.HalfFloatType,
+      samples: renderer.capabilities.isWebGL2 ? 4 : 0,
+    });
+    composer = new EffectComposer(renderer, target);
+    composer.addPass(new RenderPass(scene, camera));
+    const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.55, 0.35, 1.25);
+    // same alpha-preserving blend fix as scene.js (opaque bg here, but the
+    // two rigs must stay in lockstep so shots match the site)
+    bloom.blendMaterial.blending = THREE.CustomBlending;
+    bloom.blendMaterial.blendEquation = THREE.AddEquation;
+    bloom.blendMaterial.blendSrc = THREE.OneFactor;
+    bloom.blendMaterial.blendDst = THREE.OneFactor;
+    bloom.blendMaterial.blendSrcAlpha = THREE.ZeroFactor;
+    bloom.blendMaterial.blendDstAlpha = THREE.OneFactor;
+    composer.addPass(bloom);
+    composer.addPass(new OutputPass());
+  }
 
   const grid = new THREE.GridHelper(4, 16, 0x2a3550, 0x1a2338);
   grid.visible = !boardMode;
@@ -66,18 +94,21 @@ export function startDevStage() {
     const dt = Math.min(clock.getDelta(), 0.05);
     marut.update({ dt, pointer, scrollVel: 0 });
     controls.update();
-    renderer.render(scene, camera);
+    renderer.info.reset();
+    composer ? composer.render() : renderer.render(scene, camera);
     window.__marutStats = {
       tris: renderer.info.render.triangles,
       calls: renderer.info.render.calls,
     };
     requestAnimationFrame(tick);
   }
+  renderer.info.autoReset = false;
   requestAnimationFrame(tick);
 
   addEventListener('resize', () => {
     camera.aspect = innerWidth / innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(innerWidth, innerHeight);
+    composer?.setSize(innerWidth, innerHeight);
   }, { passive: true });
 }

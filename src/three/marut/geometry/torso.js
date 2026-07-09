@@ -59,7 +59,9 @@ export function jacketRadiusAt(worldY) {
 }
 
 export function buildTorso({ joints, mats, quality }) {
-  const seg = quality === 'low' ? 12 : 18;
+  // 32 lathe segments keep the smooth-shaded jacket silhouette round at the
+  // hero close-up (18 stepped visibly along the shoulder-line curve)
+  const seg = quality === 'low' ? 12 : 32;
   const spine = joints.spine;   // world y 1.04
   const chest = joints.chest;   // world y 1.24
 
@@ -94,7 +96,7 @@ export function buildTorso({ joints, mats, quality }) {
   }
 
   // --- pelvis / seat filler under the band (pants-dark) ---
-  const pelvis = new THREE.Mesh(new THREE.SphereGeometry(0.115, 12, 8), mats.pants);
+  const pelvis = new THREE.Mesh(new THREE.SphereGeometry(0.115, quality === 'low' ? 12 : 18, quality === 'low' ? 8 : 12), mats.pants);
   pelvis.scale.set(1.22, 0.6, 0.82);
   pelvis.position.y = -0.1; // world ~0.82, tucked behind the waistband
   joints.hips.add(pelvis);
@@ -111,7 +113,7 @@ export function buildTorso({ joints, mats, quality }) {
 
   // piping: front arc only + two short capsules down the collar's front edges
   const rim = new THREE.Mesh(
-    new THREE.TorusGeometry(0.094, 0.005, 6, seg, 3.5),
+    new THREE.TorusGeometry(0.094, 0.005, 8, seg, 3.5),
     mats.jacketTrim,
   );
   rim.rotation.x = Math.PI / 2;
@@ -156,7 +158,9 @@ export function buildTorso({ joints, mats, quality }) {
     mats.chipCoreMapped.color.setHex(0xffffff);
     mats.chipCoreMapped.map = coreTex;
     mats.chipCoreMapped.emissive = new THREE.Color(0xffffff);
-    mats.chipCoreMapped.emissiveIntensity = 0.6; // no bloom pass — higher blows white
+    // hero glow under scene.js' bloom pass: the radial-gradient emissiveMap
+    // keeps motif detail while the hot center crosses threshold → orange halo
+    mats.chipCoreMapped.emissiveIntensity = 2.2;
 
     mats.chipCoreMapped.emissiveMap = coreTex;
   }
