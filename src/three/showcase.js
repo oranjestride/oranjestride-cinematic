@@ -217,7 +217,8 @@ export function initShowcase({ sceneAPI, marut, reduced }) {
       down = false;
       lab.classList.remove('dragging');
       marut.setDragging(false);
-      if (e.timeStamp - lastMoveT > 120) marut.anim.dragVel = 0;
+      // procedural animator only — the GLB adapter has no inertia channel
+      if (e.timeStamp - lastMoveT > 120 && marut.anim) marut.anim.dragVel = 0;
     };
     lab.addEventListener('pointerup', end);
     lab.addEventListener('pointercancel', end);

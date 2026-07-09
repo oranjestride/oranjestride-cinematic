@@ -99,11 +99,19 @@ Lower the base `1400` for weaker GPUs; the mobile branch already drops ~70% (§3
 
 ---
 
-## (e) Procedural mascot — `src/three/marut/`
+## (e) Mascot — sculpted GLB + procedural fallback
 
-Marut, the OranjeStride character, is **100% code** — no model files, no imports. Every
-edge, surface, and the glowing arrow tail is authored as Three.js geometry with
-canvas-generated textures at runtime (reference art: `public/img/mascot/poses/idle.png`).
+Marut, the OranjeStride character, ships in two live implementations behind ONE instance
+API, so the showcase/lab/intro wiring is implementation-blind:
+
+1. **Sculpted rigged GLB** (`public/models/mascot.glb`, ~2.5 MB — image-to-3D sculpt
+   rigged onto Mixamo clips via `scripts/rig-transfer.py`) loaded by
+   `src/three/marut-glb.js`. This is the render-grade mesh shown on capable browsers.
+   The loader recovers circuit/trim emissives in-shader (the bake has no emissive map)
+   and gates on posed-skeleton bounds — a collapsed rig falls through to:
+2. **Procedural mascot** (`src/three/marut/`) — 100% code, no assets. Every edge,
+   surface, and the glowing arrow tail authored as Three.js geometry with
+   canvas-generated textures at runtime (reference art: `reference/marut-boards/`).
 
 ```
 src/three/marut/
@@ -123,9 +131,10 @@ numerically per aspect ratio, with mobile waypoint overrides ≤900px). Poses an
 are driven by the active-section observer in `src/main.js`, and the Mascot Lab chips call
 `marut.play('wave'|'run'|'cheer')` directly.
 
-Iterate on him in isolation at **`/marut-dev.html`** (orbit controls, pose/clip buttons,
-`window.__marutStats` budget readout). Render budget: ~21k tris, ≤38 draw calls for the
-character; `scripts/qa.mjs` asserts the live scene total each run.
+Iterate on the procedural build in isolation at **`/marut-dev.html`** (orbit controls,
+`window.__marutStats` budget readout; `?bg=board` for turnaround comparisons, `?bloom=0`
+to disable the post chain). Render budget: scene total ≤60k tris / ≤120 calls
+(sculpted mesh ~48k) — `scripts/qa.mjs` asserts it live each run.
 
 **Flat pose stills** — `public/img/mascot/poses/{idle,wave,point,run,cheer}.webp` — are the
 `prefers-reduced-motion` / no-WebGL tier only (`src/three/mascot-fallback.js`). Each mascot

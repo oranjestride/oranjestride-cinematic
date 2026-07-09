@@ -5,8 +5,8 @@
 //                       [--widths 375,820,1440] [--reduced] [--no-shots]
 //
 // Per width: full scroll-through, per-section screenshots, console
-// error/warning capture, and a zero-model-fetch assert (the mascot is 100%
-// procedural — src/three/marut/ — nothing under /models/ may be requested).
+// error/warning capture, and a mascot-asset assert (live tier loads the
+// sculpted /models/mascot.glb; reduced tier must never touch /models/).
 // At desktop width it also drives the interactive states (Mascot Lab chips +
 // drag-rotate, Clients modal + hover captions, Programme tabs) and checks the
 // live render budget via window.__marutStats + camera state via __camState.
@@ -103,8 +103,13 @@ async function runWidth(width) {
   await page.evaluate(() => scrollTo(0, document.body.scrollHeight));
   await sleep(600);
 
-  // The mascot is procedural — nothing may be fetched from /models/ ever.
-  modelFetches.length ? fail(`/models/ fetched: ${modelFetches.join(', ')}`) : pass('zero /models/ fetches');
+  // Live tier: the sculpted mascot.glb must load (procedural is fallback-
+  // only). Reduced tier: no WebGL → nothing under /models/ may be touched.
+  if (REDUCED) {
+    modelFetches.length ? fail(`/models/ fetched under reduced motion: ${modelFetches.join(', ')}`) : pass('zero /models/ fetches (reduced)');
+  } else {
+    modelFetches.some((u) => u.includes('mascot.glb')) ? pass('sculpted mascot.glb fetched') : fail('mascot.glb was never requested (GLB tier inactive)');
+  }
 
   if (REDUCED) {
     // No live WebGL / drag / parallax under reduced motion — flat stills only.
@@ -231,16 +236,19 @@ async function runWidth(width) {
       };
       const s0 = snap();
       let frames = 0;
+      // frame-based with a LONG wall cap: the skinned 48k GLB renders <1fps
+      // under SwiftShader, so 8 frames can take >10s — that's a QA-renderer
+      // artifact, not a page bug
       await new Promise((res) => {
         const t0 = performance.now();
         const step = () => {
           frames += 1;
-          if (frames >= 8 || performance.now() - t0 > 5000) res();
+          if (frames >= 8 || performance.now() - t0 > 15000) res();
           else requestAnimationFrame(step);
         };
         requestAnimationFrame(step);
       });
-      if (frames < 8) return `only ${frames} frames rendered in 5s`;
+      if (frames < 8) return `only ${frames} frames rendered in 15s`;
       return snap() !== s0 ? true : 'rig static (breath channel dead)';
     });
     breathOk === true ? pass('animator alive (breath channel moving)') : fail(`animator: ${breathOk}`);
@@ -272,14 +280,29 @@ async function runWidth(width) {
         return { x: b.x + b.width / 2, y: b.y + b.height / 2 };
       });
       await page.mouse.move(r.x, r.y); await page.mouse.down();
-      for (let i = 1; i <= 10; i++) { await page.mouse.move(r.x + i * 22, r.y); await sleep(30); }
+      // pointermove is rAF-coalesced in Chrome — under SwiftShader (<1fps)
+      // moves fired on a wall-clock cadence vanish before dispatch. Pump one
+      // rendered frame per step so every move actually lands.
+      for (let i = 1; i <= 5; i++) {
+        await page.mouse.move(r.x + i * 45, r.y);
+        await page.evaluate(() => new Promise((res) => requestAnimationFrame(res)));
+      }
       await page.mouse.up();
-      await sleep(800);
+      await sleep(400);
       const y1 = await yawOf();
       Math.abs((y1 ?? 0) - (y0 ?? 0)) > 0.15 ? pass(`drag-rotate spins (Δyaw ${(y1 - y0).toFixed(2)})`) : fail('drag-rotate did not rotate');
-      const hint = await page.evaluate(() =>
-        getComputedStyle(document.querySelector('.drag-hint')).opacity);
-      Number(hint) === 0 ? pass('drag hint faded after first drag') : fail(`drag hint opacity ${hint} after drag`);
+      // CSS opacity transitions need rendered frames to progress — poll with
+      // rAF pumps instead of a single read (SwiftShader frame scarcity)
+      const hint = await page.evaluate(() => new Promise((res) => {
+        const t0 = performance.now();
+        const check = () => {
+          const o = Number(getComputedStyle(document.querySelector('.drag-hint')).opacity);
+          if (o <= 0.05 || performance.now() - t0 > 8000) res(o);
+          else requestAnimationFrame(check);
+        };
+        check();
+      }));
+      Number(hint) <= 0.05 ? pass('drag hint faded after first drag') : fail(`drag hint opacity ${hint} after drag`);
       if (SHOTS) await page.screenshot({ path: `${OUT}/${label}-mascotlab-after-drag.png` });
     } else {
       fail('mascot-lab: live Marut missing at desktop width');

@@ -11,6 +11,7 @@ import Lenis from '@studio-freight/lenis';
 import { $, $$ } from './utils/helpers.js';
 import { initScene } from './three/scene.js';
 import { createMarut } from './three/marut/index.js';
+import { mountMarutGLB } from './three/marut-glb.js';
 import { initShowcase } from './three/showcase.js';
 import { initMascotFallback } from './three/mascot-fallback.js';
 import { initCursor } from './utils/cursor.js';
@@ -102,32 +103,39 @@ $$('a[href^="#"]').forEach((a) => a.addEventListener('click', (e) => {
 // ---------------------------------------------------------------------------
 window.OS3D = initScene({ reduced: REDUCED });
 
-// The mascot is 100% code (src/three/marut/) — geometry, textures, and
-// animation all authored in JS. One instance, center stage, active in every
-// section; the camera does the traveling (src/three/showcase.js).
+// The mascot: sculpted rigged GLB first (public/models/mascot.glb — render-
+// grade mesh + Mixamo clips), with the 100% procedural mascot
+// (src/three/marut/) as the always-works fallback when the asset is missing
+// or its rig fails the posed-bounds validity gate. Both expose the same
+// instance API, so the showcase/lab/intro wiring below is implementation-
+// blind. One instance, center stage; the camera does the traveling.
 const MOBILE = matchMedia('(max-width: 900px)').matches;
 let marut = null;
 let showcase = null;
-if (!REDUCED && window.OS3D.enabled) {
-  marut = createMarut({ quality: MOBILE ? 'low' : 'high' });
+// Preloader progress hook — the loader tracks this promise, so the wipe
+// never opens before the mascot (GLB fetch+parse, or procedural build) is in.
+window.__marutReady = (async () => {
+  if (REDUCED || !window.OS3D.enabled) {
+    initMascotFallback();   // reduced-motion tier: flat pose stills
+    return false;
+  }
+  marut = (await mountMarutGLB()) || createMarut({ quality: MOBILE ? 'low' : 'high' });
   window.OS3D.three.registerMascot(marut);
   document.body.classList.add('has-marut');
   showcase = initShowcase({ sceneAPI: window.OS3D, marut, reduced: REDUCED });
   showcase?.prepareIntro(); // park the camera on the loader's landing close-up
   initMascotLab(marut);     // clip chips (Wave / Run / Cheer) drive the animator
-} else {
-  initMascotFallback();     // reduced-motion tier: flat pose stills
-}
-// Preloader progress hook: the procedural build is synchronous, so just
-// signal readiness on the next frame.
-window.__marutReady = new Promise((r) => requestAnimationFrame(() => r(!!marut)));
+  initOverlayChoreo({ reduced: REDUCED });
+  return true;
+})();
 
 // ---------------------------------------------------------------------------
 // 4 · Video layer (§8.3) + reveals + overlay choreography + interactions (§8.7)
 // ---------------------------------------------------------------------------
 initVideos({ reduced: REDUCED });
 const { revealHero } = initReveals();
-if (showcase) initOverlayChoreo({ reduced: REDUCED });
+// overlay choreography now boots with the mascot (inside __marutReady) —
+// it only applies in showcase mode, which exists once a mascot registered
 
 const sections = $$('main .section, main .band');
 initNav({ lenis, sections });

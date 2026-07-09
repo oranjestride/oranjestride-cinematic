@@ -13,3 +13,5 @@ qa-shots/
 # Dev screenshot harness output (scripts/marut-shot.mjs)
 scripts/shots/
 claude-code-loop-*.md
+
+.vercel
