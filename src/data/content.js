@@ -251,7 +251,7 @@ export const ribbon = {
 // Marut's self-introduction — typed into a speech bubble beside the live 3D
 // character as he glides to the hero's side after the loader.
 export const intro = {
-  bubble: "Hi, I'm Marut.",
+  bubble: "Hi, I'm Marut, Welcome to OranjeStride!",
 };
 
 // Brand-moment band (§6.2) — the one copy addition of the Marut build: a short

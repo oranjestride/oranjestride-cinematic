@@ -126,7 +126,11 @@ export function initShowcase({ sceneAPI, marut, reduced }) {
 
   const camState = { ...flat(wpFor('hero')) };
   let tl = null;
-  const entered = new Set();
+  // Enter-gesture bookkeeping: gestures replay on every section RE-entry
+  // (a once-per-load Set left revisits feeling dead), with a per-section
+  // cooldown so threshold jitter at a boundary can't machine-gun a clip.
+  const lastEnterAt = new Map();
+  let lastSectionId = null;
   window.__camState = camState; // QA/diag hooks (scripts/qa.mjs)
   window.__cam = camera;
   window.__marutRoot = marut.root;
@@ -236,10 +240,14 @@ export function initShowcase({ sceneAPI, marut, reduced }) {
       marut.setLookEnabled(!!wp.look2D);
       dragEnabled = !!wp.drag;
       if (lab) lab.style.pointerEvents = dragEnabled ? 'auto' : 'none';
-      if (wp.enter && !entered.has(id)) {
-        entered.add(id);
-        gsap.delayedCall(0.45, () => marut.play(wp.enter));
+      if (wp.enter && id !== lastSectionId) {
+        const now = performance.now();
+        if ((lastEnterAt.get(id) ?? -1e9) + 4000 < now) {
+          lastEnterAt.set(id, now);
+          gsap.delayedCall(0.45, () => marut.play(wp.enter));
+        }
       }
+      lastSectionId = id;
     },
 
     // Loader hand-over: wipe opens on the close-up, camera pulls back to the

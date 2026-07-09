@@ -79,7 +79,7 @@ async function runWidth(width) {
     pass(`loader ran in ${loaderMode} mode`);
     // Marut's typed self-introduction beside the character (glide or flat tier)
     const introOk = await page
-      .waitForFunction(() => document.getElementById('marut-bubble-text')?.textContent === "Hi, I'm Marut.", { timeout: 12000 })
+      .waitForFunction(() => document.getElementById('marut-bubble-text')?.textContent === "Hi, I'm Marut, Welcome to OranjeStride!", { timeout: 15000 })
       .then(() => true).catch(() => false);
     const tier = await page.evaluate(() => window.__marutIntro || null);
     introOk ? pass(`Marut intro bubble typed (${tier} tier)`) : fail(`Marut intro bubble missing (tier: ${tier})`);
@@ -129,7 +129,7 @@ async function runWidth(width) {
       bubbleText: document.getElementById('marut-bubble-text')?.textContent || '',
     }));
     reducedLoader.preVideoShown ? fail('reduced-motion: loader video visible') : pass('reduced-motion: loader video hidden');
-    reducedLoader.bubbleText === "Hi, I'm Marut." ? pass('reduced-motion: intro bubble static, full text') : fail(`reduced-motion: bubble text "${reducedLoader.bubbleText}"`);
+    reducedLoader.bubbleText === "Hi, I'm Marut, Welcome to OranjeStride!" ? pass('reduced-motion: intro bubble static, full text') : fail(`reduced-motion: bubble text "${reducedLoader.bubbleText}"`);
   } else {
     // Live tier: procedural Marut in the scene, showcase camera driving,
     // render budget within §3.7 (scene total incl. embers/floor/videos).
