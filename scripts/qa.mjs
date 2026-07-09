@@ -48,9 +48,9 @@ async function runWidth(width) {
   console.log(`\n=== ${label}px ===`);
   const page = await browser.newPage();
   await page.setViewport({ width, height: Math.round(width < 500 ? 812 : width < 1000 ? 1180 : 900) });
-  // Always emulate explicitly: an OS with animations disabled flips
-  // prefers-reduced-motion on for every local browser, which would silently
-  // downgrade the non-reduced pass to the flat tier (see marut-shot.mjs).
+  // Motion is on by default (main.js ignores the OS flag); the flat tier is
+  // param-gated now, so the reduced pass drives it via ?motion=reduce. Media
+  // emulation kept for the CSS side of the gate.
   await page.emulateMediaFeatures([
     { name: 'prefers-reduced-motion', value: REDUCED ? 'reduce' : 'no-preference' },
   ]);
@@ -64,7 +64,8 @@ async function runWidth(width) {
   const modelFetches = [];
   page.on('request', (r) => { if (r.url().includes('/models/')) modelFetches.push(r.url()); });
 
-  await page.goto(URL, { waitUntil: 'networkidle2', timeout: 60000 });
+  const target = REDUCED ? URL + (URL.includes('?') ? '&' : '?') + 'motion=reduce' : URL;
+  await page.goto(target, { waitUntil: 'networkidle2', timeout: 60000 });
   // The video loader holds until real progress + the portal beat complete
   // (~9s); body stays scroll-locked until the vortex wipe. Wait it out.
   const loaderMode = await page.evaluate(() => {

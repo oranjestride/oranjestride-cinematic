@@ -37,16 +37,15 @@ import { renderClients, renderClientsModal, initClients } from './sections/clien
 import { renderContact, initContact } from './sections/contact.js';
 import { renderDataStride, initDataStride } from './sections/datastride.js';
 
-// Honor the OS reduced-motion setting, but allow an explicit override:
-// Windows' "animation effects off" flips this flag browser-wide, which
-// otherwise hides the live 3D tier entirely. ?motion=full forces the live
-// experience; ?motion=reduce forces the accessibility tier for testing.
+// Motion is ON by default (product decision): the live 3D experience runs
+// regardless of the OS prefers-reduced-motion flag — Windows' "animation
+// effects off" toggles it browser-wide and was hiding the mascot entirely.
+// ?motion=reduce still forces the flat accessibility tier (QA + testing).
 const motionParam = new URLSearchParams(location.search).get('motion');
-const REDUCED = motionParam === 'reduce'
-  || (motionParam !== 'full' && matchMedia('(prefers-reduced-motion: reduce)').matches);
+const REDUCED = motionParam === 'reduce';
 // unlocks the CSS side of the reduced-motion gate (style.css scopes the
 // media-query rules to body:not(.motion-full))
-if (motionParam === 'full') document.body.classList.add('motion-full');
+if (!REDUCED) document.body.classList.add('motion-full');
 
 // ---------------------------------------------------------------------------
 // 1 · Compose the DOM (skeleton, §8.2)
