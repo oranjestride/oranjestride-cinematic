@@ -39,13 +39,18 @@ export function createEmbers({ count, sprite, mobile }) {
   });
   const points = new THREE.Points(geo, mat);
 
-  function update(scrollVel, pointerLerp) {
+  function update(scrollVel, pointerLerp, burst = 0) {
     const arr = geo.attributes.position.array;
+    // `burst` (0→1, decaying) briefly accelerates the rise so a section change
+    // reads as a soft updraft of embers — a cinematic beat, not a fixed drift.
+    const rise = 1 + Math.abs(scrollVel) * 4 + burst * 3.5;
     for (let i = 0; i < count; i++) {
-      arr[i * 3 + 1] += spd[i] * (1 + Math.abs(scrollVel) * 4);
+      arr[i * 3 + 1] += spd[i] * rise;
       if (arr[i * 3 + 1] > 14) arr[i * 3 + 1] = -14;
     }
     geo.attributes.position.needsUpdate = true;
+    // and a brief brightness lift on the burst so the updraft catches the eye
+    mat.opacity = 0.4 + burst * 0.4;
     points.rotation.y = pointerLerp.x * 0.15;
     points.rotation.x = -pointerLerp.y * 0.1;
     points.position.x = pointerLerp.x * 1.2;

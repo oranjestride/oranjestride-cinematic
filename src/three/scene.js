@@ -14,7 +14,7 @@ import { makeContactShadow } from './marut/textures.js';
 
 // No-op API so main.js can always call safely (reduced-motion / no-WebGL).
 function stubAPI() {
-  return { enabled: false, three: null, setActive() {}, setScrollVelocity() {}, setPointer() {} };
+  return { enabled: false, three: null, setActive() {}, setScrollVelocity() {}, setPointer() {}, pulse() {} };
 }
 
 export function initScene({ reduced }) {
@@ -38,6 +38,13 @@ export function initScene({ reduced }) {
   renderer.toneMappingExposure = 1.15;
 
   const scene = new THREE.Scene();
+  // Atmospheric depth: black linear fog starting well BEHIND the mascot. The
+  // near-field figure (camera-to-Marut distance ≤ ~8) sits inside `near`, so
+  // his materials are untouched and the canvas stays transparent over the
+  // footage; only the far ember field dissolves toward black, which — with the
+  // embers' additive blend — reads as haze receding into depth rather than a
+  // grey wash. Gives the void a sense of volume without a visible ground.
+  scene.fog = new THREE.Fog(0x05070c, 15, 34);
   const camera = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.1, 100);
   camera.position.set(0, 0, 12);
 
@@ -133,6 +140,7 @@ export function initScene({ reduced }) {
   // ---- state driven by main.js ----
   let activeId = 'hero';
   let scrollVel = 0;
+  let burst = 0; // section-change ember pulse (decays each frame)
   const pointer = new THREE.Vector2(0, 0);
   const pointerLerp = new THREE.Vector2(0, 0);
 
@@ -160,33 +168,93 @@ export function initScene({ reduced }) {
     },
     setScrollVelocity(v) { scrollVel = v; },
     setPointer(x, y) { pointer.set(x, y); },
+    // Section-change beat: kick the ember field into a brief updraft.
+    pulse() { burst = 1; },
   };
+
+  // ---- adaptive quality (§perf) ------------------------------------------
+  // The static mobile/desktop split guesses once at load; a mid-tier laptop or
+  // throttled phone still gets the full stack and stutters. This controller
+  // watches real frame time and steps quality DOWN when the device can't hold
+  // ~50fps, so every device converges on a smooth tier instead of a fixed one.
+  //   tier 3 (high)   — bloom composer + full DPR + embers   (desktop start)
+  //   tier 2 (medium) — no bloom, full DPR, embers           (mobile start)
+  //   tier 1 (low)    — no bloom, DPR≤1.25, embers
+  //   tier 0 (min)    — no bloom, DPR 1, embers hidden
+  // Degrade-only (no step-up) avoids oscillation at a threshold. A ?q= param
+  // pins a tier for QA (?q=high|medium|low|min).
+  const TIER = { high: 3, medium: 2, low: 1, min: 0 };
+  const pinned = new URLSearchParams(location.search).get('q');
+  let tier = composer ? TIER.high : TIER.medium;
+  if (pinned && pinned in TIER) tier = TIER[pinned];
+  let useComposer = !!composer && tier >= TIER.high;
+
+  function applyTier() {
+    useComposer = !!composer && tier >= TIER.high;
+    const dpr = tier >= TIER.medium ? DPR : tier >= TIER.low ? Math.min(DPR, 1.25) : 1;
+    if (renderer.getPixelRatio() !== dpr) {
+      renderer.setPixelRatio(dpr);
+      renderer.setSize(innerWidth, innerHeight);
+    }
+    embers.points.visible = tier >= TIER.low;
+    // High-tier-only effects (CSS reads this): background defocus / DOF cue.
+    document.body.classList.toggle('fx-high', tier >= TIER.high);
+    stats.tier = tier;
+  }
+
+  // Frame-time watchdog: sample avg fps each second; two consecutive weak
+  // seconds drop a tier (a single GC/asset-decode spike shouldn't). Pinned = off.
+  let winFrames = 0, winStart = performance.now(), weak = 0;
+  function monitorFrame(now) {
+    if (pinned) return;
+    winFrames++;
+    if (now - winStart < 1000) return;
+    const fps = (winFrames * 1000) / (now - winStart);
+    winFrames = 0; winStart = now;
+    if (fps < 48 && tier > TIER.min) {
+      if (++weak >= 2) { tier--; weak = 0; applyTier(); }
+    } else weak = 0;
+  }
 
   // With a composer each frame is several internal render() calls and
   // info auto-reset would leave stats reflecting only the last quad pass —
   // reset manually at frame start so tris/calls cover the whole frame.
   renderer.info.autoReset = false;
 
+  // Pause the loop when the tab is backgrounded — a hidden tab still burns a
+  // full render every frame otherwise (drains battery, steals the GPU from
+  // whatever the user switched to). Resume cleanly, resetting the clock so the
+  // first visible frame doesn't jump on the accumulated delta.
+  let running = true;
   function tick() {
+    const now = performance.now();
     renderer.info.reset();
     const dt = Math.min(clock.getDelta(), 0.05);
     pointerLerp.lerp(pointer, 0.05);
 
-    embers.update(scrollVel, pointerLerp);
+    burst *= 0.93; // ease the section-change pulse back down
+    if (embers.points.visible) embers.update(scrollVel, pointerLerp, burst);
 
     // camera passed through for the head-look gate (eases off when orbiting behind)
     for (const m of mascots) if (m.active) m.update({ dt, pointer: pointerLerp, scrollVel, camera });
 
     for (const fn of tickCbs) fn({ pointer: pointerLerp, scrollVel });
 
-    composer ? composer.render() : renderer.render(scene, camera);
+    useComposer ? composer.render() : renderer.render(scene, camera);
     // QA hook (scripts/qa.mjs): live draw-call/triangle budget check (§3.7)
     stats.tris = renderer.info.render.triangles;
     stats.calls = renderer.info.render.calls;
-    requestAnimationFrame(tick);
+    monitorFrame(now);
+    if (running) requestAnimationFrame(tick);
   }
-  const stats = (window.__marutStats = { tris: 0, calls: 0 });
+  const stats = (window.__marutStats = { tris: 0, calls: 0, tier });
+  applyTier();
   requestAnimationFrame(tick);
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) { running = false; return; }
+    if (!running) { running = true; clock.getDelta(); requestAnimationFrame(tick); }
+  });
 
   addEventListener('resize', () => {
     camera.aspect = innerWidth / innerHeight;
