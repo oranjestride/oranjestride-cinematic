@@ -11,7 +11,18 @@
 import * as THREE from 'three';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { createNoise2D } from 'simplex-noise';
 import { $$ } from '../utils/helpers.js';
+
+// Handheld "breathing" — a slow simplex drift on the camera so settled shots
+// read as filmed on a mount, not locked on a tripod. Amplitude is tiny (a few
+// centimetres in world space) and rides ON TOP of the scrub + pointer parallax,
+// so it never fights the framing solve. Separate noise seeds per channel keep
+// x/y/z/aim from moving in lockstep (which would look like a zoom, not drift).
+const nX = createNoise2D();
+const nY = createNoise2D();
+const nZ = createNoise2D();
+const nAim = createNoise2D();
 
 // Per-section camera waypoints + Marut direction. `pos` = camera, `look` =
 // target (offsets Marut into the copy-free half of the frame), yaw in rad.
@@ -135,14 +146,23 @@ export function initShowcase({ sceneAPI, marut, reduced }) {
   window.__cam = camera;
   window.__marutRoot = marut.root;
 
-  // ---- per-frame camera apply (parallax rides on top of the scrub) ----
-  addTick(({ pointer }) => {
+  // ---- per-frame camera apply (parallax + handheld breathing ride on the scrub) ----
+  addTick(({ pointer, scrollVel }) => {
+    // Two slow octaves per channel; the faster one only wakes up while the user
+    // is actually scrolling (|scrollVel|), so motion transitions feel energised
+    // and settled shots drift almost imperceptibly. t in seconds.
+    const t = performance.now() * 0.001;
+    const gust = Math.min(1, Math.abs(scrollVel) * 6);
+    const bx = (nX(t * 0.11, 0) * 0.6 + nX(t * 0.5, 4) * 0.4 * gust) * 0.05;
+    const by = (nY(t * 0.13, 1) * 0.6 + nY(t * 0.47, 5) * 0.4 * gust) * 0.035;
+    const bz = nZ(t * 0.09, 2) * 0.03;
+    const baim = nAim(t * 0.12, 3) * 0.05;
     camera.position.set(
-      camState.px + pointer.x * 0.22,
-      camState.py + pointer.y * 0.1,
-      camState.pz,
+      camState.px + pointer.x * 0.22 + bx,
+      camState.py + pointer.y * 0.1 + by,
+      camState.pz + bz,
     );
-    camera.lookAt(camState.tx, camState.ty, camState.tz);
+    camera.lookAt(camState.tx + baim, camState.ty, camState.tz);
     if (Math.abs(camera.fov - camState.fov) > 0.01) {
       camera.fov = camState.fov;
       camera.updateProjectionMatrix();

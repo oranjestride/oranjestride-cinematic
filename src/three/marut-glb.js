@@ -83,7 +83,13 @@ export async function mountMarutGLB() {
   let gltf;
   try {
     const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js');
-    gltf = await new GLTFLoader().loadAsync(GLB_URL);
+    const { MeshoptDecoder } = await import('three/examples/jsm/libs/meshopt_decoder.module.js');
+    const loader = new GLTFLoader();
+    // The shipped GLB is meshopt-compressed (EXT_meshopt_compression) — the
+    // decoder unpacks the quantised geometry. Harmless for an uncompressed
+    // asset, so the load path is identical whether or not compression ran.
+    loader.setMeshoptDecoder(MeshoptDecoder);
+    gltf = await loader.loadAsync(GLB_URL);
   } catch (err) {
     console.warn('[marut-glb] load failed, falling back to procedural:', err);
     return null;
@@ -234,11 +240,15 @@ export async function mountMarutGLB() {
   const CHIN_LIFT = -0.035;
   const RETRACT = 0.12;
   const Y_UP = new THREE.Vector3(0, 1, 0);
+  // Spine chain (minus neck) for the body-engage lean — a fraction of the
+  // cursor-look flows down these so the whole torso orients to the pointer.
+  const spineBones = postureBones.map(([b]) => b).filter((b) => !/neck/i.test(b.name));
 
   // --- yaw / locomotion state (mirrors the procedural animator's contract) --
   let yawTarget = 0, dragYaw = 0, dragging = false;
   let locoTarget = 0, runW = 0;
   let lookX = 0, lookY = 0, lookEnabled = true;
+  let bodyLook = 0, leanZ = 0; // torso cursor-engage + roll-into-scroll
   let t = 0; // tail-sway clock
 
   const inst = {
@@ -330,6 +340,21 @@ export async function mountMarutGLB() {
         headBone.rotation.y += lookX;
         headBone.rotation.x += lookY + CHIN_LIFT * straighten;
       }
+
+      // body engage — a fraction of the cursor-look flows down the spine so the
+      // whole torso subtly turns toward the pointer (reads as "paying
+      // attention", not a bobblehead). Softer ease + tiny per-bone share so it
+      // accumulates up the chain without pulling him off his stance.
+      if (!dragging) {
+        const wantBody = lookEnabled && pointer ? pointer.x * 0.12 : 0;
+        bodyLook += (wantBody - bodyLook) * 0.04;
+        for (const b of spineBones) b.rotation.y += bodyLook * 0.5;
+      }
+      // roll into the scroll direction — a gentle bank, like bracing against
+      // momentum; independent of the yaw/run-lean axes so they compose cleanly.
+      const wantLean = THREE.MathUtils.clamp(-scrollVel * 5, -0.055, 0.055);
+      leanZ += (wantLean - leanZ) * 0.08;
+      root.rotation.z = leanZ;
     },
 
     dispose() {
