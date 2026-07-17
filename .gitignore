@@ -15,3 +15,6 @@ scripts/shots/
 claude-code-loop-*.md
 
 .vercel
+
+# Original media kept out of the build (pre-compression backups)
+.asset-backups/
