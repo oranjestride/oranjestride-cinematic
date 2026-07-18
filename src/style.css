@@ -180,6 +180,12 @@ body.showcase .contact-mascot-img { display: none; }
 }
 .lab-fallback-img, .contact-mascot-img { border-radius: 16px; border: 1px solid var(--edge); }
 
+/* Nav brand logo — full mark beside the wordmark (contain, not cropped) */
+.nav-logo {
+  flex: 0 0 auto; width: 34px; height: 34px; object-fit: contain;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.5));
+}
+
 /* Nav mascot: tiny head-and-shoulders avatar beside the wordmark */
 .mascot--nav { position: static; width: 34px; }
 .mascot--nav .mascot-shadow { display: none; }

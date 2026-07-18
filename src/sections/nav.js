@@ -1,12 +1,12 @@
 // Sticky nav — appears after hero, wordmark + nav-mascot + section dots (§3.5).
 import { nav as navData, band } from '../data/content.js';
-import { $, $$, wordmark, mascotMarkup } from '../utils/helpers.js';
+import { $, $$, wordmark, logoPath } from '../utils/helpers.js';
 
 export function renderNav() {
   return `
   <nav class="nav" aria-label="Primary">
     <a class="nav-brand" href="#hero" aria-label="OranjeStride home">
-      ${mascotMarkup('idle', 'nav')}
+      <img class="nav-logo" src="${logoPath()}" alt="" width="34" height="34" decoding="async" />
       ${wordmark()}
     </a>
     <div class="nav-links" id="nav-links">
