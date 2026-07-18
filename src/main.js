@@ -6,7 +6,7 @@
 import './style.css';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import Lenis from '@studio-freight/lenis';
+import Lenis from 'lenis';
 
 import { $, $$ } from './utils/helpers.js';
 import { initScene } from './three/scene.js';
@@ -19,6 +19,7 @@ import { initReveals } from './utils/reveal.js';
 import { initOverlayChoreo } from './utils/overlay.js';
 import { initVideos } from './utils/video.js';
 import { runMarutIntro } from './utils/intro.js';
+import { initAmbient } from './utils/ambient.js';
 
 import { renderGlobalLayers, renderFooter, initRibbon } from './sections/shell.js';
 import { renderPreloader, initPreloader } from './sections/preloader.js';
@@ -144,6 +145,7 @@ initContact();
 initDataStride({ lenis });
 initRibbon();
 initCursor({ reduced: REDUCED });
+const ambient = initAmbient({ reduced: REDUCED });
 
 // Active-section tracking → nav dots + 3D layer + showcase poses (§3.5, §6).
 const activeIO = new IntersectionObserver((ens) => {
@@ -151,7 +153,9 @@ const activeIO = new IntersectionObserver((ens) => {
     if (en.intersectionRatio < 0.5) return;
     setActiveDot(en.target.id);
     window.OS3D?.setActive(en.target.id);
+    window.OS3D?.pulse();
     showcase?.applySection(en.target.id);
+    ambient?.swell();
   });
 }, { threshold: [0.5] });
 sections.forEach((s) => activeIO.observe(s));

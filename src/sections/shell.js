@@ -6,10 +6,18 @@ import { logoPath } from '../utils/helpers.js';
 export function renderGlobalLayers() {
   return `
     <canvas id="gl-canvas" aria-hidden="true"></canvas>
+    <div class="grade" aria-hidden="true"></div>
     <div class="grain" aria-hidden="true"></div>
     <div class="vignette" aria-hidden="true"></div>
     <div class="cursor-dot" aria-hidden="true"></div>
     <div class="cursor-ring" aria-hidden="true"></div>
+    <button class="sound-toggle" id="sound-toggle" type="button" aria-pressed="false" aria-label="Toggle ambient sound">
+      <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+        <path class="snd-spk" d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/>
+        <path class="snd-wave" d="M16 8.5a4.5 4.5 0 0 1 0 7M18.5 6a8 8 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+        <line class="snd-slash" x1="3" y1="21" x2="21" y2="3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+      </svg>
+    </button>
     <div class="ribbon" role="status">
       <span class="ribbon-text">${ribbon.text}</span>
       <button class="ribbon-close" aria-label="Dismiss" id="ribbon-close">✕</button>

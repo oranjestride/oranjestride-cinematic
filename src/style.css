@@ -65,9 +65,26 @@ body.custom-cursor, body.custom-cursor * { cursor: none; }
   50% { transform: translate(2%, -2%); } 75% { transform: translate(-2%, -1%); }
   100% { transform: translate(1%, 2%); }
 }
+/* Filmic colour grade — one cohesive pass over the footage AND the 3D layer so
+   they read as a single graded image (the through-line of cinematic 3D sites).
+   Warm brand-keyed glow lifts the upper-centre where the mascot/headline live;
+   cool shadow wash sinks the rest toward teal-black. soft-light keeps it a
+   grade, not a tint — midtones shift, blacks/whites barely move, text stays
+   legible. Static (no animation), so it survives the reduced-motion tier. */
+.grade {
+  position: fixed; inset: 0; z-index: 54; pointer-events: none;
+  mix-blend-mode: soft-light; opacity: 0.9;
+  background:
+    radial-gradient(ellipse 90% 70% at 50% 32%, rgba(255, 138, 58, 0.16), transparent 62%),
+    linear-gradient(180deg, rgba(28, 52, 84, 0.10) 0%, transparent 42%, rgba(4, 8, 14, 0.18) 100%);
+}
+/* Deeper, softer-cornered vignette pulls the eye to centre-frame and adds the
+   subtle lens falloff modern 3D sites use; two stops so corners crush a touch
+   more than the mid-edges without a hard ring. */
 .vignette {
   position: fixed; inset: 0; z-index: 55; pointer-events: none;
-  background: radial-gradient(ellipse at center, transparent 45%, rgba(3, 6, 12, 0.55) 100%);
+  background:
+    radial-gradient(ellipse 118% 100% at 50% 46%, transparent 42%, rgba(3, 6, 12, 0.48) 86%, rgba(2, 4, 8, 0.72) 100%);
 }
 /* Circuit-trace ambient texture (§1 motif 3) — orthogonal traces + node dots
    pulled from the brain/circuit emblem on Marut's jacket. */
@@ -209,6 +226,50 @@ body.showcase .contact-mascot-img { display: none; }
 .pre-pct::after { content: "%"; opacity: 0.7; }
 @keyframes fadeIn { to { opacity: 1; } }
 
+/* Skip control — jump past the flight/portal footage to the reveal. Fades in a
+   beat after the loader appears (so instant loads don't flash it); hidden in
+   the reduced-motion tier, whose loader is already ~260ms. */
+.pre-skip {
+  position: absolute; z-index: 4;
+  right: clamp(1.2rem, 4vw, 2.6rem); bottom: clamp(2rem, 7vh, 4.5rem);
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  padding: 0.55rem 1.05rem; border-radius: 100px;
+  font-family: var(--font-display); font-weight: 600; font-size: 0.7rem;
+  letter-spacing: 0.16em; text-transform: uppercase; color: var(--text-muted);
+  background: rgba(12, 18, 28, 0.5); border: 1px solid var(--glass-border);
+  backdrop-filter: blur(8px); cursor: pointer;
+  opacity: 0; animation: fadeIn 0.6s 1s forwards;
+  transition: color 0.25s, border-color 0.25s, transform 0.25s;
+}
+.pre-skip:hover, .pre-skip:focus-visible { color: #fff; border-color: var(--accent-orange); }
+.pre-skip span { transition: transform 0.25s; }
+.pre-skip:hover span, .pre-skip:focus-visible span { transform: translateX(3px); }
+#preloader.flash .pre-skip { display: none; }
+
+/* Ambient sound toggle — bottom-left, mirroring the DataStride badge. Off by
+   default: shows a slashed speaker; enabled shows the speaker + waves with a
+   soft breathing glow. Opt-in only (autoplay policy + good manners). */
+.sound-toggle {
+  position: fixed; bottom: 1.4rem; left: 1.4rem; z-index: 90;
+  display: inline-grid; place-items: center; width: 42px; height: 42px;
+  border-radius: 50%; cursor: pointer; color: var(--text-muted);
+  background: rgba(12, 18, 28, 0.55); border: 1px solid var(--glass-border);
+  backdrop-filter: blur(8px);
+  transition: color 0.25s, border-color 0.25s, transform 0.25s;
+}
+.sound-toggle:hover, .sound-toggle:focus-visible { color: #fff; border-color: var(--accent-orange); transform: translateY(-2px); }
+.sound-toggle .snd-wave { opacity: 0; transition: opacity 0.3s; }
+.sound-toggle .snd-slash { opacity: 0.9; transition: opacity 0.3s; }
+.sound-toggle.on { color: var(--accent-orange); border-color: rgba(255, 106, 0, 0.5); }
+.sound-toggle.on .snd-wave { opacity: 1; }
+.sound-toggle.on .snd-slash { opacity: 0; }
+.sound-toggle.on { animation: sndPulse 2.4s ease-in-out infinite; }
+@keyframes sndPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 106, 0, 0); }
+  50% { box-shadow: 0 0 14px 2px rgba(255, 106, 0, 0.28); }
+}
+body:not(.motion-full) .sound-toggle { display: none; }
+
 /* Marut's introduction bubble — typed beside the character after the loader.
    z45 floats it over the WebGL layer (z40); the tail points at him. */
 .marut-bubble {
@@ -285,7 +346,13 @@ main { position: relative; z-index: 3; }
 .section.video-section { background: var(--bg-void); }
 #about { background: var(--bg-void); }
 /* graded darker than the original — the 3D character owns the frame now */
-.sec-video { position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%; object-fit: cover; filter: brightness(0.55) contrast(1.08) saturate(0.95); }
+.sec-video { position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%; object-fit: cover; filter: brightness(0.55) contrast(1.08) saturate(0.95); transition: filter 0.6s var(--ease-cine); }
+/* Depth-of-field cue — softly defocus the BACKGROUND footage so the sharp 3D
+   mascot + copy read as the in-focus foreground (real subject separation, no
+   text-blur or compositing risk). Gated to the high render tier: scene.js sets
+   body.fx-high only when the device holds the top tier, so mobile / throttled
+   devices skip the per-frame blur cost entirely. */
+body.fx-high .sec-video { filter: brightness(0.55) contrast(1.08) saturate(0.95) blur(2.5px); transform: scale(1.04); }
 /* Dual scrim: left-biased horizontal wash (nearly all copy is left-aligned) +
    vertical letterbox — keeps text readable over bright/busy footage. */
 .sec-video-scrim {

@@ -37,6 +37,11 @@ export function renderPreloader() {
       <span class="pre-pct" id="pre-pct">0</span>
     </div>
 
+    <!-- Skip: jump past the flight/portal footage straight to the reveal -->
+    <button class="pre-skip" id="pre-skip" type="button" aria-label="Skip intro">
+      Skip intro <span aria-hidden="true">→</span>
+    </button>
+
   </div>`;
 }
 
@@ -84,9 +89,17 @@ export function initPreloader({ reduced, onDone }) {
   const pct = document.getElementById('pre-pct');
   const video = document.getElementById('pre-video');
   const cv = document.getElementById('pre-canvas');
+  const skipBtn = document.getElementById('pre-skip');
   document.body.classList.add('locked');
 
+  // Single hand-off latch: the reveal happens exactly once, whether it's the
+  // natural portal→vortex beat, a fallback finish, or a Skip click. Whichever
+  // fires first claims it; the others no-op.
+  let handed = false;
+
   const finishSimple = (delay, mode) => {
+    if (handed) return;
+    handed = true;
     setTimeout(() => {
       pre.classList.add('done');
       document.body.classList.remove('locked');
@@ -143,8 +156,24 @@ export function initPreloader({ reduced, onDone }) {
   portal.muted = true; portal.playsInline = true; portal.preload = 'auto';
   setTimeout(() => { if (mode === 'video') portal.src = videoPath('mascot-flight-portal'); }, 900);
 
+  // --- Skip: bypass the flight/portal footage, go straight to the reveal. In
+  //     the video tier that's the designed vortex wipe (minus the footage); in
+  //     the static tier, an immediate finish. Latched, so a late natural
+  //     completion can't double-fire the hand-off. ---
+  function skip() {
+    if (handed) return;
+    done = true;
+    if (fill) fill.style.width = '100%';
+    if (pct) pct.textContent = '100';
+    try { video?.pause(); } catch (_) { /* detached after portal swap */ }
+    if (mode === 'video') vortexWipe();
+    else finishSimple(0, 'static');
+  }
+  skipBtn?.addEventListener('click', skip);
+
   // --- The beat (§5.3): progress done + hold elapsed → portal → vortex wipe ---
   Promise.all([progressP, minHold]).then(async () => {
+    if (handed) return;
     done = true;
     if (fill) fill.style.width = '100%';
     if (pct) pct.textContent = '100';
@@ -170,6 +199,8 @@ export function initPreloader({ reduced, onDone }) {
 
   // --- Vortex wipe (§5.3): the footage's portal becomes the reveal mask ---
   function vortexWipe() {
+    if (handed) return;
+    handed = true;
     document.body.classList.remove('locked');
 
     const hole = { r: 0 };
