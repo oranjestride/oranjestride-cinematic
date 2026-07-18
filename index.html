@@ -7,6 +7,11 @@
   <meta name="description" content="India's premier Generative AI & Data Science training consultancy. From data to decisions. From decisions to outcomes." />
   <link rel="icon" href="./img/logo02.png" />
 
+  <!-- Start the hero mascot download at t=0 (high priority) so the sculpt is
+       ready when the loader opens, instead of queuing behind the intro videos
+       and popping in seconds later. -->
+  <link rel="preload" href="./models/mascot.glb" as="fetch" crossorigin="anonymous" fetchpriority="high" />
+
   <!-- Fonts: Space Grotesk (display) + Inter (body), per §1 stack -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />

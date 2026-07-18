@@ -28,17 +28,6 @@ const CLIP_RE = {
   cheer: /clap|cheer/i,
 };
 
-// Real binary asset, not the SPA index.html a static host returns for 404s.
-async function assetExists(url) {
-  try {
-    const head = await fetch(url, { method: 'HEAD' });
-    const type = head.headers.get('content-type') || '';
-    return head.ok && !type.includes('text/html');
-  } catch (_) {
-    return false;
-  }
-}
-
 // Bridge the Mixamo name mismatch ("mixamorig:Hips" vs "mixamorigHips" vs
 // "Hips") — unmatched tracks silently fail to bind otherwise.
 function remapClipsToSkeleton(clips, model) {
@@ -78,8 +67,9 @@ function worldSkinnedBox(root) {
  * falls back to the procedural mascot.
  */
 export async function mountMarutGLB() {
-  if (!(await assetExists(GLB_URL))) return null;
-
+  // Straight to the load — no HEAD pre-check (it cost a round trip and delayed
+  // the fetch; the browser has already begun the download via the index.html
+  // preload). A missing/invalid GLB simply throws below → procedural fallback.
   let gltf;
   try {
     const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js');

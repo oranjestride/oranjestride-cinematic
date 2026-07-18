@@ -53,8 +53,8 @@ const withTimeout = (p, ms) => Promise.race([p, new Promise((r) => setTimeout(r,
 
 function realProgress(onStep) {
   const steps = [];
-  const track = (weight, promise) => steps.push(
-    withTimeout(promise, 8000).catch(() => {}).then(() => onStep(weight)));
+  const track = (weight, promise, ms = 8000) => steps.push(
+    withTimeout(promise, ms).catch(() => {}).then(() => onStep(weight)));
 
   // fonts
   track(0.15, document.fonts?.ready || Promise.resolve());
@@ -70,9 +70,10 @@ function realProgress(onStep) {
     ? Promise.resolve()
     : new Promise((res) => heroV.addEventListener('loadedmetadata', res, { once: true })));
 
-  // procedural mascot assembled (synchronous geometry build — resolves on the
-  // first frame after main.js creates it; no network involved)
-  track(0.2, window.__marutReady || Promise.resolve());
+  // the hero mascot (GLB fetch+parse, or procedural build). Held to a longer
+  // budget than the other steps so the loader reveals WITH Marut on stage
+  // instead of opening onto an empty frame while he's still downloading.
+  track(0.2, window.__marutReady || Promise.resolve(), 14000);
 
   // full window load
   track(0.3, document.readyState === 'complete'
