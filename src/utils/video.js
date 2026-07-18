@@ -5,6 +5,15 @@ import { $$, clamp } from './helpers.js';
 export function initVideos({ reduced }) {
   const vids = $$('.sec-video, .about-media video');
 
+  // Save-Data / 2G: honour the user's data preference — never download the
+  // background footage. Each <video> keeps showing its poster attribute (no
+  // src is ever attached), so sections still look right on a metered connection.
+  const conn = navigator.connection;
+  if (conn && (conn.saveData || /(^|\b)2g/.test(conn.effectiveType || ''))) {
+    document.body.classList.add('save-data');
+    return;
+  }
+
   // Lazy attach src when the section approaches the viewport.
   const loadIO = new IntersectionObserver((ens) => {
     ens.forEach((en) => {
