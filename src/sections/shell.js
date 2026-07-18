@@ -11,6 +11,11 @@ export function renderGlobalLayers() {
     <div class="vignette" aria-hidden="true"></div>
     <div class="cursor-dot" aria-hidden="true"></div>
     <div class="cursor-ring" aria-hidden="true"></div>
+    <button class="perf-toggle" id="perf-toggle" type="button" aria-pressed="false" aria-label="Toggle lite performance mode" title="Lite mode — calmer motion & effects">
+      <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true">
+        <path d="M13 2 4 13h6l-1 9 9-12h-6l2-8z" fill="currentColor"/>
+      </svg>
+    </button>
     <button class="sound-toggle" id="sound-toggle" type="button" aria-pressed="false" aria-label="Toggle ambient sound">
       <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
         <path class="snd-spk" d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/>

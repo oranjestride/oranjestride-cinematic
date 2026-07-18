@@ -147,6 +147,41 @@ initRibbon();
 initCursor({ reduced: REDUCED });
 const ambient = initAmbient({ reduced: REDUCED });
 
+// Performance / reduce-motion toggle (persisted in localStorage). Enabling
+// pins the lowest GPU tier + calms page motion immediately; disabling reloads
+// so the full effect stack restores cleanly. A user escape hatch layered on
+// top of the automatic adaptive tiers.
+(function perfToggle() {
+  const btn = document.getElementById('perf-toggle');
+  if (!btn) return;
+  let lite = false;
+  try { lite = localStorage.getItem('os-lite') === '1'; } catch (_) { /* private mode */ }
+  const apply = (on) => {
+    document.body.classList.toggle('perf-lite', on);
+    btn.classList.toggle('on', on);
+    btn.setAttribute('aria-pressed', String(on));
+    if (on) window.OS3D?.setTier('min');
+  };
+  apply(lite);
+  btn.addEventListener('click', () => {
+    lite = !lite;
+    try { localStorage.setItem('os-lite', lite ? '1' : '0'); } catch (_) { /* ignore */ }
+    if (lite) apply(true);
+    else location.reload(); // restore bloom/embers/DOF cleanly
+  });
+})();
+
+// DOF rack-focus on section change: the background footage swells out of focus
+// as the camera travels, then eases back. The .sec-video filter transition
+// animates the --vid-blur change; only rendered on the high tier (fx-high).
+const _docRoot = document.documentElement;
+let _focusTimer = null;
+function focusPull() {
+  _docRoot.style.setProperty('--vid-blur', '6px');
+  clearTimeout(_focusTimer);
+  _focusTimer = setTimeout(() => _docRoot.style.setProperty('--vid-blur', '2.5px'), 260);
+}
+
 // Active-section tracking → nav dots + 3D layer + showcase poses (§3.5, §6).
 const activeIO = new IntersectionObserver((ens) => {
   ens.forEach((en) => {
@@ -156,6 +191,7 @@ const activeIO = new IntersectionObserver((ens) => {
     window.OS3D?.pulse();
     showcase?.applySection(en.target.id);
     ambient?.swell();
+    focusPull();
   });
 }, { threshold: [0.5] });
 sections.forEach((s) => activeIO.observe(s));

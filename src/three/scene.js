@@ -14,7 +14,7 @@ import { makeContactShadow } from './marut/textures.js';
 
 // No-op API so main.js can always call safely (reduced-motion / no-WebGL).
 function stubAPI() {
-  return { enabled: false, three: null, setActive() {}, setScrollVelocity() {}, setPointer() {}, pulse() {} };
+  return { enabled: false, three: null, setActive() {}, setScrollVelocity() {}, setPointer() {}, pulse() {}, setTier() {} };
 }
 
 export function initScene({ reduced }) {
@@ -170,6 +170,11 @@ export function initScene({ reduced }) {
     setPointer(x, y) { pointer.set(x, y); },
     // Section-change beat: kick the ember field into a brief updraft.
     pulse() { burst = 1; },
+    // User performance toggle — pin a tier and stop the fps monitor adjusting it.
+    setTier(name) {
+      if (!(name in TIER)) return;
+      forced = true; tier = TIER[name]; applyTier();
+    },
   };
 
   // ---- adaptive quality (§perf) ------------------------------------------
@@ -187,6 +192,7 @@ export function initScene({ reduced }) {
   const pinned = new URLSearchParams(location.search).get('q');
   let tier = composer ? TIER.high : TIER.medium;
   if (pinned && pinned in TIER) tier = TIER[pinned];
+  let forced = false; // set by the user's performance toggle (setTier)
   let useComposer = !!composer && tier >= TIER.high;
 
   function applyTier() {
@@ -206,7 +212,7 @@ export function initScene({ reduced }) {
   // seconds drop a tier (a single GC/asset-decode spike shouldn't). Pinned = off.
   let winFrames = 0, winStart = performance.now(), weak = 0;
   function monitorFrame(now) {
-    if (pinned) return;
+    if (pinned || forced) return;
     winFrames++;
     if (now - winStart < 1000) return;
     const fps = (winFrames * 1000) / (now - winStart);
