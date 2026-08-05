@@ -175,25 +175,24 @@ export const clients = {
   sub: "From India's premier management schools to Fortune 500 leadership teams and government ministries — OranjeStride's programmes build capability where it matters most.",
   cta: 'View Our Clients & Partners',
   hint: '16 organisations across academia, enterprise & government — explore the full roster.',
-  // Roster from legacy content source. Logos rendered as wordmark cards
-  // (no logo image files were shipped); rel = hover caption (§7).
+  // Roster — logos from public/img/client-images/; rel = hover caption (§7).
   roster: [
-    { n: 'IIM Visakhapatnam', t: 'Management School', c: 'academic', rel: 'Postgraduate analytics cohort partner' },
-    { n: 'IIM Sambalpur', t: 'Management School', c: 'academic', rel: 'MBA business-analytics faculty engagement' },
-    { n: 'Christ University', t: 'University', c: 'academic', rel: 'Undergraduate data-analytics programme' },
-    { n: 'ISBF', t: 'Business School', c: 'academic', rel: 'Applied ML elective delivery' },
-    { n: 'Great Learning', t: 'Ed-Tech Platform', c: 'academic', rel: 'Curriculum & live-session partner' },
-    { n: 'NIIT', t: 'Training Institute', c: 'academic', rel: 'Corporate upskilling collaborator' },
-    { n: 'Imarticus', t: 'Training Institute', c: 'academic', rel: 'Data science bootcamp faculty' },
-    { n: 'IMS Proschool', t: 'Training Institute', c: 'academic', rel: 'Analytics certification partner' },
-    { n: 'EduEdgePro', t: 'Ed-Tech Platform', c: 'academic', rel: 'Gen AI content collaboration' },
-    { n: 'EY (Ernst & Young)', t: 'Big 4 Consulting', c: 'corporate', rel: 'Executive AI-strategy workshops' },
-    { n: 'Hexaware Technologies', t: 'IT Enterprise', c: 'corporate', rel: 'ML upskilling for delivery teams' },
-    { n: 'Havells India', t: 'Manufacturing', c: 'corporate', rel: 'Analytics for operations leadership' },
-    { n: 'Colt Technology', t: 'Telecom', c: 'corporate', rel: 'Data science enablement programme' },
-    { n: 'Room to Read', t: 'NGO / Social Sector', c: 'corporate', rel: 'Impact-analytics capacity building' },
-    { n: 'Bennett & Coleman', t: 'Media Group', c: 'corporate', rel: 'Newsroom analytics training' },
-    { n: 'AJNIFM (Govt. of India)', t: 'Government Ministry', c: 'corporate', rel: 'Public-sector AI research advisory' },
+    { n: 'IIM Visakhapatnam', t: 'Management School', c: 'academic', img: '/img/client-images/iim_vishakhapatnam.jpg', rel: 'Postgraduate analytics cohort partner' },
+    { n: 'IIM Sambalpur', t: 'Management School', c: 'academic', img: '/img/client-images/iim_sambalpur.png', rel: 'MBA business-analytics faculty engagement' },
+    { n: 'Christ University', t: 'University', c: 'academic', img: '/img/client-images/christ_university.png', rel: 'Undergraduate data-analytics programme' },
+    { n: 'ISBF', t: 'Business School', c: 'academic', img: '/img/client-images/ISBF.jpeg', rel: 'Applied ML elective delivery' },
+    { n: 'Great Learning', t: 'Ed-Tech Platform', c: 'academic', img: '/img/client-images/Great_Learning_Logo.jpg', rel: 'Curriculum & live-session partner' },
+    { n: 'NIIT', t: 'Training Institute', c: 'academic', img: '/img/client-images/NIIT.png', rel: 'Corporate upskilling collaborator' },
+    { n: 'Imarticus', t: 'Training Institute', c: 'academic', img: '/img/client-images/imarticus.png', rel: 'Data science bootcamp faculty' },
+    { n: 'IMS Proschool', t: 'Training Institute', c: 'academic', img: '/img/client-images/ims_proschool.png', rel: 'Analytics certification partner' },
+    { n: 'EduEdgePro', t: 'Ed-Tech Platform', c: 'academic', img: '/img/client-images/eduedge_pro.png', rel: 'Gen AI content collaboration' },
+    { n: 'EY (Ernst & Young)', t: 'Big 4 Consulting', c: 'corporate', img: '/img/client-images/EY_logo.jpg', rel: 'Executive AI-strategy workshops' },
+    { n: 'Hexaware Technologies', t: 'IT Enterprise', c: 'corporate', img: '/img/client-images/hexaware.jpg', rel: 'ML upskilling for delivery teams' },
+    { n: 'Havells India', t: 'Manufacturing', c: 'corporate', img: '/img/client-images/havells_india.png', rel: 'Analytics for operations leadership' },
+    { n: 'Colt Technology', t: 'Telecom', c: 'corporate', img: '/img/client-images/colt.png', rel: 'Data science enablement programme' },
+    { n: 'Room to Read', t: 'NGO / Social Sector', c: 'corporate', img: '/img/client-images/room_to_read.png', rel: 'Impact-analytics capacity building' },
+    { n: 'Bennett & Coleman', t: 'Media Group', c: 'corporate', img: '/img/client-images/bennett-coleman.png', rel: 'Newsroom analytics training' },
+    { n: 'AJNIFM (Govt. of India)', t: 'Government Ministry', c: 'corporate', img: '/img/client-images/ajnifm.png', rel: 'Public-sector AI research advisory' },
   ],
 };
 
@@ -241,7 +240,7 @@ export const datastride = {
     { ico: '📚', h: 'Structured Curriculum', p: 'From SELECT & WHERE to JOINs, subqueries, aggregations, and window functions.' },
     { ico: '🎯', h: 'Business Challenges', p: 'Real-world datasets drawn from finance, retail, and HR to build job-ready skills.' },
   ],
-  url: 'https://data-stride.vercel.app/',
+  url: 'https://datastride-503417.web.app/',
 };
 
 export const ribbon = {

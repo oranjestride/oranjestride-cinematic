@@ -673,11 +673,14 @@ body.mascot-dragged .drag-hint { opacity: 0; }
 .cg-grid { padding: 0.4rem 1.8rem 1.4rem; overflow-y: auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.9rem; }
 .cg-grid[data-filter="academic"] .cg-card:not([data-cat="academic"]),
 .cg-grid[data-filter="corporate"] .cg-card:not([data-cat="corporate"]) { display: none; }
-.cg-card { position: relative; aspect-ratio: 4 / 3; border-radius: 12px; overflow: hidden; display: grid; place-items: center; text-align: center; padding: 0.8rem; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); transition: transform 0.3s var(--ease-cine), border-color 0.3s, box-shadow 0.3s; }
+.cg-card { position: relative; aspect-ratio: 4 / 3; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.55rem; text-align: center; padding: 0.85rem 0.7rem; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); transition: transform 0.3s var(--ease-cine), border-color 0.3s, box-shadow 0.3s; }
 .cg-card:hover { transform: translateY(-5px); border-color: var(--accent-orange); box-shadow: 0 14px 40px rgba(255, 106, 0, 0.18); }
-.cg-name { font-family: var(--font-display); font-weight: 700; font-size: 0.82rem; line-height: 1.2; }
-.cg-type { font-weight: 500; color: var(--text-muted); font-size: 0.68rem; }
-.cg-cap { position: absolute; inset: 0; display: grid; place-items: center; padding: 0.6rem; background: linear-gradient(160deg, rgba(255, 106, 0, 0.92), rgba(244, 124, 32, 0.92)); color: #180a00; font-size: 0.74rem; font-weight: 600; opacity: 0; transition: opacity 0.3s; }
+.cg-logo { display: grid; place-items: center; width: 100%; height: 52px; padding: 0.35rem 0.5rem; border-radius: 8px; background: #fff; }
+.cg-logo img { max-height: 42px; max-width: 110px; width: auto; height: auto; object-fit: contain; transition: transform 0.25s ease; }
+.cg-card:hover .cg-logo img { transform: scale(1.04); }
+.cg-name { font-family: var(--font-display); font-weight: 700; font-size: 0.78rem; line-height: 1.25; }
+.cg-type { font-weight: 500; color: var(--text-muted); font-size: 0.64rem; }
+.cg-cap { position: absolute; inset: 0; display: grid; place-items: center; padding: 0.6rem; background: linear-gradient(160deg, rgba(255, 106, 0, 0.92), rgba(244, 124, 32, 0.92)); color: #180a00; font-size: 0.74rem; font-weight: 600; opacity: 0; transition: opacity 0.3s; z-index: 1; }
 .cg-card:hover .cg-cap { opacity: 1; }
 .cg-foot { padding: 1.1rem 1.8rem; border-top: 1px solid rgba(255, 255, 255, 0.08); display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; }
 .cg-foot span { font-size: 0.8rem; color: var(--text-muted); }

@@ -43,6 +43,7 @@ export function renderClientsModal() {
       <div class="cg-grid" id="cg-grid" data-filter="all">
         ${clients.roster.map((d) => `
           <div class="cg-card" data-cat="${d.c}">
+            <div class="cg-logo"><img src="${d.img}" alt="${d.n}" loading="lazy" decoding="async"></div>
             <div class="cg-name">${d.n}<br><span class="cg-type">${d.t}</span></div>
             <div class="cg-cap">${d.rel}</div>
           </div>`).join('')}
