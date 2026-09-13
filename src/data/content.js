@@ -240,7 +240,7 @@ export const datastride = {
     { ico: '📚', h: 'Structured Curriculum', p: 'From SELECT & WHERE to JOINs, subqueries, aggregations, and window functions.' },
     { ico: '🎯', h: 'Business Challenges', p: 'Real-world datasets drawn from finance, retail, and HR to build job-ready skills.' },
   ],
-  url: 'https://datastride-503417.web.app/',
+  url: 'https://datastride.oranjestride.com/',
 };
 
 export const ribbon = {
