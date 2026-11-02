@@ -48,7 +48,9 @@ export function renderContact() {
             </select>
           </label>
           <label>Message<textarea name="message" class="form-input" placeholder="Tell us about your goals or requirements..."></textarea></label>
+          <input type="text" name="_gotcha" class="form-gotcha" tabindex="-1" autocomplete="off" aria-hidden="true" />
           <button class="btn btn-primary" id="submitBtn" type="submit">Send Enquiry</button>
+          <p class="form-note">We use your details only to reply to your enquiry. See our <a href="/privacy.html">Privacy Policy</a>.</p>
           <p class="form-status" id="form-status" role="status"></p>
         </form>
       </div>

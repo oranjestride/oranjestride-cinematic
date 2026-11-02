@@ -276,6 +276,18 @@ export async function mountMarutGLB() {
       mixer.addEventListener('finished', restore);
     },
 
+    // freeze a clip frame as the standing pose — the award mini-mascot holds the wave peak.
+    // Idle stays on at ~0 weight: the clip lacks some bones (spine, legs), and without a writer
+    // the per-frame posture/knee overlays would accumulate on them until the figure folds over.
+    hold(name, time) {
+      const a = action(name);
+      if (!a || !mixer) return;
+      idle?.setEffectiveWeight(0.001);
+      a.reset().play();
+      a.paused = true;
+      a.time = time;
+    },
+
     // Base poses are a procedural concept — the sculpt idles through all of
     // them; the camera + one-shots carry the per-section choreography.
     setBasePose() {},

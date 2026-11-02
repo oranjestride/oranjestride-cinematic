@@ -8,6 +8,7 @@ export const brand = {
   motto: 'From data to decisions. From decisions to outcomes.',
   tagline: 'Stride into Decision Intelligence',
   legal: 'OranjeStride Consultancy Pvt. Ltd.',
+  linkedin: 'https://www.linkedin.com/company/oranjestride/',
 };
 
 export const nav = {
@@ -244,7 +245,22 @@ export const datastride = {
 };
 
 export const ribbon = {
-  text: 'New cohort enrolling — limited seats · India AI Learning Tour 2026',
+  text: '🏆 Winner — World AI Summit 2026<span class="ribbon-more"> · AI-Driven Talent Development Excellence · <u>See the award</u></span> →',
+};
+
+// shortcut: "just won" framing is time-bound, move to a permanent Recognition block by ~Q2 2027
+export const award = {
+  bubble: 'See what we just won! 🏆',
+  sprite: '/img/award/marut-trophy.webp',
+  photo: '/img/award/award-stage.webp',
+  photoAlt: 'OranjeStride receiving the AI-Driven Talent Development Excellence award on stage at the World AI Awards, Bengaluru',
+  label: 'Award Winner',
+  category: 'AI-Driven Talent Development Excellence',
+  event: 'World AI Summit 2026 · 3rd Edition',
+  where: 'Bengaluru · 14–16 October 2026',
+  quote: 'We bet on an unfashionable idea: teach the foundations, not the shortcuts. SQL before prompts. Judgement before tools.',
+  quoteBy: 'Varunn Kaushik, Founder',
+  desc: 'The award recognises our foundations-first approach to AI training, and DataStride, the hands-on learning platform built from it.',
 };
 
 // Marut's self-introduction — typed into a speech bubble beside the live 3D

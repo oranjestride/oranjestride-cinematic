@@ -1,5 +1,5 @@
 // Global shell — fixed WebGL canvas, grain, vignette, cursor, ribbon, footer (§2, §3).
-import { ribbon, nav as navData, brand } from '../data/content.js';
+import { ribbon, nav as navData, brand, contact } from '../data/content.js';
 import { logoPath } from '../utils/helpers.js';
 
 // Fixed layers that sit above section videos / below content or UI.
@@ -24,12 +24,13 @@ export function renderGlobalLayers() {
       </svg>
     </button>
     <div class="ribbon" role="status">
-      <span class="ribbon-text">${ribbon.text}</span>
+      <button class="ribbon-text" id="ribbon-open" type="button">${ribbon.text}</button>
       <button class="ribbon-close" aria-label="Dismiss" id="ribbon-close">✕</button>
     </div>`;
 }
 
 export function renderFooter() {
+  const [email, phone, place] = contact.tokens.map((t) => t.strong);
   return `
   <footer>
     <div class="footer-brand">
@@ -39,6 +40,16 @@ export function renderFooter() {
     <nav class="footer-links" aria-label="Footer">
       ${navData.links.map((l) => `<a href="#${l.id}">${l.label}</a>`).join('')}
     </nav>
+    <div class="footer-contact">
+      <a href="mailto:${email}">${email}</a>
+      <a href="tel:${phone.replace(/\s/g, '')}">${phone}</a>
+      <span>${place}, India</span>
+      <a href="${brand.linkedin}" target="_blank" rel="noopener">LinkedIn ↗</a>
+    </div>
+    <div class="footer-legal">
+      <span>© ${new Date().getFullYear()} ${brand.legal}</span>
+      <a href="/privacy.html">Privacy Policy</a>
+    </div>
   </footer>`;
 }
 

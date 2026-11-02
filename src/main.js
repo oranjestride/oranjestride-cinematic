@@ -37,6 +37,7 @@ import { renderTour } from './sections/tour.js';
 import { renderClients, renderClientsModal, initClients } from './sections/clients.js';
 import { renderContact, initContact } from './sections/contact.js';
 import { renderDataStride, initDataStride } from './sections/datastride.js';
+import { renderAward, initAward } from './sections/award.js';
 
 // Motion is ON by default (product decision): the live 3D experience runs
 // regardless of the OS prefers-reduced-motion flag — Windows' "animation
@@ -73,6 +74,7 @@ app.innerHTML = `
   ${renderFooter()}
   ${renderClientsModal()}
   ${renderDataStride()}
+  ${renderAward()}
 `;
 
 // ---------------------------------------------------------------------------
@@ -95,6 +97,9 @@ $$('a[href^="#"]').forEach((a) => a.addEventListener('click', (e) => {
   if (!el) return;
   e.preventDefault();
   closeMobileMenu();
+  // modal CTAs (#cg-contact, #award-contact) arrive with lenis stopped; start it first,
+  // because the modal's own close() → lenis.start() → reset() would cancel the scroll
+  lenis?.start();
   lenis ? lenis.scrollTo(el, { duration: 1.3 }) : el.scrollIntoView({ behavior: REDUCED ? 'auto' : 'smooth' });
 }));
 
@@ -143,6 +148,7 @@ initProgrammes();
 initClients({ lenis });
 initContact();
 initDataStride({ lenis });
+const awardUI = initAward({ lenis });
 initRibbon();
 initCursor({ reduced: REDUCED });
 const ambient = initAmbient({ reduced: REDUCED });
@@ -220,7 +226,7 @@ addEventListener('click', (e) => {
 // Global ESC → close any open modal / mobile menu.
 addEventListener('keydown', (e) => {
   if (e.key !== 'Escape') return;
-  ['#clients-modal', '#ds-popup'].forEach((sel) => {
+  ['#clients-modal', '#ds-popup', '#award-modal'].forEach((sel) => {
     const m = $(sel);
     if (m?.classList.contains('open')) { m.classList.remove('open'); lenis?.start(); document.body.style.overflow = ''; }
   });
@@ -238,5 +244,6 @@ initPreloader({
   onDone(mode) {
     revealHero();
     runMarutIntro({ showcase, marut, mode, reduced: REDUCED });
+    awardUI.show();
   },
 });
